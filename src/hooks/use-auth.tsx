@@ -24,7 +24,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If firebase is not configured, create a mock user for testing purposes
     if (!isFirebaseConfigured) {
+      const mockUser = {
+        uid: 'test-user-123',
+        email: 'test@lexai.com',
+        displayName: 'Advogado Teste',
+      } as User;
+      
+      const mockProfile: UserProfile = {
+        cargo: 'Advogado(a)',
+        areas_atuacao: ['Direito Civil', 'Direito Penal'],
+        primeiro_acesso: false, // Set to false to bypass onboarding and go to dashboard
+        data_criacao: new Date() as any, // Mock date
+      };
+
+      setUser(mockUser);
+      setUserProfile(mockProfile);
       setLoading(false);
       return;
     }
