@@ -3,6 +3,9 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
+import { AuthProvider } from '@/hooks/use-auth';
+import { OnboardingGuard } from '@/components/layout/onboarding-guard';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: 'LexAI',
@@ -28,11 +31,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <Toaster />
+            <AuthProvider>
+                <OnboardingGuard>
+                    <AppLayout>
+                        {children}
+                    </AppLayout>
+                    <Toaster />
+                </OnboardingGuard>
+            </AuthProvider>
         </ThemeProvider>
+        <SpeedInsights/>
       </body>
     </html>
   );
