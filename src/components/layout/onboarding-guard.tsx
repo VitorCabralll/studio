@@ -33,7 +33,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (needsOnboarding && pathname !== '/onboarding') {
       router.replace('/onboarding');
     } else if (!needsOnboarding && pathname === '/onboarding') {
-      router.replace('/');
+      router.replace('/workspace');
     } else if (pathname === '/login') {
       // if user is logged in and on login page, redirect to home
       router.replace('/');
