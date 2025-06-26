@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, signInAnonymously } from 'firebase/auth';
 import { getUserProfile, UserProfile } from '@/services/user-service';
-import { firebaseApp } from '@/lib/firebase';
+import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     const auth = getAuth(firebaseApp);
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {

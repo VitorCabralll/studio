@@ -12,10 +12,12 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "your-app-id",
 };
 
+export const isFirebaseConfigured = firebaseConfig.apiKey !== 'your-api-key';
+
 // Initialize Firebase
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Analytics if running in the browser and a valid API key is provided
-if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your-api-key') {
+if (typeof window !== 'undefined' && isFirebaseConfigured) {
   getAnalytics(firebaseApp);
 }
