@@ -1,7 +1,11 @@
 
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Users, Settings, Trash2 } from "lucide-react";
+import { PlusCircle, Users, Settings, Trash2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +18,20 @@ const workspaces = [
 ];
 
 export default function WorkspacePage() {
+  const [newWorkspaceName, setNewWorkspaceName] = useState("Meu Novo Workspace");
+  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
+
+  const handleCreateWorkspace = async () => {
+    if (!newWorkspaceName.trim()) return;
+    setIsCreating(true);
+    // Simulate API call to create workspace
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("Creating workspace:", newWorkspaceName);
+    setIsCreating(false);
+    router.push('/workspace/success');
+  };
+  
   return (
     <div className="flex-1 p-4 md:p-8">
       <div className="flex items-center justify-between mb-8">
@@ -40,11 +58,19 @@ export default function WorkspacePage() {
                 <Label htmlFor="name" className="text-right">
                   Nome
                 </Label>
-                <Input id="name" defaultValue="Meu Novo Workspace" className="col-span-3" />
+                <Input 
+                  id="name" 
+                  value={newWorkspaceName}
+                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  className="col-span-3" 
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Criar Workspace</Button>
+              <Button type="button" onClick={handleCreateWorkspace} disabled={isCreating || !newWorkspaceName.trim()}>
+                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Criar Workspace
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

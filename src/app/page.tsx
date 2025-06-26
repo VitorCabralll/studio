@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { List, Grip, FileText, PlusCircle, ArrowRight } from "lucide-react";
@@ -105,7 +106,7 @@ export default function DashboardPage() {
               ))}
                <li className="mt-4">
                 <Button variant="outline" className="w-full border-dashed" asChild>
-                  <Link href="/agents/create">
+                  <Link href="/agente/criar">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Criar novo modelo
                   </Link>
