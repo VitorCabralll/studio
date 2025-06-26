@@ -40,16 +40,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!isFirebaseConfigured) {
       setLoading(true);
       setUser(getMockUser());
-      // Simulate a NEW user who needs onboarding
+      // Simulate a user who has already completed onboarding and has a workspace
       setUserProfile({
-        cargo: '',
-        areas_atuacao: [],
-        primeiro_acesso: true,
+        cargo: 'Advogado(a)',
+        areas_atuacao: ['Direito Civil'],
+        primeiro_acesso: false,
         data_criacao: new Date() as any,
-        workspaces: [],
+        workspaces: [{ name: "Workspace Pessoal" }],
       });
       setLoading(false);
-      router.push('/onboarding');
+      router.push('/');
     }
   };
 
