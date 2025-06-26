@@ -2,7 +2,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -18,16 +17,9 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
               <CardTitle className="font-headline">Perfil</CardTitle>
-              <CardDescription>Atualize suas informações pessoais e avatar.</CardDescription>
+              <CardDescription>Atualize suas informações pessoais.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-              <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20">
-                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="lawyer portrait"/>
-                  <AvatarFallback>AV</AvatarFallback>
-              </Avatar>
-              <Button variant="outline">Alterar Foto</Button>
-              </div>
+          <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                       <Label htmlFor="full-name">Nome Completo</Label>
