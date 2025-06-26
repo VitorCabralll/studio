@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from '@/components/ui/sidebar';
@@ -5,8 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FilePlus2, Bot, Gavel, Users, Settings, ChevronDown, Scale } from 'lucide-react';
-import { Button } from '../ui/button';
+import { LayoutDashboard, FilePlus2, Bot, Users, Settings, ChevronDown, Scale } from 'lucide-react';
 
 const navItems = [
   { href: "/", label: "Início", icon: LayoutDashboard },
@@ -15,22 +15,14 @@ const navItems = [
 
 const agentSections = [
     { 
-        title: "Agentes por Matéria", 
+        title: "Agentes", 
         icon: Bot,
         agents: [
             { name: "Direito Civil", count: 5 },
             { name: "Direito Penal", count: 3 },
             { name: "Direito do Trabalho", count: 2 },
         ]
-    },
-    { 
-        title: "Agentes Oficiais", 
-        icon: Gavel,
-        agents: [
-            { name: "STF Jurisprudência", count: 1 },
-            { name: "STJ Jurisprudência", count: 1 },
-        ]
-    },
+    }
 ];
 
 export function AppSidebar() {
