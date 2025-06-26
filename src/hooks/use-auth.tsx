@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         cargo: 'Advogado(a)',
         areas_atuacao: ['Direito Civil'],
         primeiro_acesso: false,
+        initial_setup_complete: true,
         data_criacao: new Date() as any,
         workspaces: [{ name: "Workspace Pessoal" }],
       });

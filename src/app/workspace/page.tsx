@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from '@/hooks/use-auth';
+import { updateUserProfile } from '@/services/user-service';
 
-const workspaces = [
-  { name: "Workspace Pessoal", members: 1, isOwner: true },
+const staticWorkspaces = [
   { name: "Escritório & Associados", members: 5, isOwner: false },
   { name: "Projetos Especiais", members: 3, isOwner: true },
 ];
@@ -21,16 +22,28 @@ export default function WorkspacePage() {
   const [newWorkspaceName, setNewWorkspaceName] = useState("Meu Novo Workspace");
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
+  const { user, userProfile, updateUserProfileState } = useAuth();
 
   const handleCreateWorkspace = async () => {
-    if (!newWorkspaceName.trim()) return;
+    if (!newWorkspaceName.trim() || !user) return;
     setIsCreating(true);
-    // Simulate API call to create workspace
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Creating workspace:", newWorkspaceName);
-    setIsCreating(false);
-    router.push('/workspace/success');
+    try {
+      const existingWorkspaces = userProfile?.workspaces || [];
+      const newWorkspace = { name: newWorkspaceName.trim() };
+      const updatedWorkspaces = [...existingWorkspaces, newWorkspace];
+
+      await updateUserProfile(user.uid, { workspaces: updatedWorkspaces });
+      updateUserProfileState({ workspaces: updatedWorkspaces });
+      
+      router.push('/workspace/success');
+    } catch (error) {
+        console.error("Failed to create workspace:", error);
+    } finally {
+        setIsCreating(false);
+    }
   };
+  
+  const userWorkspaces = userProfile?.workspaces || [];
   
   return (
     <div className="flex-1 p-4 md:p-8">
@@ -77,23 +90,24 @@ export default function WorkspacePage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {workspaces.map((ws, index) => (
+        {[...userWorkspaces, ...staticWorkspaces].map((ws, index) => (
           <Card key={index} className="flex flex-col">
             <CardHeader>
               <CardTitle className="font-headline">{ws.name}</CardTitle>
               <CardDescription className="flex items-center gap-2 pt-1">
                 <Users className="h-4 w-4" />
-                <span>{ws.members} {ws.members > 1 ? 'membros' : 'membro'}</span>
+                <span>{ws.members || 1} { (ws.members && ws.members > 1) ? 'membros' : 'membro'}</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex items-end">
                 <div className="flex items-center space-x-2">
                     <Avatar className="h-6 w-6"><AvatarFallback>A</AvatarFallback></Avatar>
-                    <Avatar className="h-6 w-6"><AvatarFallback>B</AvatarFallback></Avatar>
-                    {ws.members > 2 && <Avatar className="h-6 w-6"><AvatarFallback>+ {ws.members - 2}</AvatarFallback></Avatar>}
+                    {(ws.members && ws.members > 1) && <Avatar className="h-6 w-6"><AvatarFallback>B</AvatarFallback></Avatar>}
+                    {(ws.members && ws.members > 2) && <Avatar className="h-6 w-6"><AvatarFallback>+ {ws.members - 2}</AvatarFallback></Avatar>}
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
+              {/* @ts-ignore */}
               {ws.isOwner && (
                 <>
                   <Button variant="outline" size="icon"><Settings className="h-4 w-4" /></Button>

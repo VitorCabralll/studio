@@ -43,9 +43,8 @@ export default function CreateAgentPage() {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Update user profile to mark the end of the initial setup flow
-      const newWorkspace = { name: "Workspace Pessoal" };
-      await updateUserProfile(user.uid, { workspaces: [newWorkspace] });
-      updateUserProfileState({ workspaces: [newWorkspace] });
+      await updateUserProfile(user.uid, { initial_setup_complete: true });
+      updateUserProfileState({ initial_setup_complete: true });
       
       console.log("Agente criado com sucesso!", { agentName, materia, files: files.map(f => f.name) });
       router.push('/'); // Redirect to dashboard

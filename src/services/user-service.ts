@@ -7,6 +7,7 @@ export interface UserProfile {
   cargo: string;
   areas_atuacao: string[];
   primeiro_acesso: boolean;
+  initial_setup_complete: boolean;
   data_criacao: Timestamp | Date;
   workspaces?: { name: string }[];
 }
@@ -17,6 +18,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         cargo: '',
         areas_atuacao: [],
         primeiro_acesso: true,
+        initial_setup_complete: false,
         data_criacao: new Date(),
         workspaces: [],
     };
@@ -29,6 +31,9 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     if (!data.workspaces) {
       data.workspaces = [];
     }
+    if (data.initial_setup_complete === undefined) {
+      data.initial_setup_complete = false;
+    }
     return data;
   } else {
     // We can create a default profile here if one doesn't exist
@@ -36,6 +41,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         cargo: '',
         areas_atuacao: [],
         primeiro_acesso: true,
+        initial_setup_complete: false,
         data_criacao: new Date(),
         workspaces: [],
     };
@@ -53,6 +59,7 @@ export async function createUserProfile(uid: string, data: Omit<UserProfile, 'da
     const userDocRef = doc(db, 'usuarios', uid);
     return setDoc(userDocRef, {
         ...data,
+        initial_setup_complete: data.initial_setup_complete || false,
         data_criacao: serverTimestamp(),
     });
 }

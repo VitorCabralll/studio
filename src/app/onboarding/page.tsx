@@ -159,11 +159,10 @@ export default function OnboardingPage() {
     if (!user || !userProfile) return;
     setIsSubmitting(true);
     try {
-      const profileData: UserProfile = {
-        ...userProfile,
+      const profileData: Partial<UserProfile> = {
         ...data,
         primeiro_acesso: false,
-        data_criacao: new Date(),
+        initial_setup_complete: false,
       };
       
       await updateUserProfile(user.uid, profileData);
@@ -172,7 +171,8 @@ export default function OnboardingPage() {
       
     } catch (error) {
       console.error("Failed to save profile", error);
-      setIsSubmitting(false);
+    } finally {
+        setIsSubmitting(false);
     }
   }
 

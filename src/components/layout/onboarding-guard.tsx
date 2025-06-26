@@ -12,11 +12,11 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !router) {
       return;
     }
 
-    // Redirect to login if not authenticated
+    // Redirect to login if not authenticated and not on login page
     if (!user) {
       if (pathname !== '/login') {
         router.replace('/login');
@@ -26,12 +26,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // --- User is authenticated from this point ---
+    // If user is authenticated, but profile is not loaded yet, wait.
+    if (!userProfile) {
+      return;
+    }
 
-    const needsOnboarding = !userProfile || userProfile.primeiro_acesso;
+    // --- User is authenticated and profile is loaded from this point ---
 
-    if (needsOnboarding) {
-      // Force user to the onboarding page if they haven't completed it
+    // 1. Check if user needs to go through the initial profile setup.
+    if (userProfile.primeiro_acesso) {
       if (pathname !== '/onboarding') {
         router.replace('/onboarding');
       } else {
@@ -39,31 +42,29 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       }
       return;
     }
-    
-    // --- User has completed onboarding from this point ---
 
-    // After onboarding, if the user has no workspaces, they are in the "create first workspace/agent" flow.
-    if (!userProfile.workspaces || userProfile.workspaces.length === 0) {
+    // 2. Check if user has completed the entire setup flow (workspace + first agent).
+    if (!userProfile.initial_setup_complete) {
       const allowedPaths = [
         '/workspace',
         '/workspace/success',
         '/agente/criar',
+        '/settings',
       ];
-      const isAllowed = allowedPaths.some(p => pathname.startsWith(p)) || pathname.startsWith('/settings');
+      const isAllowed = allowedPaths.some(p => pathname.startsWith(p));
 
       if (!isAllowed) {
+        // If not on an allowed page, start the flow.
         router.replace('/workspace');
       } else {
         setIsVerified(true);
       }
       return;
     }
-
-    // --- User has workspaces from this point ---
-
-    // Redirect them away from login/onboarding/initial setup if they try to access it again.
+    
+    // 3. User is fully onboarded. Redirect from setup pages to dashboard.
     const forbiddenPaths = ['/login', '/onboarding', '/workspace', '/workspace/success', '/agente/criar'];
-    if (forbiddenPaths.includes(pathname)) {
+    if (forbiddenPaths.some(p => pathname.startsWith(p))) {
       router.replace('/');
     } else {
       setIsVerified(true);
