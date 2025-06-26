@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronsLeftRight, User, Settings, LogOut } from "lucide-react";
+import Link from 'next/link';
 
 export function AppHeader() {
   return (
@@ -29,7 +30,9 @@ export function AppHeader() {
             <DropdownMenuItem>Workspace Pessoal</DropdownMenuItem>
             <DropdownMenuItem>Escritório & Associados</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Criar novo workspace</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/workspace">Criar novo workspace</Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -43,18 +46,22 @@ export function AppHeader() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User className="mr-2" />
-                <span>Perfil</span>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2" />
-                <span>Configurações</span>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configurações</span>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut className="mr-2" />
+              <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

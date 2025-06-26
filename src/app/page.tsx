@@ -1,23 +1,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { List, Grip, FileText, PlusCircle, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const useCases = [
-  { title: "Criar uma petição inicial", description: "Elabore uma petição inicial completa a partir de fatos e fundamentos.", icon: FileText },
-  { title: "Analisar contrato", description: "Identifique cláusulas de risco e pontos de melhoria em segundos.", icon: FileText },
-  { title: "Gerar notificação extrajudicial", description: "Crie notificações com base em modelos pré-definidos ou instruções.", icon: FileText },
-  { title: "Resumir processo", description: "Obtenha um resumo dos principais pontos de um processo extenso.", icon: FileText },
+  { title: "Criar uma petição inicial", description: "Elabore uma petição inicial completa a partir de fatos e fundamentos.", icon: FileText, href: "/generate" },
+  { title: "Analisar contrato", description: "Identifique cláusulas de risco e pontos de melhoria em segundos.", icon: FileText, href: "/generate" },
+  { title: "Gerar notificação extrajudicial", description: "Crie notificações com base em modelos pré-definidos ou instruções.", icon: FileText, href: "/generate" },
+  { title: "Resumir processo", description: "Obtenha um resumo dos principais pontos de um processo extenso.", icon: FileText, href: "/generate" },
 ];
 
 const readyTemplates = [
-  { title: "Contrato de Aluguel Residencial" },
-  { title: "Procuração Ad Judicia" },
-  { title: "Acordo de Confidencialidade (NDA)" },
+  { title: "Contrato de Aluguel Residencial", href: "/generate" },
+  { title: "Procuração Ad Judicia", href: "/generate" },
+  { title: "Acordo de Confidencialidade (NDA)", href: "/generate" },
 ];
 
 const customTemplates = [
-  { title: "Modelo de Ação de Alimentos" },
-  { title: "Template para Recurso de Apelação Cível" },
+  { title: "Modelo de Ação de Alimentos", href: "/generate" },
+  { title: "Template para Recurso de Apelação Cível", href: "/generate" },
 ];
 
 export default function DashboardPage() {
@@ -44,8 +45,10 @@ export default function DashboardPage() {
                 <CardDescription className="pt-2">{useCase.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">
-                  Iniciar <ArrowRight className="ml-2 h-4 w-4" />
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={useCase.href}>
+                    Iniciar <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -70,7 +73,9 @@ export default function DashboardPage() {
               {readyTemplates.map((template, index) => (
                 <li key={index} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
                   <span className="font-medium">{template.title}</span>
-                  <Button variant="ghost" size="sm">Usar</Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={template.href}>Usar</Link>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -93,13 +98,17 @@ export default function DashboardPage() {
               {customTemplates.map((template, index) => (
                 <li key={index} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
                   <span className="font-medium">{template.title}</span>
-                  <Button variant="ghost" size="sm">Usar</Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={template.href}>Usar</Link>
+                  </Button>
                 </li>
               ))}
                <li className="mt-4">
-                <Button variant="outline" className="w-full border-dashed">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Criar novo modelo
+                <Button variant="outline" className="w-full border-dashed" asChild>
+                  <Link href="/agents/create">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Criar novo modelo
+                  </Link>
                 </Button>
               </li>
             </ul>
