@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FilePlus2, Bot, Users, Settings, ChevronDown, Scale } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, Bot, Users, Settings, ChevronDown, Scale, PlusCircle } from 'lucide-react';
 
 const navItems = [
   { href: "/", label: "Início", icon: LayoutDashboard },
@@ -69,6 +69,10 @@ export function AppSidebar() {
                                 <Badge variant="secondary">{agent.count}</Badge>
                              </div>
                         ))}
+                        <Link href="/agente/criar" className="flex items-center justify-start text-sm text-muted-foreground p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground mt-2 border-t border-dashed border-sidebar-border pt-3">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            <span>Criar Agente</span>
+                        </Link>
                     </CollapsibleContent>
                 </Collapsible>
             ))}

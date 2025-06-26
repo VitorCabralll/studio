@@ -108,7 +108,7 @@ export default function DashboardPage() {
                 <Button variant="outline" className="w-full border-dashed" asChild>
                   <Link href="/agente/criar">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Criar novo modelo
+                    Criar novo agente
                   </Link>
                 </Button>
               </li>
