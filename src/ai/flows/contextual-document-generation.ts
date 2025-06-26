@@ -36,44 +36,24 @@ export async function contextualDocumentGeneration(
   return contextualDocumentGenerationFlow(input);
 }
 
-const shouldIncludeAttachmentTool = ai.defineTool({
-  name: 'shouldIncludeAttachment',
-  description: 'Determines whether an attachment is relevant and should be included in the document based on the instructions.',
-  inputSchema: z.object({
-    attachmentDataUri: z
-      .string()
-      .describe(
-        "An attachment as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-      ),
-    instructions: z.string().describe('The instructions for generating the document.'),
-  }),
-  outputSchema: z.boolean().describe('Whether the attachment should be included.'),
-}, async (input) => {
-  // Implement the logic to determine if the attachment is relevant.
-  // This is a placeholder implementation.  A real implementation would
-  // use an LLM or other AI technique to determine relevance.
-  // For now, we just return true if the instructions contain the word "include".
-  return input.instructions.toLowerCase().includes('include');
-});
-
 const generateDocumentPrompt = ai.definePrompt({
   name: 'generateDocumentPrompt',
   input: {schema: ContextualDocumentGenerationInputSchema},
   output: {schema: ContextualDocumentGenerationOutputSchema},
-  tools: [shouldIncludeAttachmentTool],
-  prompt: `You are an AI document generator.  Follow the instructions to generate a document.
+  prompt: `You are an AI document generator. Your task is to generate a document based on the user's instructions and any provided attachments.
+
+Carefully review the instructions. If attachments are provided, analyze their content and incorporate them into the final document only if they are relevant to the user's request. Do not include information from an attachment if it does not support the instructions.
 
 Instructions: {{{instructions}}}
 
 {{#if attachmentDataUris}}
-The following attachments are available.  Decide whether to include each attachment based on the instructions.  If the instructions do not refer to the content of the attachment, do not include it.
-
+Attachments:
 {{#each attachmentDataUris}}
-{{#if (shouldIncludeAttachment attachmentDataUri=this instructions=../instructions)}}
-Attachment: {{media url=this}}
-{{/if}}
+- Attachment: {{media url=this}}
 {{/each}}
 {{/if}}
+
+Generated Document:
 `,
 });
 
