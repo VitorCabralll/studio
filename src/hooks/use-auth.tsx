@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
@@ -10,12 +10,16 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  login: () => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   userProfile: null,
   loading: true,
+  login: () => {},
+  logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -23,25 +27,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // If firebase is not configured, create a mock user for testing purposes
-    if (!isFirebaseConfigured) {
-      const mockUser = {
-        uid: 'test-user-123',
-        email: 'test@lexai.com',
-        displayName: 'Advogado Teste',
-      } as User;
-      
-      const mockProfile: UserProfile = {
-        cargo: 'Advogado(a)',
-        areas_atuacao: ['Direito Civil', 'Direito Penal'],
-        primeiro_acesso: false, // Set to false to bypass onboarding and go to dashboard
-        data_criacao: new Date() as any, // Mock date
-      };
+  const getMockUser = () => ({
+    uid: 'test-user-123',
+    email: 'test@lexai.com',
+    displayName: 'Advogado Teste',
+  } as User);
 
-      setUser(mockUser);
-      setUserProfile(mockProfile);
+  const getMockProfile = (): UserProfile => ({
+    cargo: 'Advogado(a)',
+    areas_atuacao: ['Direito Civil', 'Direito Penal'],
+    primeiro_acesso: false,
+    data_criacao: new Date() as any,
+  });
+
+  const login = () => {
+    if (!isFirebaseConfigured) {
+      setLoading(true);
+      setUser(getMockUser());
+      setUserProfile(getMockProfile());
       setLoading(false);
+    }
+    // In a real app, this would trigger the full Firebase login flow.
+    // For testing, this function allows the login page button to "log in" the mock user.
+  };
+
+  const logout = () => {
+    if (!isFirebaseConfigured) {
+      setUser(null);
+      setUserProfile(null);
+    } else {
+      const auth = getAuth(firebaseApp);
+      signOut(auth);
+    }
+  };
+
+  useEffect(() => {
+    // If firebase is not configured, we start "logged in" for easier testing of authenticated pages.
+    if (!isFirebaseConfigured) {
+      login();
       return;
     }
 
@@ -54,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profile = await getUserProfile(currentUser.uid);
         setUserProfile(profile);
       } else {
-        // User is not logged in
         setUser(null);
         setUserProfile(null);
       }
@@ -65,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

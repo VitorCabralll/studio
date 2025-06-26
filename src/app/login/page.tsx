@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,6 +16,8 @@ import Link from 'next/link'
 import { Scale } from 'lucide-react'
 
 export default function LoginPage() {
+  const { login } = useAuth();
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm">
@@ -32,6 +37,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
+                defaultValue="test@lexai.com"
               />
             </div>
             <div className="grid gap-2">
@@ -41,9 +47,9 @@ export default function LoginPage() {
                   Esqueceu sua senha?
                 </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" required defaultValue="password" />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="button" className="w-full" onClick={login}>
               Login
             </Button>
             <Button variant="outline" className="w-full" asChild>
