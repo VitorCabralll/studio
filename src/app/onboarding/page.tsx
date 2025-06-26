@@ -41,7 +41,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
-  const { user } = useAuth();
+  const { user, updateUserProfileState } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,11 +57,17 @@ export default function OnboardingPage() {
     if (!user) return;
     setIsSubmitting(true);
     try {
-      await updateUserProfile(user.uid, {
+      const profileData = {
         ...data,
         primeiro_acesso: false,
         data_criacao: new Date(),
-      });
+      };
+      
+      await updateUserProfile(user.uid, profileData);
+      
+      // Update the local auth state for the mock environment
+      updateUserProfileState(profileData); 
+
       router.push('/');
     } catch (error) {
       console.error("Failed to save profile", error);
@@ -103,7 +109,7 @@ export default function OnboardingPage() {
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione seu cargo ou função..." />
-                              </SelectTrigger>
+                              </Trigger>
                             </FormControl>
                             <SelectContent>
                               {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}

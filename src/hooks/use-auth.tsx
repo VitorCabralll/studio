@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -12,6 +11,7 @@ interface AuthContextType {
   loading: boolean;
   login: () => void;
   logout: () => void;
+  updateUserProfileState: (data: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: () => {},
   logout: () => {},
+  updateUserProfileState: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -33,22 +34,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     displayName: 'Advogado Teste',
   } as User);
 
-  const getMockProfile = (): UserProfile => ({
-    cargo: 'Advogado(a)',
-    areas_atuacao: ['Direito Civil', 'Direito Penal'],
-    primeiro_acesso: false,
-    data_criacao: new Date() as any,
-  });
-
   const login = () => {
     if (!isFirebaseConfigured) {
       setLoading(true);
       setUser(getMockUser());
-      setUserProfile(getMockProfile());
+      // Simulate a NEW user who needs onboarding
+      setUserProfile({
+        cargo: '',
+        areas_atuacao: [],
+        primeiro_acesso: true,
+        data_criacao: new Date() as any,
+      });
       setLoading(false);
     }
-    // In a real app, this would trigger the full Firebase login flow.
-    // For testing, this function allows the login page button to "log in" the mock user.
   };
 
   const logout = () => {
@@ -61,10 +59,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserProfileState = (data: Partial<UserProfile>) => {
+    setUserProfile(prev => (prev ? { ...prev, ...data } : null));
+  };
+
   useEffect(() => {
-    // If firebase is not configured, we start "logged in" for easier testing of authenticated pages.
+    // In mock mode, auth state is handled by login/logout buttons
     if (!isFirebaseConfigured) {
-      login();
+      setLoading(false);
       return;
     }
 
@@ -87,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, login, logout, updateUserProfileState }}>
       {children}
     </AuthContext.Provider>
   );
