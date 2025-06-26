@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUpload } from "@/components/file-upload";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { updateUserProfile } from '@/services/user-service';
 
 const materiasDireito = [
   'Direito Penal', 'Direito Tributário', 'Direito Civil', 'Direito Ambiental',
@@ -23,6 +25,7 @@ const materiasDireito = [
 
 export default function CreateAgentPage() {
   const router = useRouter();
+  const { user, updateUserProfileState } = useAuth();
   const [agentName, setAgentName] = useState('');
   const [materia, setMateria] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -32,13 +35,25 @@ export default function CreateAgentPage() {
 
   const handleCreateAgent = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !user) return;
 
     setIsCreating(true);
-    // Simulate agent creation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log("Agente criado com sucesso!", { agentName, materia, files: files.map(f => f.name) });
-    router.push('/'); // Redirect to dashboard
+    try {
+      // Simulate agent creation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Update user profile to mark the end of the initial setup flow
+      const newWorkspace = { name: "Workspace Pessoal" };
+      await updateUserProfile(user.uid, { workspaces: [newWorkspace] });
+      updateUserProfileState({ workspaces: [newWorkspace] });
+      
+      console.log("Agente criado com sucesso!", { agentName, materia, files: files.map(f => f.name) });
+      router.push('/'); // Redirect to dashboard
+    } catch (error) {
+      console.error("Failed to create agent or update profile", error);
+      // You could show a toast message here
+      setIsCreating(false);
+    }
   };
 
   return (

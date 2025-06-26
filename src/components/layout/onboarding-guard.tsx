@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -43,25 +42,31 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     
     // --- User has completed onboarding from this point ---
 
-    const hasWorkspaces = userProfile.workspaces && userProfile.workspaces.length > 0;
+    // After onboarding, if the user has no workspaces, they are in the "create first workspace/agent" flow.
+    if (!userProfile.workspaces || userProfile.workspaces.length === 0) {
+      const allowedPaths = [
+        '/workspace',
+        '/workspace/success',
+        '/agente/criar',
+      ];
+      const isAllowed = allowedPaths.some(p => pathname.startsWith(p)) || pathname.startsWith('/settings');
 
-    if (hasWorkspaces) {
-      // If user has workspaces, they can access the app.
-      // Redirect them away from login/onboarding.
-      if (pathname === '/login' || pathname === '/onboarding') {
-        router.replace('/');
-      } else {
-        setIsVerified(true);
-      }
-    } else {
-      // If user has no workspaces, they must create one.
-      // Force them to the /workspace page from anywhere else.
-      // We allow settings to be accessible.
-      if (pathname !== '/workspace' && !pathname.startsWith('/settings')) {
+      if (!isAllowed) {
         router.replace('/workspace');
       } else {
         setIsVerified(true);
       }
+      return;
+    }
+
+    // --- User has workspaces from this point ---
+
+    // Redirect them away from login/onboarding/initial setup if they try to access it again.
+    const forbiddenPaths = ['/login', '/onboarding', '/workspace', '/workspace/success', '/agente/criar'];
+    if (forbiddenPaths.includes(pathname)) {
+      router.replace('/');
+    } else {
+      setIsVerified(true);
     }
 
   }, [user, userProfile, loading, pathname, router]);

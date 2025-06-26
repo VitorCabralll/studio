@@ -1,0 +1,34 @@
+'use client';
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { CheckCircle } from 'lucide-react'; // Importe o ícone CheckCircle
+
+export default function OnboardingSuccessPage() {
+  return (
+    <div className="flex-1 p-4 md:p-8 flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md text-center">
+        <CardHeader className="flex flex-col items-center space-y-4">
+          <CheckCircle className="h-16 w-16 text-green-500" />
+          <CardTitle className="text-3xl font-bold text-green-600">
+            Seu ambiente de trabalho foi criado com sucesso!
+          </CardTitle>
+          <CardDescription className="text-lg text-muted-foreground">
+            Agora vamos criar seu primeiro agente inteligente. Ele será responsável por gerar documentos com IA, baseando-se em seus modelos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Conteúdo adicional opcional aqui */}
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <Button asChild className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
+            <Link href="/agente/criar">
+              Criar meu primeiro agente
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
