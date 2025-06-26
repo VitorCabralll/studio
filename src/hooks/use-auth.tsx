@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -11,6 +12,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   login: () => void;
+  signup: () => void;
   logout: () => void;
   updateUserProfileState: (data: Partial<UserProfile>) => void;
 }
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   userProfile: null,
   loading: true,
   login: () => {},
+  signup: () => {},
   logout: () => {},
   updateUserProfileState: () => {},
 });
@@ -34,6 +37,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     uid: 'test-user-123',
     email: 'test@lexai.com',
     displayName: 'Advogado Teste',
+  } as User);
+
+  const getNewMockUser = () => ({
+    uid: `new-user-${Date.now()}`,
+    email: 'novo@lexai.com',
+    displayName: 'Novo Usuário',
   } as User);
 
   const login = () => {
@@ -53,6 +62,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/');
     }
   };
+
+  const signup = () => {
+    if (!isFirebaseConfigured) {
+      setLoading(true);
+      const newUser = getNewMockUser();
+      setUser(newUser);
+      // This is a new user, so they need to go through onboarding.
+      const newUserProfile: UserProfile = {
+        cargo: '',
+        areas_atuacao: [],
+        primeiro_acesso: true,
+        initial_setup_complete: false,
+        data_criacao: new Date() as any,
+        workspaces: [],
+      };
+      setUserProfile(newUserProfile);
+      setLoading(false);
+      // The OnboardingGuard will see 'primeiro_acesso: true' and redirect
+      router.push('/onboarding');
+    }
+  };
+
 
   const logout = () => {
     if (!isFirebaseConfigured) {
@@ -95,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, login, logout, updateUserProfileState }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, login, signup, logout, updateUserProfileState }}>
       {children}
     </AuthContext.Provider>
   );

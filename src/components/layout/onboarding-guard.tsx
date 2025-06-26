@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -15,10 +16,12 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (loading || !router) {
       return;
     }
+    
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-    // Redirect to login if not authenticated and not on login page
+    // Redirect to login if not authenticated and not on an auth page
     if (!user) {
-      if (pathname !== '/login') {
+      if (!isAuthPage) {
         router.replace('/login');
       } else {
         setIsVerified(true);
@@ -63,7 +66,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     }
     
     // 3. User is fully onboarded. Redirect from setup pages to dashboard.
-    const forbiddenPaths = ['/login', '/onboarding', '/workspace', '/workspace/success', '/agente/criar'];
+    const forbiddenPaths = ['/login', '/signup', '/onboarding', '/workspace', '/workspace/success', '/agente/criar'];
     if (forbiddenPaths.some(p => pathname.startsWith(p))) {
       router.replace('/');
     } else {
