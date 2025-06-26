@@ -8,6 +8,7 @@ export interface UserProfile {
   areas_atuacao: string[];
   primeiro_acesso: boolean;
   data_criacao: Timestamp | Date;
+  workspaces?: { name: string }[];
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -17,13 +18,18 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         areas_atuacao: [],
         primeiro_acesso: true,
         data_criacao: new Date(),
+        workspaces: [],
     };
   }
   const docRef = doc(db, 'usuarios', uid);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return docSnap.data() as UserProfile;
+    const data = docSnap.data() as UserProfile;
+    if (!data.workspaces) {
+      data.workspaces = [];
+    }
+    return data;
   } else {
     // We can create a default profile here if one doesn't exist
     const defaultProfile = {
@@ -31,6 +37,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         areas_atuacao: [],
         primeiro_acesso: true,
         data_criacao: new Date(),
+        workspaces: [],
     };
     await createUserProfile(uid, defaultProfile);
     const newDocSnap = await getDoc(docRef);
@@ -38,7 +45,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
 }
 
-export async function createUserProfile(uid: string, data: Omit<UserProfile, 'data_criacao'> & {data_criacao: Date}) {
+export async function createUserProfile(uid: string, data: Omit<UserProfile, 'data_criacao' | 'workspaces'> & {data_criacao: Date, workspaces?: {name: string}[]}) {
     if (!isFirebaseConfigured || !db) {
       console.log(`Mocking createUserProfile for user ${uid}`, data);
       return Promise.resolve();

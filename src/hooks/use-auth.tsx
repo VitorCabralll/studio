@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const getMockUser = () => ({
     uid: 'test-user-123',
@@ -44,8 +46,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         areas_atuacao: [],
         primeiro_acesso: true,
         data_criacao: new Date() as any,
+        workspaces: [],
       });
       setLoading(false);
+      router.push('/onboarding');
     }
   };
 
@@ -53,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!isFirebaseConfigured) {
       setUser(null);
       setUserProfile(null);
+      router.push('/login');
     } else {
       const auth = getAuth(firebaseApp);
       signOut(auth);

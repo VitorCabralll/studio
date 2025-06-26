@@ -17,7 +17,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // if no user, redirect to login page
+    // Redirect to login if not authenticated
     if (!user) {
       if (pathname !== '/login') {
         router.replace('/login');
@@ -27,19 +27,43 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // if user is logged in, check for onboarding
+    // --- User is authenticated from this point ---
+
     const needsOnboarding = !userProfile || userProfile.primeiro_acesso;
-    
-    if (needsOnboarding && pathname !== '/onboarding') {
-      router.replace('/onboarding');
-    } else if (!needsOnboarding && pathname === '/onboarding') {
-      router.replace('/workspace');
-    } else if (pathname === '/login') {
-      // if user is logged in and on login page, redirect to home
-      router.replace('/');
-    } else {
-      setIsVerified(true);
+
+    if (needsOnboarding) {
+      // Force user to the onboarding page if they haven't completed it
+      if (pathname !== '/onboarding') {
+        router.replace('/onboarding');
+      } else {
+        setIsVerified(true);
+      }
+      return;
     }
+    
+    // --- User has completed onboarding from this point ---
+
+    const hasWorkspaces = userProfile.workspaces && userProfile.workspaces.length > 0;
+
+    if (hasWorkspaces) {
+      // If user has workspaces, they can access the app.
+      // Redirect them away from login/onboarding.
+      if (pathname === '/login' || pathname === '/onboarding') {
+        router.replace('/');
+      } else {
+        setIsVerified(true);
+      }
+    } else {
+      // If user has no workspaces, they must create one.
+      // Force them to the /workspace page from anywhere else.
+      // We allow settings to be accessible.
+      if (pathname !== '/workspace' && !pathname.startsWith('/settings')) {
+        router.replace('/workspace');
+      } else {
+        setIsVerified(true);
+      }
+    }
+
   }, [user, userProfile, loading, pathname, router]);
 
   if (!isVerified) {
