@@ -17,9 +17,9 @@ import { Loader2, ArrowRight, Scale } from 'lucide-react';
 
 // --- Constants ---
 const roles = [
-  'Advogado', 'Promotor de Justica', 'Juiz', 'Procurador',
-  'Desembargador', 'Defensor Publico', 'Delegado', 'Escrivao',
-  'Analista Juridico', 'Assessor Juridico', 'Estudante de Direito', 'Outro'
+  'Advogado', 'Promotor de Justiça', 'Juiz', 'Procurador',
+  'Desembargador', 'Defensor Público', 'Delegado', 'Escrivão',
+  'Analista Jurídico', 'Assessor Jurídico', 'Estudante de Direito', 'Outro'
 ];
 
 const areas = [
@@ -55,79 +55,79 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 }
 
 function RoleStep({ form, onNext }: { form: UseFormReturn<ProfileFormValues>, onNext: () => void }) {
-  return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle className="font-headline">Como você atua no sistema de justiça?</CardTitle>
-        <CardDescription>Esta informação nos ajuda a personalizar as ferramentas para você.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <FormField
-          control={form.control}
-          name="cargo"
-          render={({ field }) => (
-            <FormItem>
-              <Select onValueChange={(value) => {
-                field.onChange(value);
-                onNext();
-              }} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione seu cargo ou função..." />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-    </Card>
-  );
+    return (
+        <Card className="w-full max-w-2xl">
+        <CardHeader>
+            <CardTitle className="font-headline">Como você atua no sistema de justiça?</CardTitle>
+            <CardDescription>Esta informação nos ajuda a personalizar as ferramentas para você.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <FormField
+            control={form.control}
+            name="cargo"
+            render={({ field }) => (
+                <FormItem>
+                <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    onNext();
+                }} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione seu cargo ou função..." />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {roles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </CardContent>
+        </Card>
+    );
 }
 
 function AreasStep({ form, isSubmitting }: { form: UseFormReturn<ProfileFormValues>, isSubmitting: boolean }) {
-  return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle className="font-headline">Quais são suas áreas de atuação?</CardTitle>
-        <CardDescription>Selecione uma ou mais áreas para focarmos no que é mais importante para você.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center">
-        <FormField
-          control={form.control}
-          name="areas_atuacao"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormControl>
-                <ToggleGroup
-                  type="multiple"
-                  variant="outline"
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="flex flex-wrap justify-center gap-3"
-                >
-                  {areas.map(area => (
-                    <ToggleGroupItem key={area} value={area} className="h-auto py-2 px-4">
-                      {area}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </FormControl>
-              <FormMessage className="text-center pt-2" />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" size="lg" className="mt-8" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Finalizar Configuração
-        </Button>
-      </CardContent>
-    </Card>
-  );
+    return (
+        <Card className="w-full max-w-4xl">
+        <CardHeader>
+            <CardTitle className="font-headline">Quais são suas áreas de atuação?</CardTitle>
+            <CardDescription>Selecione uma ou mais áreas para focarmos no que é mais importante para você.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center">
+            <FormField
+            control={form.control}
+            name="areas_atuacao"
+            render={({ field }) => (
+                <FormItem className="w-full">
+                <FormControl>
+                    <ToggleGroup
+                    type="multiple"
+                    variant="outline"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="flex flex-wrap justify-center gap-3"
+                    >
+                    {areas.map(area => (
+                        <ToggleGroupItem key={area} value={area} className="h-auto py-2 px-4">
+                        {area}
+                        </ToggleGroupItem>
+                    ))}
+                    </ToggleGroup>
+                </FormControl>
+                <FormMessage className="text-center pt-2" />
+                </FormItem>
+            )}
+            />
+            <Button type="submit" size="lg" className="mt-8" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Finalizar Configuração
+            </Button>
+        </CardContent>
+        </Card>
+    );
 }
 
 

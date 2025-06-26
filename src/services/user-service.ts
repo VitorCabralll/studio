@@ -1,17 +1,24 @@
-
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { firebaseApp } from '@/lib/firebase';
+import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
-const db = getFirestore(firebaseApp);
+const db = isFirebaseConfigured ? getFirestore(firebaseApp) : null;
 
 export interface UserProfile {
   cargo: string;
   areas_atuacao: string[];
   primeiro_acesso: boolean;
-  data_criacao: Timestamp;
+  data_criacao: Timestamp | Date;
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  if (!isFirebaseConfigured || !db) {
+     return {
+        cargo: '',
+        areas_atuacao: [],
+        primeiro_acesso: true,
+        data_criacao: new Date(),
+    };
+  }
   const docRef = doc(db, 'usuarios', uid);
   const docSnap = await getDoc(docRef);
 
@@ -32,6 +39,10 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function createUserProfile(uid: string, data: Omit<UserProfile, 'data_criacao'> & {data_criacao: Date}) {
+    if (!isFirebaseConfigured || !db) {
+      console.log(`Mocking createUserProfile for user ${uid}`, data);
+      return Promise.resolve();
+    }
     const userDocRef = doc(db, 'usuarios', uid);
     return setDoc(userDocRef, {
         ...data,
@@ -40,7 +51,10 @@ export async function createUserProfile(uid: string, data: Omit<UserProfile, 'da
 }
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>) {
+  if (!isFirebaseConfigured || !db) {
+      console.log(`Mocking updateUserProfile for user ${uid}`, data);
+      return Promise.resolve();
+  }
   const userDocRef = doc(db, 'usuarios', uid);
   return setDoc(userDocRef, data, { merge: true });
 }
-
