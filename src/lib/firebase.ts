@@ -15,7 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Analytics if running in the browser
-if (typeof window !== 'undefined') {
+// Initialize Analytics if running in the browser and a valid API key is provided
+if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your-api-key') {
   getAnalytics(firebaseApp);
 }
