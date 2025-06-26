@@ -17,9 +17,18 @@ import { Loader2, ArrowRight, Scale } from 'lucide-react';
 
 // --- Constants ---
 const roles = [
-  'Advogado', 'Promotor de Justiça', 'Juiz', 'Procurador',
-  'Desembargador', 'Defensor Público', 'Delegado', 'Escrivão',
-  'Analista Jurídico', 'Assessor Jurídico', 'Estudante de Direito', 'Outro'
+  'Advogado(a)',
+  'Promotor(a) de Justiça',
+  'Juiz(a)',
+  'Procurador(a)',
+  'Desembargador(a)',
+  'Defensor(a) Público(a)',
+  'Delegado(a)',
+  'Escrivão(ã)',
+  'Analista Jurídico',
+  'Assessor(a) Jurídico(a)',
+  'Estudante de Direito',
+  'Outro'
 ];
 
 const areas = [
@@ -161,7 +170,7 @@ export default function OnboardingPage() {
       
       updateUserProfileState(profileData); 
 
-      router.push('/');
+      router.push('/workspace');
     } catch (error) {
       console.error("Failed to save profile", error);
       setIsSubmitting(false);
