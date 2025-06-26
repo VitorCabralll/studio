@@ -10,8 +10,8 @@ import { AppHeader } from '@/components/layout/header';
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Don't render the main layout on the onboarding page
-  if (pathname === '/onboarding') {
+  // Don't render the main layout on login or onboarding pages
+  if (pathname === '/onboarding' || pathname === '/login') {
     return <>{children}</>;
   }
   

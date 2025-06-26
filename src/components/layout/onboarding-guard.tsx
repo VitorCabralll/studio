@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useAuth, UserProfile } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -17,18 +17,25 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // if no user, redirect to login page
     if (!user) {
-      // You should implement a real login page, for now we let it pass
-      // to see the UI. In a real app, you'd redirect to '/login'
-      setIsVerified(true);
+      if (pathname !== '/login') {
+        router.replace('/login');
+      } else {
+        setIsVerified(true);
+      }
       return;
     }
 
+    // if user is logged in, check for onboarding
     const needsOnboarding = !userProfile || userProfile.primeiro_acesso;
     
     if (needsOnboarding && pathname !== '/onboarding') {
       router.replace('/onboarding');
     } else if (!needsOnboarding && pathname === '/onboarding') {
+      router.replace('/');
+    } else if (pathname === '/login') {
+      // if user is logged in and on login page, redirect to home
       router.replace('/');
     } else {
       setIsVerified(true);
