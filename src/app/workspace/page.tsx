@@ -13,7 +13,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/hooks/use-auth';
 import { updateUserProfile } from '@/services/user-service';
 
-const staticWorkspaces = [
+interface Workspace {
+  name: string;
+  members?: number;
+  isOwner?: boolean;
+}
+
+const staticWorkspaces: Workspace[] = [
   { name: "Escritório & Associados", members: 5, isOwner: false },
   { name: "Projetos Especiais", members: 3, isOwner: true },
 ];
@@ -43,7 +49,7 @@ export default function WorkspacePage() {
     }
   };
   
-  const userWorkspaces = userProfile?.workspaces || [];
+  const userWorkspaces: Workspace[] = userProfile?.workspaces || [];
   
   return (
     <div className="flex-1 p-4 md:p-8">
@@ -107,7 +113,6 @@ export default function WorkspacePage() {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-              {/* @ts-ignore */}
               {ws.isOwner && (
                 <>
                   <Button variant="outline" size="icon"><Settings className="h-4 w-4" /></Button>
