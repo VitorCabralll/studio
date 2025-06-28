@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth, UserProfile } from '@/hooks/use-auth';
 import { updateUserProfile } from '@/services/user-service';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,6 +123,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const { user, userProfile, updateUserProfileState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -142,8 +144,10 @@ export default function OnboardingPage() {
       };
       
       await updateUserProfile(user.uid, profileData);
-      
+
       updateUserProfileState(profileData);
+
+      router.push('/onboarding/success');
       
     } catch (error) {
       console.error("Failed to save profile", error);

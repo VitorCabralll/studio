@@ -53,6 +53,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         '/workspace/success',
         '/agente/criar',
         '/settings',
+        '/onboarding/success',
       ];
       const isAllowed = allowedPaths.some(p => pathname.startsWith(p));
 
