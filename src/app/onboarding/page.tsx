@@ -13,31 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Loader2, ArrowRight, Scale } from 'lucide-react';
-
-// --- Constants ---
-const roles = [
-  'Advogado(a)',
-  'Promotor(a) de Justiça',
-  'Juiz(a)',
-  'Procurador(a)',
-  'Desembargador(a)',
-  'Defensor(a) Público(a)',
-  'Delegado(a)',
-  'Escrivão(ã)',
-  'Analista Jurídico',
-  'Assessor(a) Jurídico(a)',
-  'Estudante de Direito',
-  'Outro'
-];
-
-const areas = [
-  'Direito Penal', 'Direito Tributário', 'Direito Civil', 'Direito Ambiental',
-  'Direito Constitucional', 'Direito Administrativo', 'Direito do Trabalho',
-  'Direito Previdenciário', 'Direito Empresarial', 'Direito Imobiliário',
-  'Direito Eleitoral', 'Direito do Consumidor', 'Direito Internacional',
-  'Direito Digital', 'Direito Processual Civil', 'Direito Processual Penal',
-  'Propriedade Intelectual'
-];
+import { roles, legalAreas } from '@/lib/legal-constants';
 
 const profileSchema = z.object({
   cargo: z.string({ required_error: 'Por favor, selecione um cargo.' }),
@@ -119,7 +95,7 @@ function AreasStep({ form, isSubmitting }: { form: UseFormReturn<ProfileFormValu
                                     onValueChange={field.onChange}
                                     className="flex flex-wrap justify-center gap-3"
                                 >
-                                    {areas.map(area => (
+                                    {legalAreas.map(area => (
                                         <ToggleGroupItem key={area} value={area} className="h-auto py-2 px-4">
                                             {area}
                                         </ToggleGroupItem>

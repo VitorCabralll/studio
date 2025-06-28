@@ -11,15 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUpload } from "@/components/file-upload";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from 'next/link';
-
-const materiasDireito = [
-  'Direito Penal', 'Direito Tributário', 'Direito Civil', 'Direito Ambiental',
-  'Direito Constitucional', 'Direito Administrativo', 'Direito do Trabalho',
-  'Direito Previdenciário', 'Direito Empresarial', 'Direito Imobiliário',
-  'Direito Eleitoral', 'Direito do Consumidor', 'Direito Internacional',
-  'Direito Digital', 'Direito Processual Civil', 'Direito Processual Penal',
-  'Propriedade Intelectual'
-];
+import { legalAreas } from '@/lib/legal-constants';
 
 export default function CreateAgentPage() {
   const router = useRouter();
@@ -68,7 +60,7 @@ export default function CreateAgentPage() {
                     <SelectValue placeholder="Selecione a matéria..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {materiasDireito.map(item => (
+                    {legalAreas.map(item => (
                       <SelectItem key={item} value={item}>{item}</SelectItem>
                     ))}
                   </SelectContent>
