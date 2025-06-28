@@ -29,7 +29,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar id="sidebar">
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2">
             <Scale className="w-7 h-7 text-primary" />

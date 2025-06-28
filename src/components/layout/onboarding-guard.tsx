@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -67,7 +66,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     }
     
     // 3. User is fully onboarded. Redirect from setup pages to dashboard.
-    const forbiddenPaths = ['/login', '/signup', '/onboarding', '/workspace', '/workspace/success', '/agente/criar'];
+    const forbiddenPaths = ['/login', '/signup', '/onboarding', '/workspace', '/workspace/success'];
     if (forbiddenPaths.some(p => pathname.startsWith(p))) {
       router.replace('/');
     } else {

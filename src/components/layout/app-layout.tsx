@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -10,8 +9,8 @@ import { AppHeader } from '@/components/layout/header';
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Don't render the main layout on login or onboarding pages
-  if (pathname === '/onboarding' || pathname === '/login') {
+  // Don't render the main layout on login, onboarding, or agent creation pages
+  if (pathname === '/onboarding' || pathname === '/login' || pathname === '/agente/criar') {
     return <>{children}</>;
   }
   
@@ -22,7 +21,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
           <AppHeader />
           <SidebarInset>
-            <main className="flex-1">
+            <main id="main-content" className="flex-1" tabIndex={-1}>
               {children}
             </main>
           </SidebarInset>

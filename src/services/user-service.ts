@@ -1,7 +1,69 @@
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
 import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
 const db = isFirebaseConfigured ? getFirestore(firebaseApp) : null;
+
+// Tipos para resultado de operações com tratamento de erro
+export interface ServiceResult<T> {
+  data: T | null;
+  error: ServiceError | null;
+  success: boolean;
+}
+
+export interface ServiceError {
+  code: string;
+  message: string;
+  details?: string;
+}
+
+// Função utilitária para criar erros padronizados
+function createServiceError(error: unknown, operation: string): ServiceError {
+  if (error instanceof Error) {
+    // Erro específico do Firestore
+    if ('code' in error) {
+      const firestoreError = error as FirestoreError;
+      return {
+        code: firestoreError.code,
+        message: getFirestoreErrorMessage(firestoreError.code),
+        details: firestoreError.message
+      };
+    }
+    
+    // Erro genérico
+    return {
+      code: 'unknown',
+      message: `Erro durante ${operation}: ${error.message}`,
+      details: error.stack
+    };
+  }
+  
+  // Erro não tipado
+  return {
+    code: 'unknown',
+    message: `Erro desconhecido durante ${operation}`,
+    details: String(error)
+  };
+}
+
+// Mensagens amigáveis para códigos de erro do Firestore
+function getFirestoreErrorMessage(code: string): string {
+  switch (code) {
+    case 'permission-denied':
+      return 'Você não tem permissão para acessar este recurso.';
+    case 'not-found':
+      return 'Dados não encontrados.';
+    case 'unavailable':
+      return 'Serviço temporariamente indisponível. Tente novamente.';
+    case 'cancelled':
+      return 'Operação cancelada.';
+    case 'deadline-exceeded':
+      return 'Tempo limite excedido. Verifique sua conexão.';
+    case 'unauthenticated':
+      return 'Você precisa estar logado para realizar esta ação.';
+    default:
+      return 'Ocorreu um erro inesperado. Tente novamente.';
+  }
+}
 
 export interface Workspace {
   name: string;
@@ -18,66 +80,199 @@ export interface UserProfile {
   workspaces?: Workspace[];
 }
 
-export async function getUserProfile(uid: string): Promise<UserProfile | null> {
-  if (!isFirebaseConfigured || !db) {
-     return {
+export async function getUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
+  try {
+    // Modo mock quando Firebase não está configurado
+    if (!isFirebaseConfigured || !db) {
+      const mockProfile: UserProfile = {
         cargo: '',
         areas_atuacao: [],
         primeiro_acesso: true,
         initial_setup_complete: false,
         data_criacao: new Date(),
         workspaces: [],
-    };
-  }
-  const docRef = doc(db, 'usuarios', uid);
-  const docSnap = await getDoc(docRef);
+      };
+      return { data: mockProfile, error: null, success: true };
+    }
 
-  if (docSnap.exists()) {
-    const data = docSnap.data() as UserProfile;
-    if (!data.workspaces) {
-      data.workspaces = [];
+    // Validação de entrada
+    if (!uid || uid.trim() === '') {
+      return {
+        data: null,
+        error: {
+          code: 'invalid-argument',
+          message: 'ID do usuário é obrigatório.'
+        },
+        success: false
+      };
     }
-    if (data.initial_setup_complete === undefined) {
-      data.initial_setup_complete = false;
-    }
-    return data;
-  } else {
-    // We can create a default profile here if one doesn't exist
-    const defaultProfile = {
+
+    const docRef = doc(db, 'usuarios', uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data() as UserProfile;
+      
+      // Garantir campos obrigatórios
+      const normalizedData: UserProfile = {
+        ...data,
+        workspaces: data.workspaces || [],
+        initial_setup_complete: data.initial_setup_complete ?? false
+      };
+      
+      return { data: normalizedData, error: null, success: true };
+    } else {
+      // Usuário não existe - criar perfil padrão
+      const defaultProfile: UserProfile = {
         cargo: '',
         areas_atuacao: [],
         primeiro_acesso: true,
         initial_setup_complete: false,
         data_criacao: new Date(),
         workspaces: [],
+      };
+      
+      const createResult = await createUserProfile(uid, {
+        ...defaultProfile,
+        data_criacao: new Date()
+      });
+      if (!createResult.success) {
+        return {
+          data: null,
+          error: createResult.error,
+          success: false
+        };
+      }
+      
+      // Retornar o perfil criado
+      return { data: createResult.data, error: null, success: true };
+    }
+  } catch (error) {
+    console.error('Erro em getUserProfile:', error);
+    return {
+      data: null,
+      error: createServiceError(error, 'buscar perfil do usuário'),
+      success: false
     };
-    await createUserProfile(uid, defaultProfile);
-    const newDocSnap = await getDoc(docRef);
-    return newDocSnap.data() as UserProfile;
   }
 }
 
 export async function createUserProfile(
   uid: string,
   data: Omit<UserProfile, 'data_criacao' | 'workspaces'> & { data_criacao: Date; workspaces?: Workspace[] }
-) {
-    if (!isFirebaseConfigured || !db) {
-      console.log(`Mocking createUserProfile for user ${uid}`, data);
-      return Promise.resolve();
+): Promise<ServiceResult<UserProfile>> {
+  try {
+    // Validação de entrada
+    if (!uid || uid.trim() === '') {
+      return {
+        data: null,
+        error: {
+          code: 'invalid-argument',
+          message: 'ID do usuário é obrigatório.'
+        },
+        success: false
+      };
     }
-    const userDocRef = doc(db, 'usuarios', uid);
-    return setDoc(userDocRef, {
+
+    if (!data) {
+      return {
+        data: null,
+        error: {
+          code: 'invalid-argument',
+          message: 'Dados do perfil são obrigatórios.'
+        },
+        success: false
+      };
+    }
+
+    // Modo mock quando Firebase não está configurado
+    if (!isFirebaseConfigured || !db) {
+      console.log(`[MOCK] Criando perfil para usuário ${uid}`, data);
+      const mockProfile: UserProfile = {
         ...data,
         initial_setup_complete: data.initial_setup_complete || false,
-        data_criacao: serverTimestamp(),
-    });
+        data_criacao: new Date(),
+        workspaces: data.workspaces || []
+      };
+      return { data: mockProfile, error: null, success: true };
+    }
+
+    const userDocRef = doc(db, 'usuarios', uid);
+    const profileData = {
+      ...data,
+      initial_setup_complete: data.initial_setup_complete || false,
+      data_criacao: serverTimestamp(),
+      workspaces: data.workspaces || []
+    };
+
+    await setDoc(userDocRef, profileData);
+
+    // Retornar os dados criados (com data_criacao como Date para consistência)
+    const createdProfile: UserProfile = {
+      ...profileData,
+      data_criacao: new Date()
+    };
+
+    return { data: createdProfile, error: null, success: true };
+  } catch (error) {
+    console.error('Erro em createUserProfile:', error);
+    return {
+      data: null,
+      error: createServiceError(error, 'criar perfil do usuário'),
+      success: false
+    };
+  }
 }
 
-export async function updateUserProfile(uid: string, data: Partial<UserProfile>) {
-  if (!isFirebaseConfigured || !db) {
-      console.log(`Mocking updateUserProfile for user ${uid}`, data);
-      return Promise.resolve();
+export async function updateUserProfile(
+  uid: string, 
+  data: Partial<UserProfile>
+): Promise<ServiceResult<Partial<UserProfile>>> {
+  try {
+    // Validação de entrada
+    if (!uid || uid.trim() === '') {
+      return {
+        data: null,
+        error: {
+          code: 'invalid-argument',
+          message: 'ID do usuário é obrigatório.'
+        },
+        success: false
+      };
+    }
+
+    if (!data || Object.keys(data).length === 0) {
+      return {
+        data: null,
+        error: {
+          code: 'invalid-argument',
+          message: 'Dados para atualização são obrigatórios.'
+        },
+        success: false
+      };
+    }
+
+    // Modo mock quando Firebase não está configurado
+    if (!isFirebaseConfigured || !db) {
+      console.log(`[MOCK] Atualizando perfil para usuário ${uid}`, data);
+      return { data, error: null, success: true };
+    }
+
+    const userDocRef = doc(db, 'usuarios', uid);
+    
+    // Preparar dados para atualização (remover campos que não devem ser sobrescritos)
+    const updateData = { ...data };
+    delete updateData.data_criacao; // Não permitir sobrescrever data de criação
+    
+    await setDoc(userDocRef, updateData, { merge: true });
+
+    return { data: updateData, error: null, success: true };
+  } catch (error) {
+    console.error('Erro em updateUserProfile:', error);
+    return {
+      data: null,
+      error: createServiceError(error, 'atualizar perfil do usuário'),
+      success: false
+    };
   }
-  const userDocRef = doc(db, 'usuarios', uid);
-  return setDoc(userDocRef, data, { merge: true });
 }

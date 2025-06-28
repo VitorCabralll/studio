@@ -13,12 +13,12 @@ export function AppHeader() {
   const { logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
+    <header id="navigation" className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
       <div className="md:hidden">
-        <SidebarTrigger />
+        <SidebarTrigger aria-label="Abrir menu lateral" />
       </div>
       <div className="hidden md:block">
-        <SidebarTrigger />
+        <SidebarTrigger aria-label="Alternar menu lateral" />
       </div>
       <div className="flex w-full items-center justify-end gap-4">
         <DropdownMenu>

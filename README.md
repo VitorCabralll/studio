@@ -101,53 +101,78 @@ O pipeline pode ser facilmente ajustado para usar diferentes IAs em cada etapa, 
 ## 📁 Estrutura de Pastas
 
 ```
-studio-master/
+studio-1/
 │
-├── .vscode/
-├── docs/
 ├── src/
-│   ├── ai/              # Pipeline de IA e integração multi-LLM
-│   ├── app/             # Páginas e rotas Next.js
-│   ├── components/      # Componentes reutilizáveis
-│   ├── hooks/           # React hooks customizados
-│   ├── lib/             # Integrações (ex: Firebase)
-│   ├── services/        # Serviços e regras de negócio
-│   └── ...              # Outras pastas customizadas
+│   ├── ai/orchestrator/          # 🧠 Orquestrador de IA (IMPLEMENTADO)
+│   │   ├── types.ts             # Tipos TypeScript completos
+│   │   ├── router.ts            # Roteamento inteligente multi-LLM
+│   │   ├── pipeline.ts          # Pipeline principal de processamento
+│   │   ├── processors.ts        # Processadores por etapa
+│   │   ├── config.ts            # Configurações e LLMs disponíveis
+│   │   ├── index.ts             # Interface principal
+│   │   └── example.ts           # Exemplos de uso
+│   ├── app/                     # App Router Next.js
+│   ├── components/              # Componentes React
+│   │   ├── ui/                  # shadcn/ui components
+│   │   ├── layout/              # Header, sidebar, error boundaries
+│   │   ├── forms/               # Formulários de agentes
+│   │   └── ocr/                 # Processamento OCR local
+│   ├── hooks/                   # Hooks customizados
+│   ├── services/                # Firebase services
+│   └── lib/                     # Utilitários
 │
-├── tailwind.config.ts
-├── tsconfig.json
-├── package.json
-├── apphosting.yaml
-├── README.md
+├── functions/                   # Firebase Functions
+├── docs/                        # Documentação adicional
+├── .env.example                 # Template de variáveis
+├── SETUP.md                     # Guia de configuração
+├── PRD-LEXAI.md                # Product Requirements
+├── Technical-Backlog-LEXAI.md   # Backlog técnico
+└── README.md                    # Este arquivo
 ```
 
 ---
 
 ## ⚙️ Configuração e Execução Local
 
+> **📖 Para instruções detalhadas, consulte [SETUP.md](./SETUP.md)**
+
 **Pré-requisitos:**
-- Node.js 18+
+- Node.js 20+
 - npm ou yarn
-- Conta Firebase (projeto criado)
+- Conta Firebase (plano Blaze para Functions)
+- APIs de IA: OpenAI, Google AI, Anthropic
 
-### Passos
+### Instalação Rápida
 
-1. Clone o repositório:
+1. **Clone e instale:**
    ```bash
-   git clone <url-do-repo>
-   cd studio-master
-   ```
-2. Instale as dependências:
-   ```bash
+   git clone https://github.com/VitorCabralll/studio-1.git
+   cd studio-1
    npm install
    ```
-3. Configure variáveis de ambiente:
-   - Copie `.env.example` (se houver) para `.env.local` e preencha com as chaves do Firebase e das IAs.
-4. Inicie o app localmente:
+
+2. **Configure ambiente:**
    ```bash
-   npm run dev
+   cp .env.example .env.local
+   # Edite .env.local com suas chaves de API
    ```
-   Acesse em `http://localhost:3000`
+
+3. **Execute o projeto:**
+   ```bash
+   # Frontend Next.js
+   npm run dev
+
+   # Firebase Functions (novo terminal)
+   cd functions && npm run serve
+   ```
+
+4. **Teste o orquestrador:**
+   ```bash
+   npm run test:orchestrator
+   ```
+
+**Acesso:** http://localhost:3000
 
 ---
 
