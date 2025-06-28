@@ -3,13 +3,19 @@ import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
 const db = isFirebaseConfigured ? getFirestore(firebaseApp) : null;
 
+export interface Workspace {
+  name: string;
+  members?: number;
+  isOwner?: boolean;
+}
+
 export interface UserProfile {
   cargo: string;
   areas_atuacao: string[];
   primeiro_acesso: boolean;
   initial_setup_complete: boolean;
   data_criacao: Timestamp | Date;
-  workspaces?: { name: string }[];
+  workspaces?: Workspace[];
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -51,7 +57,10 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
 }
 
-export async function createUserProfile(uid: string, data: Omit<UserProfile, 'data_criacao' | 'workspaces'> & {data_criacao: Date, workspaces?: {name: string}[]}) {
+export async function createUserProfile(
+  uid: string,
+  data: Omit<UserProfile, 'data_criacao' | 'workspaces'> & { data_criacao: Date; workspaces?: Workspace[] }
+) {
     if (!isFirebaseConfigured || !db) {
       console.log(`Mocking createUserProfile for user ${uid}`, data);
       return Promise.resolve();
