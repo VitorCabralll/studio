@@ -7,7 +7,7 @@ export function SkipLinks() {
     <div className="sr-only focus-within:not-sr-only">
       <a
         href="#main-content"
-        className="fixed top-0 left-0 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-br-md transform -translate-y-full focus:translate-y-0 transition-transform duration-150 ease-in-out font-medium"
+        className="fixed left-0 top-0 z-50 -translate-y-full rounded-br-md bg-primary px-4 py-2 font-medium text-primary-foreground transition-transform duration-150 ease-in-out focus:translate-y-0"
         onFocus={(e) => {
           // Garantir que o link seja visível quando focado
           e.currentTarget.style.transform = 'translateY(0)';
@@ -21,7 +21,7 @@ export function SkipLinks() {
       </a>
       <a
         href="#navigation"
-        className="fixed top-0 left-32 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-br-md transform -translate-y-full focus:translate-y-0 transition-transform duration-150 ease-in-out font-medium"
+        className="fixed left-32 top-0 z-50 -translate-y-full rounded-br-md bg-primary px-4 py-2 font-medium text-primary-foreground transition-transform duration-150 ease-in-out focus:translate-y-0"
         onFocus={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}
@@ -33,7 +33,7 @@ export function SkipLinks() {
       </a>
       <a
         href="#sidebar"
-        className="fixed top-0 left-64 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-br-md transform -translate-y-full focus:translate-y-0 transition-transform duration-150 ease-in-out font-medium"
+        className="fixed left-64 top-0 z-50 -translate-y-full rounded-br-md bg-primary px-4 py-2 font-medium text-primary-foreground transition-transform duration-150 ease-in-out focus:translate-y-0"
         onFocus={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}

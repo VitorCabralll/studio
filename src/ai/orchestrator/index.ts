@@ -3,6 +3,7 @@
  * Ponto de entrada para geração de documentos jurídicos
  */
 
+import { DEFAULT_ORCHESTRATOR_CONFIG } from './config';
 import { DocumentPipeline } from './pipeline';
 import { LLMRouter } from './router';
 import { 
@@ -12,7 +13,6 @@ import {
   RoutingDecision,
   LLMConfig
 } from './types';
-import { DEFAULT_ORCHESTRATOR_CONFIG } from './config';
 
 /**
  * Classe principal do Orquestrador de IA

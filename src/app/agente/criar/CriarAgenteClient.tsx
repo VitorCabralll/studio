@@ -1,35 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Loader2, AlertCircle, Bot, Brain, FileText, Upload, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import dynamic from 'next/dynamic';
-import { ArrowLeft, Loader2, AlertCircle, Bot, Brain, FileText, Upload, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from 'framer-motion';
+
 
 // Lazy load do componente de upload de arquivos
 const FileUpload = dynamic(
   () => import('@/components/file-upload').then(mod => ({ default: mod.FileUpload })),
   {
     loading: () => (
-      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+      <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
         <div className="animate-pulse">
-          <div className="w-16 h-16 bg-muted rounded-full mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 size-16 rounded-full bg-muted"></div>
           <p className="text-sm text-muted-foreground">Carregando área de upload...</p>
         </div>
       </div>
     ),
   }
 );
-import Link from 'next/link';
+
 import { useAuth } from '@/hooks/use-auth';
-import { updateUserProfile } from '@/services/user-service';
-import { legalAreas } from '@/lib/legal-constants';
 import { useToast } from "@/hooks/use-toast";
+import { legalAreas } from '@/lib/legal-constants';
+import { updateUserProfile } from '@/services/user-service';
 
 export function CriarAgenteClient() {
   const router = useRouter();
@@ -95,36 +98,36 @@ export function CriarAgenteClient() {
   };
 
   return (
-    <div className="flex-1 p-4 md:p-8 bg-gradient-to-br from-background via-background to-primary/5 min-h-screen flex items-center justify-center">
+    <div className="to-primary/3 flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-background via-background p-4 md:p-8">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-slate-200/20 dark:bg-grid-slate-700/20 pointer-events-none" />
+      <div className="bg-grid-slate-100/50 dark:bg-grid-slate-800/50 pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
       
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="relative z-10 w-full max-w-3xl"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-4xl"
       >
-        <Card className="shadow-2xl border-primary/10">
+        <Card className="surface-elevated shadow-apple-lg border-2 border-border/50">
           <form onSubmit={handleCreateAgent} onKeyPress={handleKeyPress}>
-            <CardHeader className="text-center space-y-6 pb-8">
+            <CardHeader className="space-y-8 pb-8 text-center">
               {/* Logo/Icon */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
-                className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-4"
+                className="shadow-apple-lg mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80"
               >
-                <Bot className="w-8 h-8 text-white" />
+                <Bot className="size-10 text-white" />
               </motion.div>
               
               {/* Hero Text */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <motion.h1
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-3xl font-bold font-headline tracking-tight"
+                  className="text-display"
                 >
                   Criar Novo Agente de IA
                 </motion.h1>
@@ -132,7 +135,7 @@ export function CriarAgenteClient() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-muted-foreground text-lg max-w-2xl mx-auto"
+                  className="text-body-large mx-auto max-w-2xl text-muted-foreground"
                 >
                   Crie um assistente jurídico especializado, treinado com seus documentos e personalizado para sua área de atuação
                 </motion.p>
@@ -146,15 +149,15 @@ export function CriarAgenteClient() {
                 className="flex justify-center gap-6 text-sm text-muted-foreground"
               >
                 <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-primary" />
+                  <Brain className="size-4 text-primary" />
                   <span>IA Personalizada</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary" />
+                  <FileText className="size-4 text-primary" />
                   <span>Documentos Próprios</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="size-4 text-primary" />
                   <span>Resultados Precisos</span>
                 </div>
               </motion.div>
@@ -166,10 +169,10 @@ export function CriarAgenteClient() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
+                    className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4"
                   >
-                    <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-                    <span className="text-sm text-destructive font-medium">{error}</span>
+                    <AlertCircle className="size-5 shrink-0 text-destructive" />
+                    <span className="text-sm font-medium text-destructive">{error}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -182,8 +185,8 @@ export function CriarAgenteClient() {
               >
                 {/* Nome do Agente */}
                 <div className="space-y-3">
-                  <Label htmlFor="agent-name" className="text-base font-medium flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-primary" />
+                  <Label htmlFor="agent-name" className="flex items-center gap-2 text-base font-medium">
+                    <Bot className="size-4 text-primary" />
                     Nome do Agente *
                   </Label>
                   <Input 
@@ -202,8 +205,8 @@ export function CriarAgenteClient() {
                 
                 {/* Matéria do Direito */}
                 <div className="space-y-3">
-                  <Label htmlFor="materia-direito" className="text-base font-medium flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-primary" />
+                  <Label htmlFor="materia-direito" className="flex items-center gap-2 text-base font-medium">
+                    <Brain className="size-4 text-primary" />
                     Área de Especialização *
                   </Label>
                   <Select required value={materia} onValueChange={setMateria} disabled={isCreating}>
@@ -212,7 +215,7 @@ export function CriarAgenteClient() {
                     </SelectTrigger>
                     <SelectContent>
                       {legalAreas.map(item => (
-                        <SelectItem key={item} value={item} className="text-base py-3">
+                        <SelectItem key={item} value={item} className="py-3 text-base">
                           {item}
                         </SelectItem>
                       ))}
@@ -222,11 +225,11 @@ export function CriarAgenteClient() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800"
+                      className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950"
                     >
                       <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="font-medium text-sm">Área selecionada: {materia}</span>
+                        <CheckCircle className="size-4" />
+                        <span className="text-sm font-medium">Área selecionada: {materia}</span>
                       </div>
                     </motion.div>
                   )}
@@ -234,21 +237,21 @@ export function CriarAgenteClient() {
 
                 {/* Upload de Documentos */}
                 <div className="space-y-3">
-                  <Label className="text-base font-medium flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-primary" />
+                  <Label className="flex items-center gap-2 text-base font-medium">
+                    <Upload className="size-4 text-primary" />
                     Documentos de Treinamento
                     <span className="text-sm font-normal text-muted-foreground">(Opcional)</span>
                   </Label>
                   <div className="space-y-3">
                     <FileUpload onFilesChange={setFiles} />
-                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
                       <div className="flex items-start gap-3">
-                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <FileText className="mt-0.5 size-5 shrink-0 text-blue-600 dark:text-blue-400" />
                         <div className="space-y-2">
                           <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                             Como funciona o treinamento personalizado?
                           </p>
-                          <ul className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
+                          <ul className="space-y-1 text-xs text-blue-600 dark:text-blue-300">
                             <li>• Envie documentos modelo da sua prática (contratos, petições, etc.)</li>
                             <li>• O agente aprenderá seu estilo de redação e terminologia</li>
                             <li>• Documentos são processados localmente e não são armazenados</li>
@@ -260,11 +263,11 @@ export function CriarAgenteClient() {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800"
+                        className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950"
                       >
                         <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-                          <CheckCircle className="w-4 h-4" />
-                          <span className="font-medium text-sm">
+                          <CheckCircle className="size-4" />
+                          <span className="text-sm font-medium">
                             {files.length} documento{files.length > 1 ? 's' : ''} carregado{files.length > 1 ? 's' : ''} para treinamento
                           </span>
                         </div>
@@ -274,14 +277,14 @@ export function CriarAgenteClient() {
                 </div>
               </motion.div>
             </CardContent>
-            <CardFooter className="flex flex-col md:flex-row justify-between gap-4 pt-8 border-t">
+            <CardFooter className="flex flex-col justify-between gap-4 border-t pt-8 md:flex-row">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button variant="outline" type="button" asChild disabled={isCreating} className="w-full md:w-auto">
                   <Link href="/">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> 
+                    <ArrowLeft className="mr-2 size-4" /> 
                     Voltar ao Dashboard
                   </Link>
                 </Button>
@@ -295,18 +298,18 @@ export function CriarAgenteClient() {
                 <Button 
                   type="submit" 
                   disabled={!canSubmit || isCreating} 
-                  className="w-full md:w-auto h-12 px-8 text-base font-medium bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all"
+                  className="h-12 w-full bg-gradient-to-r from-primary to-primary/90 px-8 text-base font-medium transition-all hover:from-primary/90 hover:to-primary md:w-auto"
                 >
                   {isCreating ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Loader2 className="mr-2 size-5 animate-spin" />
                       Criando seu agente...
                     </>
                   ) : (
                     <>
-                      <Bot className="mr-2 h-5 w-5" />
+                      <Bot className="mr-2 size-5" />
                       Criar Agente Personalizado
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 size-5" />
                     </>
                   )}
                 </Button>

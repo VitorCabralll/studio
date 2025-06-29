@@ -1,13 +1,16 @@
-import dynamic from 'next/dynamic';
-import { Loader2, Sparkles } from 'lucide-react';
+'use client';
+
 import { motion } from 'framer-motion';
+import { Loader2, Sparkles } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 
 // Lazy load do wizard pesado com loading fallback aprimorado
 const GenerationWizard = dynamic(
   () => import('./components/wizard').then(mod => ({ default: mod.GenerationWizard })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-[600px] bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="flex min-h-[600px] items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -19,17 +22,17 @@ const GenerationWizard = dynamic(
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="relative"
           >
-            <Sparkles className="h-12 w-12 text-primary" />
+            <Sparkles className="size-12 text-primary" />
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
               className="absolute inset-0"
             >
-              <Loader2 className="h-12 w-12 text-primary/60" />
+              <Loader2 className="size-12 text-primary/60" />
             </motion.div>
           </motion.div>
           
-          <div className="text-center space-y-2">
+          <div className="space-y-2 text-center">
             <motion.h3
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -42,7 +45,7 @@ const GenerationWizard = dynamic(
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-sm text-muted-foreground max-w-md"
+              className="max-w-md text-sm text-muted-foreground"
             >
               Carregando ferramentas de IA especializadas para geração de documentos jurídicos...
             </motion.p>
@@ -54,7 +57,7 @@ const GenerationWizard = dynamic(
             transition={{ delay: 0.6 }}
             className="flex items-center gap-2 text-xs text-muted-foreground"
           >
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <div className="size-2 animate-pulse rounded-full bg-primary" />
             <span>Inteligência Artificial Especializada</span>
           </motion.div>
         </motion.div>
@@ -65,18 +68,8 @@ const GenerationWizard = dynamic(
 
 export default function GeneratePage() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="flex-1 p-4 md:p-8 bg-gradient-to-br from-background via-background to-primary/5 min-h-screen"
-    >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-slate-200/20 dark:bg-grid-slate-700/20 pointer-events-none" />
-      
-      <div className="relative z-10">
-        <GenerationWizard />
-      </div>
-    </motion.div>
+    <OnboardingGuard>
+      <GenerationWizard />
+    </OnboardingGuard>
   );
 }

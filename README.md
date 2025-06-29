@@ -17,6 +17,7 @@ LexAI é uma plataforma SaaS para automação e hiperpersonalização de documen
 - [Contribuição](#contribuição)
 - [Licença](#licença)
 - [Suporte](#suporte)
+- [SEO](#seo)
 
 ---
 
@@ -206,6 +207,44 @@ MIT – veja o arquivo LICENSE.
 - Abra issues para dúvidas, bugs ou sugestões
 - Consulte a documentação na pasta `/docs`
 - Use este README e comentários do código como referência para humanos e IAs
+
+---
+
+## SEO
+
+Para garantir que o LexAI seja bem indexado pelo Google:
+
+1. Crie um arquivo `public/robots.txt` com:
+
+```
+User-agent: *
+Allow: /
+Sitemap: https://lexai.com.br/sitemap.xml
+```
+
+2. Crie um arquivo `public/sitemap.xml` (exemplo básico):
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://lexai.com.br/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://lexai.com.br/login</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://lexai.com.br/signup</loc>
+    <priority>0.8</priority>
+  </url>
+</urlset>
+```
+
+3. Adicione imagens de preview em `public/og-image.png` para Open Graph.
+
+4. As principais tags meta já estão no layout global (`src/app/layout.tsx`).
 
 ---
 

@@ -11,12 +11,51 @@ import {
   LLMResponse,
   ContextItem
 } from './types';
+import { createLLMClient } from './clients';
+import { LLMRouter } from './router';
+
+/**
+ * Classe base para processadores com funcionalidade comum de LLM
+ */
+abstract class BaseLLMProcessor implements PipelineProcessor {
+  abstract process(input: any, context: PipelineContext): Promise<any>;
+
+  protected async callLLM(
+    prompt: string, 
+    context: PipelineContext, 
+    criteria?: any
+  ): Promise<LLMResponse> {
+    // FORÇA O USO APENAS DO GOOGLE AI
+    const documentConfig = context.input.documentType ? 
+      require('./config').DOCUMENT_TYPE_CONFIGS[context.input.documentType] : null;
+    
+    // Determina qual modelo Gemini usar
+    const model = criteria?.preferredModel || 
+                  documentConfig?.preferredModel || 
+                  (criteria?.qualityRequirement === 'premium' ? 'gemini-1.5-pro' : 'gemini-1.5-flash');
+
+    const client = createLLMClient('google', {
+      apiKey: process.env.GOOGLE_AI_API_KEY || '',
+      timeout: 30000
+    });
+
+    return await client.generateText({
+      model,
+      messages: [
+        { role: 'system', content: 'Você é um assistente jurídico especializado em análise de documentos brasileiros.' },
+        { role: 'user', content: prompt }
+      ],
+      maxTokens: criteria?.maxTokens || 2000,
+      temperature: criteria?.temperature || 0.3
+    });
+  }
+}
 
 /**
  * Processador de Sumarização - Etapa 1
  * Extrai fatos principais dos documentos anexados
  */
-export class SummarizationProcessor implements PipelineProcessor {
+export class SummarizationProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<string> {
     const processingInput = context.input;
     
@@ -36,7 +75,11 @@ export class SummarizationProcessor implements PipelineProcessor {
     const prompt = this.buildSummarizationPrompt(ocrContent, processingInput);
     
     // Simula chamada para LLM (implementação real faria chamada HTTP)
-    const response = await this.mockLLMCall(prompt, 'summarization');
+    const response = await this.callLLM(prompt, context, {
+      preferredModel: 'gemini-1.5-flash', // Rápido para sumarização
+      maxTokens: 1500,
+      temperature: 0.2
+    });
     
     return response.content;
   }
@@ -59,28 +102,13 @@ ${input.instructions}
 Resposta deve ser objetiva, factual e estruturada para uso em ${input.documentType}.
 `;
   }
-
-  private async mockLLMCall(prompt: string, stage: string): Promise<LLMResponse> {
-    // Mock para desenvolvimento - substituir por chamadas reais
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      content: `Sumarização dos fatos principais identificados nos documentos anexados. [Mock response for ${stage}]`,
-      finishReason: 'stop',
-      usage: {
-        promptTokens: Math.floor(prompt.length / 4),
-        completionTokens: 200,
-        totalTokens: Math.floor(prompt.length / 4) + 200
-      }
-    };
-  }
 }
 
 /**
  * Processador de Análise de Contexto - Etapa 2
  * Analisa instruções específicas e arquivos auxiliares
  */
-export class ContextAnalysisProcessor implements PipelineProcessor {
+export class ContextAnalysisProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<any> {
     const processingInput = context.input;
     const summary = input; // Recebe resultado da sumarização
@@ -93,7 +121,11 @@ export class ContextAnalysisProcessor implements PipelineProcessor {
       .join('\n\n');
 
     const prompt = this.buildContextPrompt(summary, instructions, auxiliaryContent, processingInput);
-    const response = await this.mockLLMCall(prompt, 'context_analysis');
+    const response = await this.callLLM(prompt, context, {
+      preferredModel: 'gemini-1.5-pro', // Qualidade para análise jurídica
+      maxTokens: 2000,
+      temperature: 0.3
+    });
     
     return {
       keyPoints: response.content,
@@ -139,26 +171,13 @@ Forneça análise estratégica para orientar a geração do documento.
     return strategyMatch ? strategyMatch[1].trim() : 'Estratégia padrão baseada nos fatos apresentados';
   }
 
-  private async mockLLMCall(prompt: string, stage: string): Promise<LLMResponse> {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    return {
-      content: `Análise contextual identificando pontos prioritários e estratégia jurídica. [Mock response for ${stage}]`,
-      finishReason: 'stop',
-      usage: {
-        promptTokens: Math.floor(prompt.length / 4),
-        completionTokens: 300,
-        totalTokens: Math.floor(prompt.length / 4) + 300
-      }
-    };
-  }
 }
 
 /**
  * Processador de Definição de Estrutura - Etapa 3
  * Define a estrutura do documento baseada no template
  */
-export class StructureDefinitionProcessor implements PipelineProcessor {
+export class StructureDefinitionProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<any> {
     const processingInput = context.input;
     const contextAnalysis = input;
@@ -168,7 +187,11 @@ export class StructureDefinitionProcessor implements PipelineProcessor {
       .find(item => item.type === 'template')?.content || '';
 
     const prompt = this.buildStructurePrompt(contextAnalysis, template, processingInput);
-    const response = await this.mockLLMCall(prompt, 'structure_definition');
+    const response = await this.callLLM(prompt, context, {
+      preferredModel: 'gemini-1.5-flash', // Eficiente para estrutura
+      maxTokens: 1500,
+      temperature: 0.1
+    });
     
     return {
       sections: this.extractSections(response.content),
@@ -218,26 +241,13 @@ Forneça estrutura clara e hierárquica.
     return orderMap[documentType] || defaultOrder;
   }
 
-  private async mockLLMCall(prompt: string, stage: string): Promise<LLMResponse> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      content: `Estrutura detalhada definida para o documento. [Mock response for ${stage}]`,
-      finishReason: 'stop',
-      usage: {
-        promptTokens: Math.floor(prompt.length / 4),
-        completionTokens: 250,
-        totalTokens: Math.floor(prompt.length / 4) + 250
-      }
-    };
-  }
 }
 
 /**
  * Processador de Geração de Conteúdo - Etapa 4
  * Gera conteúdo para cada seção usando LLM premium
  */
-export class ContentGenerationProcessor implements PipelineProcessor {
+export class ContentGenerationProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<any> {
     const structure = input;
     const sections: Record<string, string> = {};
@@ -245,7 +255,11 @@ export class ContentGenerationProcessor implements PipelineProcessor {
     // Gera conteúdo para cada seção
     for (const section of structure.sections) {
       const prompt = this.buildSectionPrompt(section, context);
-      const response = await this.mockLLMCall(prompt, 'content_generation');
+      const response = await this.callLLM(prompt, context, {
+        preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
+        maxTokens: 3000,
+        temperature: 0.4
+      });
       sections[section] = response.content;
       
       // Pequeno delay entre seções
@@ -283,20 +297,6 @@ Redija apenas o conteúdo desta seção, sem cabeçalhos ou numeração.
 `;
   }
 
-  private async mockLLMCall(prompt: string, stage: string): Promise<LLMResponse> {
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simula LLM premium mais lento
-    
-    return {
-      content: `Conteúdo detalhado da seção gerado com fundamentação jurídica apropriada. [Mock response for ${stage}]`,
-      finishReason: 'stop',
-      usage: {
-        promptTokens: Math.floor(prompt.length / 4),
-        completionTokens: 500,
-        totalTokens: Math.floor(prompt.length / 4) + 500,
-        cost: 0.03 // LLM premium custa mais
-      }
-    };
-  }
 }
 
 /**

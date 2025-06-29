@@ -1,4 +1,5 @@
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
+
 import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 
 const db = isFirebaseConfigured ? getFirestore(firebaseApp) : null;

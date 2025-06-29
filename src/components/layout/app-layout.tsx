@@ -1,10 +1,11 @@
 "use client";
 
-import React from 'react';
 import { usePathname } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/layout/sidebar';
+import React from 'react';
+
 import { AppHeader } from '@/components/layout/header';
+import { AppSidebar } from '@/components/layout/sidebar';
+import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

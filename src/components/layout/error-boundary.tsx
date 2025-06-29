@@ -1,9 +1,10 @@
 'use client';
 
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import React, { Component, ReactNode, ErrorInfo } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -55,13 +56,13 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="size-6 text-destructive" />
               </div>
-              <CardTitle className="text-xl font-headline">
+              <CardTitle className="font-headline text-xl">
                 Oops! Algo deu errado
               </CardTitle>
               <CardDescription>
@@ -74,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   onClick={this.handleReload}
                   className="w-full"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-2 size-4" />
                   Recarregar Página
                 </Button>
                 <Button 
@@ -87,24 +88,24 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
               
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="mt-4 p-3 bg-muted rounded-md">
-                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground mb-2">
+                <details className="mt-4 rounded-md bg-muted p-3">
+                  <summary className="mb-2 cursor-pointer text-sm font-medium text-muted-foreground">
                     Detalhes do Erro (Desenvolvimento)
                   </summary>
-                  <div className="text-xs font-mono space-y-2">
+                  <div className="space-y-2 font-mono text-xs">
                     <div>
                       <strong>Erro:</strong> {this.state.error.message}
                     </div>
                     <div>
                       <strong>Stack:</strong>
-                      <pre className="mt-1 whitespace-pre-wrap bg-background p-2 rounded border">
+                      <pre className="mt-1 whitespace-pre-wrap rounded border bg-background p-2">
                         {this.state.error.stack}
                       </pre>
                     </div>
                     {this.state.errorInfo?.componentStack && (
                       <div>
                         <strong>Component Stack:</strong>
-                        <pre className="mt-1 whitespace-pre-wrap bg-background p-2 rounded border">
+                        <pre className="mt-1 whitespace-pre-wrap rounded border bg-background p-2">
                           {this.state.errorInfo.componentStack}
                         </pre>
                       </div>

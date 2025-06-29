@@ -1,75 +1,163 @@
 
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { motion } from 'framer-motion';
+import { ChevronsLeftRight, User, Settings, LogOut, Building2, Plus } from "lucide-react";
+import Link from 'next/link';
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronsLeftRight, User, Settings, LogOut } from "lucide-react";
-import Link from 'next/link';
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from '@/lib/utils';
+
 
 export function AppHeader() {
   const { logout } = useAuth();
 
   return (
-    <header id="navigation" className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
-      <div className="md:hidden">
-        <SidebarTrigger aria-label="Abrir menu lateral" />
-      </div>
-      <div className="hidden md:block">
-        <SidebarTrigger aria-label="Alternar menu lateral" />
-      </div>
+    <header id="navigation" className="shadow-apple-sm sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-gradient-to-r from-background via-background to-primary/5 px-4 backdrop-blur-sm sm:px-6">
+      <motion.div 
+        className="md:hidden"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <SidebarTrigger 
+          aria-label="Abrir menu lateral" 
+          className="rounded-lg transition-colors hover:bg-primary/10 hover:text-primary"
+        />
+      </motion.div>
+      <motion.div 
+        className="hidden md:block"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <SidebarTrigger 
+          aria-label="Alternar menu lateral" 
+          className="rounded-lg transition-colors hover:bg-primary/10 hover:text-primary"
+        />
+      </motion.div>
+      
       <div className="flex w-full items-center justify-end gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
-              <ChevronsLeftRight className="h-4 w-4 text-muted-foreground" />
-              <span>Workspace Pessoal</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Meus Workspaces</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Workspace Pessoal</DropdownMenuItem>
-            <DropdownMenuItem>Escritório & Associados</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/workspace">Criar novo workspace</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "flex items-center gap-3 h-10 px-4 rounded-xl",
+                  "border-border/50 hover:border-primary/50",
+                  "bg-background/50 hover:bg-primary/5",
+                  "shadow-apple-sm hover:shadow-apple-md",
+                  "transition-all duration-300 group"
+                )}
+              >
+                <div className="flex size-6 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+                  <Building2 className="size-3 text-primary" />
+                </div>
+                <span className="font-medium transition-colors group-hover:text-primary">Workspace Pessoal</span>
+                <ChevronsLeftRight className="size-4 text-muted-foreground transition-colors group-hover:text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="shadow-apple-lg w-64 border-border/50">
+              <DropdownMenuLabel className="flex items-center gap-2 text-base">
+                <Building2 className="size-4 text-primary" />
+                Meus Workspaces
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
+                <div className="flex size-8 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+                  <Building2 className="size-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Workspace Pessoal</div>
+                  <div className="text-xs text-muted-foreground">Apenas você</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-3 rounded-lg p-3">
+                <div className="flex size-8 items-center justify-center rounded-lg border border-blue-200/50 bg-gradient-to-br from-blue-100 to-indigo-100 dark:border-blue-800/50 dark:from-blue-950/50 dark:to-indigo-950/50">
+                  <Building2 className="size-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Escritório & Associados</div>
+                  <div className="text-xs text-muted-foreground">3 membros</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/workspace" className="flex items-center gap-3 rounded-lg border-2 border-dashed border-primary/20 p-3 hover:border-primary/40 hover:bg-primary/5">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Plus className="size-4 text-primary" />
+                  </div>
+                  <span className="font-medium text-primary">Criar novo workspace</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </motion.div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Avatar className="h-9 w-9 cursor-pointer">
-              <AvatarImage src="https://placehold.co/100x100.png" alt="@advogado" data-ai-hint="lawyer portrait"/>
-              <AvatarFallback>AV</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Perfil</span>
-                </Link>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="group relative cursor-pointer">
+                <Avatar className="shadow-apple-sm group-hover:shadow-apple-md size-10 border-2 border-border/50 transition-all duration-300 group-hover:border-primary/50">
+                  <AvatarImage src="https://placehold.co/100x100.png" alt="@advogado" data-ai-hint="lawyer portrait"/>
+                  <AvatarFallback className="border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 font-semibold text-primary">
+                    AV
+                  </AvatarFallback>
+                </Avatar>
+                <div className="shadow-apple-sm absolute -right-1 -top-1 size-4 rounded-full border-2 border-background bg-green-500"></div>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="shadow-apple-lg w-64 border-border/50">
+              <DropdownMenuLabel className="flex items-center gap-3 p-3">
+                <Avatar className="size-10 border border-border/50">
+                  <AvatarImage src="https://placehold.co/100x100.png" alt="@advogado" data-ai-hint="lawyer portrait"/>
+                  <AvatarFallback className="border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 font-semibold text-primary">
+                    AV
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="font-semibold">Dr. Advogado</div>
+                  <div className="text-xs text-muted-foreground">advogado@exemplo.com</div>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup className="space-y-1">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-3 rounded-lg p-3 hover:bg-muted/50">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-muted/50">
+                      <User className="size-4 text-muted-foreground" />
+                    </div>
+                    <span className="font-medium">Perfil</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-3 rounded-lg p-3 hover:bg-muted/50">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-muted/50">
+                      <Settings className="size-4 text-muted-foreground" />
+                    </div>
+                    <span className="font-medium">Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={logout} className="flex items-center gap-3 rounded-lg p-3 hover:bg-destructive/10 hover:text-destructive">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10">
+                  <LogOut className="size-4 text-destructive" />
+                </div>
+                <span className="font-medium">Sair</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Configurações</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={logout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </motion.div>
       </div>
     </header>
   );
