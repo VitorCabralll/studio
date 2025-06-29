@@ -1,9 +1,10 @@
 'use client';
 
-import { useAuth } from '@/hooks/use-auth';
+import { Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+
+import { useAuth } from '@/hooks/use-auth';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { user, loading, userProfile } = useAuth();
@@ -78,7 +79,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   if (!isVerified) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     );
   }

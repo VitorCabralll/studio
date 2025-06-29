@@ -1,80 +1,96 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from 'framer-motion';
+import { User, Palette, Building, AlertTriangle, Settings2, Save } from "lucide-react";
+
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { User, Palette, Building, AlertTriangle, Settings2, Save } from "lucide-react";
-import { motion } from 'framer-motion';
+import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 
 export default function SettingsPage() {
   return (
-    <div className="flex-1 p-4 md:p-8 bg-gradient-to-br from-background via-background to-primary/5 min-h-screen">
+    <OnboardingGuard>
+      <SettingsPageContent />
+    </OnboardingGuard>
+  );
+}
+
+function SettingsPageContent() {
+  return (
+    <div className="to-primary/3 min-h-screen flex-1 bg-gradient-to-br from-background via-background p-4 md:p-8">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-slate-200/20 dark:bg-grid-slate-700/20 pointer-events-none" />
+      <div className="bg-grid-slate-100/50 dark:bg-grid-slate-800/50 pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
       
-      <div className="relative z-10 max-w-4xl mx-auto">
+      <div className="relative z-10 mx-auto max-w-5xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 space-y-4"
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-16 space-y-6"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
-              className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center"
+              className="shadow-apple-lg flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80"
             >
-              <Settings2 className="w-6 h-6 text-white" />
+              <Settings2 className="size-8 text-white" />
             </motion.div>
-            <h1 className="text-4xl font-bold tracking-tight font-headline">Configurações</h1>
+            <div>
+              <h1 className="text-display mb-2">Configurações</h1>
+              <p className="text-body-large max-w-2xl text-muted-foreground">
+                Personalize sua experiência no LexAI e gerencie as configurações do seu workspace.
+              </p>
+            </div>
           </div>
-          <p className="text-lg text-muted-foreground">
-            Personalize sua experiência no LexAI e gerencie as configurações do seu workspace.
-          </p>
         </motion.div>
 
         {/* Settings Cards */}
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Profile Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className="shadow-lg border-primary/10">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Card className="surface-elevated shadow-apple-lg hover:shadow-apple-lg border-2 border-border/50 transition-all duration-500 hover:scale-[1.01] hover:border-primary/30">
+              <CardHeader className="pb-8">
+                <div className="flex items-center gap-4">
+                  <div className="shadow-apple-sm flex size-14 items-center justify-center rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-indigo-100 dark:border-blue-800/50 dark:from-blue-950/50 dark:to-indigo-950/50">
+                    <User className="size-7 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <CardTitle className="font-headline text-xl">Informações Pessoais</CardTitle>
-                    <CardDescription>Gerencie seus dados pessoais e preferências de conta.</CardDescription>
+                    <CardTitle className="text-headline mb-2">Informações Pessoais</CardTitle>
+                    <CardDescription className="text-body-large">Gerencie seus dados pessoais e preferências de conta.</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="full-name" className="text-sm font-medium flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
+              <CardContent className="space-y-8">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <Label htmlFor="full-name" className="flex items-center gap-3 text-base font-semibold">
+                      <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                        <User className="size-3 text-primary" />
+                      </div>
                       Nome Completo
                     </Label>
                     <Input 
                       id="full-name" 
                       defaultValue="Advogado Teste" 
-                      className="h-11 transition-all focus:ring-2 focus:ring-primary/20"
+                      className="shadow-apple-sm hover:shadow-apple-md h-12 border-2 text-base transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
                     />
                   </div>
-                  <div className="space-y-3">
-                    <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
+                  <div className="space-y-4">
+                    <Label htmlFor="email" className="flex items-center gap-3 text-base font-semibold">
+                      <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                        <User className="size-3 text-primary" />
+                      </div>
                       Email
                     </Label>
                     <Input 
@@ -82,127 +98,142 @@ export default function SettingsPage() {
                       type="email" 
                       defaultValue="advogado@lexai.com" 
                       disabled 
-                      className="h-11 bg-muted/50"
+                      className="h-12 border-2 bg-muted/50 text-base"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-caption leading-relaxed">
                       Para alterar seu email, entre em contato com o suporte
                     </p>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="border-t pt-6 flex justify-end">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <CardFooter className="flex justify-end border-t border-border/50 pt-8">
+                <Button 
+                  className="shadow-apple-md hover:shadow-apple-lg h-12 bg-gradient-to-r from-primary to-primary/90 px-8 font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
                 >
-                  <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Alterações
-                  </Button>
-                </motion.div>
+                  <Save className="mr-3 size-5" />
+                  Salvar Alterações
+                </Button>
               </CardFooter>
             </Card>
           </motion.div>
 
           {/* Appearance Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className="shadow-lg border-primary/10">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                    <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <Card className="surface-elevated shadow-apple-lg hover:shadow-apple-lg border-2 border-border/50 transition-all duration-500 hover:scale-[1.01] hover:border-primary/30">
+              <CardHeader className="pb-8">
+                <div className="flex items-center gap-4">
+                  <div className="shadow-apple-sm flex size-14 items-center justify-center rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-violet-100 dark:border-purple-800/50 dark:from-purple-950/50 dark:to-violet-950/50">
+                    <Palette className="size-7 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="font-headline text-xl">Aparência</CardTitle>
-                    <CardDescription>Personalize o tema e a aparência da interface do LexAI.</CardDescription>
+                    <CardTitle className="text-headline mb-2">Aparência</CardTitle>
+                    <CardDescription className="text-body-large">Personalize o tema e a aparência da interface do LexAI.</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Tema da Interface</Label>
-                  <div className="flex items-center gap-4">
+              <CardContent className="space-y-8">
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-3 text-base font-semibold">
+                    <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                      <Palette className="size-3 text-primary" />
+                    </div>
+                    Tema da Interface
+                  </Label>
+                  <div className="surface-overlay flex items-center gap-6 rounded-xl border border-border/50 p-4">
                     <ThemeToggle />
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-caption leading-relaxed">
                       Escolha entre modo claro, escuro ou automático baseado no sistema
                     </p>
                   </div>
                 </div>
                 
-                <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    🎨 Em breve: Personalização de cores, fontes e layout da interface
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="shadow-apple-sm rounded-2xl border border-blue-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:border-blue-800/50 dark:from-blue-950/30 dark:to-indigo-950/30"
+                >
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                      <Palette className="size-3 text-blue-600" />
+                    </div>
+                    <span className="font-semibold text-blue-800 dark:text-blue-200">Novidades em breve</span>
+                  </div>
+                  <p className="text-caption leading-relaxed text-blue-600 dark:text-blue-300">
+                    Personalização avançada de cores, fontes e layout da interface para uma experiência ainda mais única
                   </p>
-                </div>
+                </motion.div>
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Workspace Settings */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className="shadow-lg border-primary/10">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                    <Building className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <Card className="surface-elevated shadow-apple-lg hover:shadow-apple-lg border-2 border-border/50 transition-all duration-500 hover:scale-[1.01] hover:border-primary/30">
+              <CardHeader className="pb-8">
+                <div className="flex items-center gap-4">
+                  <div className="shadow-apple-sm flex size-14 items-center justify-center rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-emerald-100 dark:border-green-800/50 dark:from-green-950/50 dark:to-emerald-950/50">
+                    <Building className="size-7 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <CardTitle className="font-headline text-xl">Workspace Atual</CardTitle>
-                    <CardDescription>Configure e gerencie seu ambiente de trabalho.</CardDescription>
+                    <CardTitle className="text-headline mb-2">Workspace Atual</CardTitle>
+                    <CardDescription className="text-body-large">Configure e gerencie seu ambiente de trabalho.</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="space-y-3">
-                  <Label htmlFor="workspace-name" className="text-sm font-medium flex items-center gap-2">
-                    <Building className="w-4 h-4 text-muted-foreground" />
+              <CardContent className="space-y-10">
+                <div className="space-y-4">
+                  <Label htmlFor="workspace-name" className="flex items-center gap-3 text-base font-semibold">
+                    <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                      <Building className="size-3 text-primary" />
+                    </div>
                     Nome do Workspace
                   </Label>
                   <Input 
                     id="workspace-name" 
                     defaultValue="Workspace Pessoal" 
-                    className="h-11 transition-all focus:ring-2 focus:ring-primary/20"
+                    className="shadow-apple-sm hover:shadow-apple-md h-12 border-2 text-base transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-caption leading-relaxed">
                     Este nome será visível para todos os membros do workspace
                   </p>
                 </div>
                 
-                <Separator />
+                <Separator className="bg-border/50" />
                 
                 {/* Danger Zone */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="space-y-4"
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  className="space-y-6"
                 >
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                    <h4 className="font-semibold text-destructive">Zona de Perigo</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-destructive/10">
+                      <AlertTriangle className="size-3 text-destructive" />
+                    </div>
+                    <h4 className="text-headline text-destructive">Zona de Perigo</h4>
                   </div>
-                  <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-4">
+                  <div className="shadow-apple-sm rounded-2xl border-2 border-red-200/50 bg-gradient-to-r from-red-50 to-rose-50 p-6 dark:border-red-800/50 dark:from-red-950/30 dark:to-rose-950/30">
+                    <p className="text-caption mb-6 leading-relaxed">
                       A exclusão do workspace removerá permanentemente todos os dados, agentes e documentos associados. 
-                      <strong className="text-destructive">Esta ação não pode ser desfeita.</strong>
+                      <strong className="font-semibold text-destructive">Esta ação não pode ser desfeita.</strong>
                     </p>
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <Button 
+                      variant="destructive" 
+                      className="shadow-apple-sm hover:shadow-apple-md h-11 px-6 font-semibold transition-all duration-300 hover:scale-105 hover:bg-destructive/90"
                     >
-                      <Button variant="destructive" className="hover:bg-destructive/90">
-                        <AlertTriangle className="mr-2 h-4 w-4" />
-                        Excluir Workspace Permanentemente
-                      </Button>
-                    </motion.div>
+                      <AlertTriangle className="mr-3 size-4" />
+                      Excluir Workspace Permanentemente
+                    </Button>
                   </div>
                 </motion.div>
               </CardContent>

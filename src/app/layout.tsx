@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
-import { AppLayout } from '@/components/layout/app-layout';
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/layout/error-boundary';
 import { SkipLinks } from '@/components/layout/skip-links';
+import { ResourcePreloader } from '@/components/optimization/resource-preloader';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/hooks/use-auth';
 import { fontVariables } from './fonts';
 import './globals.css';
-import { AuthProvider } from '@/hooks/use-auth';
-import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import dynamic from 'next/dynamic';
-import { ResourcePreloader } from '@/components/optimization/resource-preloader';
 
 // Lazy load do componente de debug apenas em desenvolvimento
 const AuthDebug = dynamic(
@@ -21,8 +19,36 @@ const AuthDebug = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: 'LexAI',
-  description: 'Seu assistente jurídico com IA',
+  title: 'LexAI - IA Jurídica para Advogados e Escritórios',
+  description: 'Automatize documentos jurídicos, petições, contratos e pareceres com inteligência artificial treinada em direito brasileiro. Segurança, compliance LGPD e produtividade máxima para advogados.',
+  keywords: 'IA jurídica, automação de documentos, petições, contratos, advocacia, LGPD, inteligência artificial, LexAI',
+  openGraph: {
+    title: 'LexAI - IA Jurídica para Advogados',
+    description: 'Automatize documentos jurídicos com IA treinada em direito brasileiro. Segurança, compliance LGPD e produtividade máxima.',
+    url: 'https://lexai.com.br',
+    siteName: 'LexAI',
+    images: [
+      {
+        url: 'https://lexai.com.br/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'LexAI - IA Jurídica',
+      },
+    ],
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@lexai_br',
+    title: 'LexAI - IA Jurídica para Advogados',
+    description: 'Automatize documentos jurídicos com IA treinada em direito brasileiro.',
+    images: ['https://lexai.com.br/og-image.png'],
+  },
+  metadataBase: new URL('https://lexai.com.br'),
+  alternates: {
+    canonical: 'https://lexai.com.br',
+  },
 };
 
 export default function RootLayout({
@@ -42,14 +68,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
               <AuthProvider>
-                  <OnboardingGuard>
-                      <AppLayout>
-                          {children}
-                      </AppLayout>
-                      <Toaster />
-                      <AuthDebug />
-                      <ResourcePreloader />
-                  </OnboardingGuard>
+                  {children}
+                  <Toaster />
+                  <AuthDebug />
+                  <ResourcePreloader />
               </AuthProvider>
           </ThemeProvider>
           <SpeedInsights/>

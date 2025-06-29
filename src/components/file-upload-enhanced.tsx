@@ -1,13 +1,15 @@
 "use client"
 
+import { motion, AnimatePresence } from 'framer-motion';
+import { UploadCloud, File, X, ScanText, FileImage, CheckCircle } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, File, X, ScanText, FileImage } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
+
 
 // Lazy load do OCR processor
 const OCRProcessor = dynamic(
@@ -70,150 +72,209 @@ export function FileUploadEnhanced({
   const isImageFile = (file: File) => file.type.startsWith('image/') || file.type === 'application/pdf';
   const hasImageFiles = files.some(isImageFile);
 
-  return (
-    <div className={cn("space-y-4", className)}>
-      {enableOCR ? (
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <UploadCloud className="h-4 w-4" />
-              Upload de Arquivos
-            </TabsTrigger>
-            <TabsTrigger value="ocr" className="flex items-center gap-2">
-              <ScanText className="h-4 w-4" />
-              OCR - Extrair Texto
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="upload" className="space-y-4">
-            <div
-              {...getRootProps()}
-              className={cn(
-                "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                isDragActive 
-                  ? "border-primary bg-primary/5" 
-                  : "border-border hover:border-primary/50"
-              )}
-            >
-              <input {...getInputProps()} />
-              <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              {isDragActive ? (
-                <p className="text-lg font-medium">Solte os arquivos aqui...</p>
-              ) : (
-                <div>
-                  <p className="text-lg font-medium mb-2">Clique para selecionar arquivos ou arraste e solte</p>
-                  <p className="text-sm text-muted-foreground">Suporte para imagens, PDFs, documentos de texto</p>
-                </div>
-              )}
-            </div>
-
-            {files.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Arquivos anexados:</h4>
-                  {hasImageFiles && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <FileImage className="h-3 w-3" />
-                      {files.filter(isImageFile).length} imagem(ns) - Use OCR para extrair texto
-                    </Badge>
-                  )}
-                </div>
-                <ul className="space-y-2">
-                  {files.map((file, index) => (
-                    <li key={index} className="flex items-center justify-between p-2 rounded-md bg-muted">
-                      <div className="flex items-center gap-3">
-                        {isImageFile(file) ? (
-                          <FileImage className="w-5 h-5 text-blue-500" />
-                        ) : (
-                          <File className="w-5 h-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm font-medium truncate max-w-xs">{file.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {(file.size / 1024 / 1024).toFixed(1)} MB
-                        </Badge>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => removeFile(file)} 
-                        className="h-7 w-7"
-                        aria-label={`Remover arquivo ${file.name}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-                
-                {extractedTexts.length > 0 && (
-                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-950 rounded-md">
-                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                      ✓ Texto extraído de {extractedTexts.length} documento(s) via OCR
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="ocr">
-            <OCRProcessor
-              onTextExtracted={handleOCRTextExtracted}
-              maxFiles={5}
-              language="por+eng"
-              enableStructuredExtraction={true}
-            />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        // Versão simplificada sem OCR
-        <div className="space-y-4">
-          <div
-            {...getRootProps()}
-            className={cn(
-              "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-              isDragActive 
-                ? "border-primary bg-primary/5" 
-                : "border-border hover:border-primary/50"
-            )}
-          >
-            <input {...getInputProps()} />
-            <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            {isDragActive ? (
-              <p className="text-lg font-medium">Solte os arquivos aqui...</p>
-            ) : (
-              <div>
-                <p className="text-lg font-medium mb-2">Clique para selecionar arquivos ou arraste e solte</p>
-                <p className="text-sm text-muted-foreground">Suporte para imagens, PDFs, documentos de texto</p>
-              </div>
-            )}
+  const renderUploadArea = () => (
+    <motion.div
+      className="group"
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div
+        {...getRootProps()}
+        className={cn(
+          "border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-500 hover:scale-[1.02]",
+          isDragActive 
+            ? "border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-apple-lg" 
+            : "border-border/50 hover:border-primary/50 hover:bg-primary/5 surface-elevated shadow-apple-md hover:shadow-apple-lg"
+        )}
+      >
+        <input {...getInputProps()} />
+        <motion.div
+          animate={{ 
+            scale: isDragActive ? 1.1 : 1,
+            rotate: isDragActive ? [0, -5, 5, 0] : 0
+          }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6"
+        >
+          <div className="shadow-apple-sm mx-auto flex size-20 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+            <UploadCloud className="size-10 text-primary" />
           </div>
-
-          {files.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Arquivos anexados:</h4>
-              <ul className="space-y-2">
-                {files.map((file, index) => (
-                  <li key={index} className="flex items-center justify-between p-2 rounded-md bg-muted">
-                    <div className="flex items-center gap-3">
-                      <File className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm font-medium truncate max-w-xs">{file.name}</span>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => removeFile(file)} 
-                      className="h-7 w-7"
-                      aria-label={`Remover arquivo ${file.name}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+          {isDragActive ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <h3 className="text-headline text-primary">Solte os arquivos aqui...</h3>
+              <p className="text-body-large text-primary/80">Processando upload...</p>
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="text-headline transition-colors group-hover:text-primary">
+                Envie seus documentos
+              </h3>
+              <p className="text-body-large mx-auto max-w-md leading-relaxed text-muted-foreground">
+                Clique para selecionar arquivos ou arraste e solte aqui. 
+                {enableOCR && <span className="font-medium text-blue-600">Texto será extraído automaticamente</span>}
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Badge variant="secondary" className="bg-muted/50 text-xs text-muted-foreground">
+                  PDF
+                </Badge>
+                <Badge variant="secondary" className="bg-muted/50 text-xs text-muted-foreground">
+                  Imagens
+                </Badge>
+                <Badge variant="secondary" className="bg-muted/50 text-xs text-muted-foreground">
+                  Documentos
+                </Badge>
+              </div>
             </div>
           )}
-        </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+
+  const renderFileList = () => (
+    <AnimatePresence>
+      {files.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="space-y-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="shadow-apple-sm flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-950/50 dark:to-emerald-950/50">
+                <CheckCircle className="size-4 text-green-600" />
+              </div>
+              <h4 className="text-headline">Arquivos anexados</h4>
+            </div>
+            {hasImageFiles && (
+              <Badge variant="secondary" className="flex items-center gap-2 border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-800/50 dark:bg-blue-950/50 dark:text-blue-300">
+                <ScanText className="size-3" />
+                {files.filter(isImageFile).length} arquivo(s) com extração de texto
+              </Badge>
+            )}
+          </div>
+          
+          <div className="grid gap-3">
+            <AnimatePresence mode="popLayout">
+              {files.map((file, index) => (
+                <motion.div
+                  key={`${file.name}-${index}`}
+                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="surface-elevated shadow-apple-sm hover:shadow-apple-md group flex items-center justify-between rounded-xl border border-border/50 p-4 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div className={`shadow-apple-sm flex size-12 items-center justify-center rounded-xl border ${
+                      isImageFile(file) 
+                        ? 'border-blue-200/50 bg-gradient-to-br from-blue-50 to-indigo-100 dark:border-blue-800/50 dark:from-blue-950/50 dark:to-indigo-950/50' 
+                        : 'border-gray-200/50 bg-gradient-to-br from-gray-50 to-slate-100 dark:border-gray-800/50 dark:from-gray-950/50 dark:to-slate-950/50'
+                    }`}>
+                      {isImageFile(file) ? (
+                        <FileImage className="size-6 text-blue-600 dark:text-blue-400" />
+                      ) : (
+                        <File className="size-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="truncate text-base font-medium transition-colors group-hover:text-primary">
+                        {file.name}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="border-border/50 bg-muted/30 text-xs">
+                          {(file.size / 1024 / 1024).toFixed(1)} MB
+                        </Badge>
+                        <span className="text-caption">
+                          {file.type || 'Tipo desconhecido'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => removeFile(file)}
+                    className="size-10 shrink-0 transition-all duration-300 hover:scale-110 hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Remover arquivo ${file.name}`}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          
+          <AnimatePresence>
+            {extractedTexts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="shadow-apple-sm rounded-2xl border border-green-200/50 bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:border-green-800/50 dark:from-green-950/30 dark:to-emerald-950/30"
+              >
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="shadow-apple-sm flex size-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                    <CheckCircle className="size-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-green-800 dark:text-green-200">
+                      Texto extraído com sucesso!
+                    </h5>
+                    <p className="text-caption text-green-600 dark:text-green-300">
+                      {extractedTexts.length} documento(s) processado(s) via OCR
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className={cn("space-y-6", className)}>
+      {renderUploadArea()}
+      {renderFileList()}
+      
+      {/* OCR automático para arquivos de imagem/PDF */}
+      {enableOCR && hasImageFiles && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="shadow-apple-sm rounded-2xl border border-blue-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:border-blue-800/50 dark:from-blue-950/30 dark:to-indigo-950/30"
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div className="shadow-apple-sm flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+              <ScanText className="size-4 text-blue-600" />
+            </div>
+            <div>
+              <h5 className="font-semibold text-blue-800 dark:text-blue-200">
+                Extração de Texto Automática
+              </h5>
+              <p className="text-caption text-blue-600 dark:text-blue-300">
+                Detectamos {files.filter(isImageFile).length} arquivo(s) de imagem/PDF. O texto será extraído automaticamente.
+              </p>
+            </div>
+          </div>
+          
+          <OCRProcessor
+            onTextExtracted={handleOCRTextExtracted}
+            maxFiles={5}
+            language="por+eng"
+            enableStructuredExtraction={true}
+          />
+        </motion.div>
       )}
     </div>
   );

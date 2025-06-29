@@ -1,14 +1,16 @@
 "use client"
 
+import { UploadCloud, File, X, ScanText, FileImage } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, File, X, ScanText, FileImage } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
+
 
 // Lazy load do OCR processor
 const OCRProcessor = dynamic(
@@ -64,7 +66,7 @@ export function FileUpload({
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center text-center">
-          <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
+          <UploadCloud className="mb-4 size-12 text-muted-foreground" />
           <p className="font-semibold">Arraste e solte arquivos aqui</p>
           <p className="text-sm text-muted-foreground">ou clique para selecionar arquivos</p>
         </div>
@@ -74,19 +76,19 @@ export function FileUpload({
           <h4 className="font-semibold">Arquivos selecionados:</h4>
           <ul className="space-y-2">
             {files.map((file, index) => (
-              <li key={index} className="flex items-center justify-between p-2 rounded-md bg-muted">
+              <li key={index} className="flex items-center justify-between rounded-md bg-muted p-2">
                 <div className="flex items-center gap-3">
-                  <File className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium truncate max-w-xs">{file.name}</span>
+                  <File className="size-5 text-muted-foreground" />
+                  <span className="max-w-xs truncate text-sm font-medium">{file.name}</span>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => removeFile(file)} 
-                  className="h-7 w-7"
+                  className="size-7"
                   aria-label={`Remover arquivo ${file.name}`}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="size-4" />
                 </Button>
               </li>
             ))}

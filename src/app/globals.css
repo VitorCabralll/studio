@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animações customizadas para Magic UI */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -23,7 +51,17 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 243 75% 62%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+    
+    /* Apple-inspired refinements */
+    --surface-elevated: 0 0% 99%;
+    --surface-overlay: 0 0% 98%;
+    --text-headline: 222.2 84% 4.9%;
+    --text-body: 215.4 16.3% 36.9%;
+    --text-caption: 215.4 16.3% 56.9%;
+    --shadow-subtle: 0px 1px 3px 0px rgba(0, 0, 0, 0.03), 0px 1px 2px 0px rgba(0, 0, 0, 0.02);
+    --shadow-medium: 0px 4px 6px -1px rgba(0, 0, 0, 0.07), 0px 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-large: 0px 20px 25px -5px rgba(0, 0, 0, 0.08), 0px 10px 10px -5px rgba(0, 0, 0, 0.02);
   }
 
   .dark {
@@ -46,6 +84,16 @@
     --border: 217.2 32.6% 22.5%;
     --input: 217.2 32.6% 22.5%;
     --ring: 243 75% 62%;
+    
+    /* Dark mode refinements */
+    --surface-elevated: 220 26% 18%;
+    --surface-overlay: 220 26% 20%;
+    --text-headline: 0 0% 98%;
+    --text-body: 215 20.2% 75.1%;
+    --text-caption: 215 20.2% 65.1%;
+    --shadow-subtle: 0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0px 4px 6px -1px rgba(0, 0, 0, 0.18), 0px 2px 4px -1px rgba(0, 0, 0, 0.12);
+    --shadow-large: 0px 20px 25px -5px rgba(0, 0, 0, 0.25), 0px 10px 10px -5px rgba(0, 0, 0, 0.15);
   }
 }
 
@@ -55,5 +103,106 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Apple-inspired Typography Scale */
+  .text-display {
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  
+  .text-headline-large {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+  }
+  
+  .text-headline {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  
+  .text-body-large {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  
+  .text-caption {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: hsl(var(--text-caption));
+  }
+
+  /* Apple-inspired Shadows */
+  .shadow-apple-sm {
+    box-shadow: var(--shadow-subtle);
+  }
+  
+  .shadow-apple-md {
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .shadow-apple-lg {
+    box-shadow: var(--shadow-large);
+  }
+
+  /* Refined surfaces */
+  .surface-elevated {
+    background-color: hsl(var(--surface-elevated));
+  }
+  
+  .surface-overlay {
+    background-color: hsl(var(--surface-overlay));
+  }
+
+  /* Smooth animations */
+  .animate-scale-in {
+    animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Glass effect */
+  .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+  }
+  
+  .dark .glass {
+    background-color: rgba(17, 25, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

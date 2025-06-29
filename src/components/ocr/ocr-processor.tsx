@@ -1,15 +1,5 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useOCR, OCRResult } from '@/hooks/use-ocr';
-import { useFocusManagement } from '@/hooks/use-focus-management';
 import { 
   FileImage, 
   ScanText, 
@@ -21,7 +11,19 @@ import {
   FileText,
   Loader2
 } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { useFocusManagement } from '@/hooks/use-focus-management';
+import { useOCR, OCRResult } from '@/hooks/use-ocr';
+
 
 interface OCRProcessorProps {
   onTextExtracted?: (text: string, structured?: any) => void;
@@ -163,7 +165,7 @@ export function OCRProcessor({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ScanText className="h-5 w-5" />
+            <ScanText className="size-5" />
             OCR - Extração de Texto Local
           </CardTitle>
           <CardDescription>
@@ -175,7 +177,7 @@ export function OCRProcessor({
           <div
             {...getRootProps()}
             className={`
-              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+              cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors
               ${isDragActive 
                 ? 'border-primary bg-primary/5' 
                 : 'border-border hover:border-primary/50'
@@ -184,13 +186,13 @@ export function OCRProcessor({
             `}
           >
             <input {...getInputProps()} />
-            <FileImage className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <FileImage className="mx-auto mb-4 size-12 text-muted-foreground" />
             
             {isDragActive ? (
               <p className="text-lg font-medium">Solte os arquivos aqui...</p>
             ) : (
               <div>
-                <p className="text-lg font-medium mb-2">
+                <p className="mb-2 text-lg font-medium">
                   Arraste imagens ou PDFs aqui, ou clique para selecionar
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -204,12 +206,12 @@ export function OCRProcessor({
           {/* Arquivos selecionados */}
           {selectedImages.length > 0 && (
             <div className="mt-4">
-              <h4 className="font-medium mb-2">Arquivos selecionados:</h4>
+              <h4 className="mb-2 font-medium">Arquivos selecionados:</h4>
               <div className="space-y-2">
                 {selectedImages.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                  <div key={index} className="flex items-center justify-between rounded-md bg-muted p-2">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
+                      <FileText className="size-4" />
                       <span className="text-sm font-medium">{file.name}</span>
                       <Badge variant="secondary">{(file.size / 1024 / 1024).toFixed(2)} MB</Badge>
                     </div>
@@ -228,7 +230,7 @@ export function OCRProcessor({
           )}
 
           {/* Botões de ação */}
-          <div className="flex gap-2 mt-4">
+          <div className="mt-4 flex gap-2">
             <Button
               onClick={handleProcessImages}
               disabled={selectedImages.length === 0 || isProcessing}
@@ -236,12 +238,12 @@ export function OCRProcessor({
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Processando...
                 </>
               ) : (
                 <>
-                  <ScanText className="h-4 w-4 mr-2" />
+                  <ScanText className="mr-2 size-4" />
                   Extrair Texto ({selectedImages.length})
                 </>
               )}
@@ -275,7 +277,7 @@ export function OCRProcessor({
       {/* Error */}
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className="size-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -286,20 +288,20 @@ export function OCRProcessor({
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <CheckCircle2 className="size-5 text-green-600" />
                 Texto Extraído
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="mr-2 size-4" />
                   {showPreview ? 'Ocultar' : 'Visualizar'}
                 </Button>
                 <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="mr-2 size-4" />
                   Copiar
                 </Button>
                 <Button variant="outline" size="sm" onClick={downloadText}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="mr-2 size-4" />
                   Download
                 </Button>
               </div>
@@ -323,8 +325,8 @@ export function OCRProcessor({
               {enableStructuredExtraction && structuredData && (
                 <div className="mt-4">
                   <Separator className="my-4" />
-                  <h4 className="font-medium mb-2">Dados Estruturados Detectados:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h4 className="mb-2 font-medium">Dados Estruturados Detectados:</h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {Object.entries(structuredData.structured).map(([key, values]) => {
                       const valueArray = Array.isArray(values) ? values : [];
                       return valueArray.length > 0 && (

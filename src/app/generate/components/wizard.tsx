@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+
 import { FileUploadEnhanced } from '@/components/file-upload-enhanced';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 // Temporarily commented out to fix import errors
 // import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
 // import { contextualDocumentGeneration, ContextualDocumentGenerationInput } from '@/ai/flows/contextual-document-generation';
@@ -24,6 +25,7 @@ type ContextualDocumentGenerationInput = {
   attachmentDataUris?: string[];
 };
 import { useFocusManagement } from '@/hooks/use-focus-management';
+
 import { Loader2, CheckCircle, ArrowLeft, ArrowRight, FileText, Lightbulb, User, Copy, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -192,26 +194,56 @@ export function GenerationWizard() {
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+    <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-3">
       <AnnouncementRegion />
-      <Card className="lg:col-span-1 flex flex-col">
-        <CardHeader>
-          <CardTitle id="wizard-title" className="font-headline">Gerar Novo Documento</CardTitle>
-          <CardDescription>Siga os passos para criar seu documento com IA.</CardDescription>
+      <Card className="surface-elevated shadow-apple-md hover:shadow-apple-lg flex flex-col transition-all duration-500 lg:col-span-1">
+        <CardHeader className="pb-6">
+          <CardTitle id="wizard-title" className="text-headline">Gerar Novo Documento</CardTitle>
+          <CardDescription className="text-body-large">Siga os passos para criar seu documento com IA.</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col justify-between">
+        <CardContent className="flex flex-1 flex-col justify-between">
             <div>
-                <Progress value={progress} className="mb-6" />
-                <div className="space-y-4">
+                <div className="mb-8">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-caption font-medium">Progresso</span>
+                    <span className="text-caption">{currentStep}/{steps.length}</span>
+                  </div>
+                  <Progress value={progress} className="shadow-apple-sm h-2" />
+                </div>
+                <div className="space-y-3">
                 {steps.map(step => (
-                    <div key={step.id} className="flex items-center gap-4">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep >= step.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                        {currentStep > step.id ? <CheckCircle className="w-5 h-5" /> : step.id}
+                    <motion.div 
+                      key={step.id} 
+                      className="flex items-center gap-4 rounded-xl p-3 transition-all duration-300"
+                      animate={{
+                        backgroundColor: currentStep === step.id ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                        scale: currentStep === step.id ? 1.02 : 1
+                      }}
+                    >
+                    <div className={`flex size-10 items-center justify-center rounded-full transition-all duration-300 ${
+                      currentStep > step.id 
+                        ? 'shadow-apple-sm bg-green-500 text-white' 
+                        : currentStep === step.id 
+                        ? 'shadow-apple-md bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                        {currentStep > step.id ? <CheckCircle className="size-5" /> : step.id}
                     </div>
-                    <div>
-                        <h3 className={`font-semibold ${currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'}`}>{step.title}</h3>
+                    <div className="flex-1">
+                        <h3 className={`font-semibold transition-colors ${
+                          currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>{step.title}</h3>
+                        {currentStep === step.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="text-caption mt-1"
+                          >
+                            Em andamento...
+                          </motion.div>
+                        )}
                     </div>
-                    </div>
+                    </motion.div>
                 ))}
                 </div>
                 <div className="mt-8 space-y-4">
@@ -222,26 +254,44 @@ export function GenerationWizard() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                         id="step-content-1"
-                        className="p-4 bg-muted/50 rounded-lg"
+                        className="surface-overlay shadow-apple-sm rounded-2xl border border-border/50 p-6"
                       >
-                        <h4 id="step-1-heading" className="font-semibold mb-4" tabIndex={-1}>1. Modo de Geração</h4>
-                        <RadioGroup value={generationMode} onValueChange={(v) => setGenerationMode(v as 'outline' | 'full')} className="space-y-3">
-                          <div className="flex items-start space-x-3 p-3 rounded-md hover:bg-background transition-colors">
-                            <RadioGroupItem value="outline" id="r1" className="mt-1" />
-                            <div className="flex-1">
-                              <Label htmlFor="r1" className="font-medium cursor-pointer">Rascunho (Outline)</Label>
-                              <p className="text-sm text-muted-foreground mt-1">Estrutura e tópicos principais do documento</p>
+                        <h4 id="step-1-heading" className="text-headline mb-6" tabIndex={-1}>1. Modo de Geração</h4>
+                        <RadioGroup value={generationMode} onValueChange={(v) => setGenerationMode(v as 'outline' | 'full')} className="space-y-4">
+                          <motion.div 
+                            className="hover:shadow-apple-sm group relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 hover:scale-[1.02]"
+                            whileHover={{ y: -2 }}
+                            animate={{
+                              borderColor: generationMode === 'outline' ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                              backgroundColor: generationMode === 'outline' ? 'hsl(var(--primary) / 0.05)' : 'transparent'
+                            }}
+                          >
+                            <div className="flex items-start space-x-4">
+                              <RadioGroupItem value="outline" id="r1" className="mt-1" />
+                              <div className="flex-1">
+                                <Label htmlFor="r1" className="cursor-pointer text-base font-semibold">Rascunho (Outline)</Label>
+                                <p className="text-caption mt-2 leading-relaxed">Estrutura e tópicos principais do documento para organização inicial</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-start space-x-3 p-3 rounded-md hover:bg-background transition-colors">
-                            <RadioGroupItem value="full" id="r2" className="mt-1" />
-                            <div className="flex-1">
-                              <Label htmlFor="r2" className="font-medium cursor-pointer">Completo (Full)</Label>
-                              <p className="text-sm text-muted-foreground mt-1">Documento jurídico completo e detalhado</p>
+                          </motion.div>
+                          <motion.div 
+                            className="hover:shadow-apple-sm group relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 hover:scale-[1.02]"
+                            whileHover={{ y: -2 }}
+                            animate={{
+                              borderColor: generationMode === 'full' ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                              backgroundColor: generationMode === 'full' ? 'hsl(var(--primary) / 0.05)' : 'transparent'
+                            }}
+                          >
+                            <div className="flex items-start space-x-4">
+                              <RadioGroupItem value="full" id="r2" className="mt-1" />
+                              <div className="flex-1">
+                                <Label htmlFor="r2" className="cursor-pointer text-base font-semibold">Completo (Full)</Label>
+                                <p className="text-caption mt-2 leading-relaxed">Documento jurídico completo e detalhado, pronto para uso</p>
+                              </div>
                             </div>
-                          </div>
+                          </motion.div>
                         </RadioGroup>
                       </motion.div>
                     )}
@@ -251,45 +301,60 @@ export function GenerationWizard() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                         id="step-content-2"
-                        className="space-y-4"
+                        className="space-y-6"
                       >
-                        <div className="p-4 bg-muted/50 rounded-lg">
-                          <h4 id="step-2-heading" className="font-semibold mb-4" tabIndex={-1}>2. Seleção de Agente</h4>
-                          <RadioGroup defaultValue="geral" onValueChange={setAgent} className="space-y-3">
+                        <div className="surface-overlay shadow-apple-sm rounded-2xl border border-border/50 p-6">
+                          <h4 id="step-2-heading" className="text-headline mb-6" tabIndex={-1}>2. Seleção de Agente</h4>
+                          <RadioGroup defaultValue="geral" onValueChange={setAgent} className="space-y-4">
                             {Object.entries(agentInfo).map(([key, info]) => (
-                              <div key={key} className="flex items-start space-x-3 p-3 rounded-md hover:bg-background transition-colors">
-                                <RadioGroupItem value={key} id={`agent-${key}`} className="mt-1" />
-                                <div className="flex-1">
-                                  <Label htmlFor={`agent-${key}`} className="font-medium cursor-pointer flex items-center gap-2">
-                                    <User className="w-4 h-4" />
-                                    {info.name}
-                                  </Label>
-                                  <p className="text-sm text-muted-foreground mt-1">{info.description}</p>
-                                  <div className="flex gap-1 mt-2">
-                                    {info.strengths.map((strength, idx) => (
-                                      <span key={idx} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                        {strength}
-                                      </span>
-                                    ))}
+                              <motion.div 
+                                key={key} 
+                                className="hover:shadow-apple-sm group relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 hover:scale-[1.02]"
+                                whileHover={{ y: -2 }}
+                                animate={{
+                                  borderColor: agent === key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                                  backgroundColor: agent === key ? 'hsl(var(--primary) / 0.05)' : 'transparent'
+                                }}
+                              >
+                                <div className="flex items-start space-x-4">
+                                  <RadioGroupItem value={key} id={`agent-${key}`} className="mt-1" />
+                                  <div className="flex-1">
+                                    <Label htmlFor={`agent-${key}`} className="mb-2 flex cursor-pointer items-center gap-3 text-base font-semibold">
+                                      <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                                        <User className="size-4 text-primary" />
+                                      </div>
+                                      {info.name}
+                                    </Label>
+                                    <p className="text-caption mb-3 leading-relaxed">{info.description}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {info.strengths.map((strength, idx) => (
+                                        <span key={idx} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                          {strength}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
+                              </motion.div>
                             ))}
                           </RadioGroup>
                         </div>
                         {agent && (
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800"
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="shadow-apple-sm rounded-xl border border-blue-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:border-blue-800/50 dark:from-blue-950/50 dark:to-indigo-950/50"
                           >
-                            <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                              <Lightbulb className="w-4 h-4" />
-                              <span className="font-medium">Agente Selecionado</span>
+                            <div className="mb-2 flex items-center gap-3 text-blue-800 dark:text-blue-200">
+                              <div className="flex size-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                                <Lightbulb className="size-3" />
+                              </div>
+                              <span className="font-semibold">Agente Selecionado</span>
                             </div>
-                            <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
+                            <p className="text-caption leading-relaxed text-blue-600 dark:text-blue-300">
                               {agentInfo[agent as keyof typeof agentInfo].description}
                             </p>
                           </motion.div>
@@ -302,26 +367,43 @@ export function GenerationWizard() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                         id="step-content-3"
-                        className="p-4 bg-muted/50 rounded-lg"
+                        className="surface-overlay shadow-apple-sm rounded-2xl border border-border/50 p-6"
                       >
-                        <h4 id="step-3-heading" className="font-semibold mb-4" tabIndex={-1}>3. Instruções</h4>
-                        <Textarea 
-                          placeholder="Descreva os fatos, fundamentos, e o que você precisa no documento..." 
-                          value={instructions} 
-                          onChange={(e) => setInstructions(e.target.value)} 
-                          rows={6}
-                          className="resize-none"
-                        />
+                        <h4 id="step-3-heading" className="text-headline mb-6" tabIndex={-1}>3. Instruções</h4>
+                        <div className="space-y-4">
+                          <Textarea 
+                            placeholder="Descreva os fatos, fundamentos, e o que você precisa no documento..." 
+                            value={instructions} 
+                            onChange={(e) => setInstructions(e.target.value)} 
+                            rows={8}
+                            className="shadow-apple-sm resize-none border-2 text-base leading-relaxed transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
+                          />
+                          <div className="text-caption flex items-center justify-between">
+                            <span>Seja específico para melhores resultados</span>
+                            <span className={instructions.length > 50 ? 'text-green-600' : 'text-muted-foreground'}>
+                              {instructions.length} caracteres
+                            </span>
+                          </div>
+                        </div>
                         {instructions && (
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800"
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="shadow-apple-sm mt-6 rounded-xl border border-green-200/50 bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:border-green-800/50 dark:from-green-950/50 dark:to-emerald-950/50"
                           >
-                            <p className="text-sm text-green-800 dark:text-green-200">
-                              ✓ Instruções definidas ({instructions.length} caracteres)
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                                <CheckCircle className="size-3 text-green-600" />
+                              </div>
+                              <span className="font-semibold text-green-800 dark:text-green-200">
+                                Instruções definidas
+                              </span>
+                            </div>
+                            <p className="text-caption mt-2 text-green-600 dark:text-green-300">
+                              {instructions.length} caracteres • {instructions.split('\n').length} linhas
                             </p>
                           </motion.div>
                         )}
@@ -333,71 +415,103 @@ export function GenerationWizard() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                         id="step-content-4"
-                        className="p-4 bg-muted/50 rounded-lg"
+                        className="surface-overlay shadow-apple-sm rounded-2xl border border-border/50 p-6"
                       >
-                        <h4 id="step-4-heading" className="font-semibold mb-4" tabIndex={-1}>4. Anexos</h4>
-                        <FileUploadEnhanced 
-                          onFilesChange={setFiles}
-                          onTextExtracted={(text, structured) => {
-                            setExtractedText(text);
-                            setStructuredData(structured);
-                            announce(`Texto extraído com sucesso! ${text.length} caracteres processados.`);
-                          }}
-                          enableOCR={true}
-                        />
-                        {extractedText && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800"
-                          >
-                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                              📄 Texto extraído por OCR será incluído na geração
-                            </p>
-                            <p className="text-xs text-blue-600 dark:text-blue-300">
-                              {extractedText.slice(0, 150)}...
-                            </p>
-                          </motion.div>
-                        )}
+                        <h4 id="step-4-heading" className="text-headline mb-6" tabIndex={-1}>4. Anexos</h4>
+                        <div className="space-y-6">
+                          <FileUploadEnhanced 
+                            onFilesChange={setFiles}
+                            onTextExtracted={(text, structured) => {
+                              setExtractedText(text);
+                              setStructuredData(structured);
+                              announce(`Texto extraído com sucesso! ${text.length} caracteres processados.`);
+                            }}
+                            enableOCR={true}
+                          />
+                          {extractedText && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="shadow-apple-sm rounded-xl border border-blue-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:border-blue-800/50 dark:from-blue-950/50 dark:to-indigo-950/50"
+                            >
+                              <div className="mb-3 flex items-center gap-3">
+                                <div className="flex size-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                                  <FileText className="size-3 text-blue-600" />
+                                </div>
+                                <span className="font-semibold text-blue-800 dark:text-blue-200">
+                                  Texto extraído por OCR
+                                </span>
+                              </div>
+                              <p className="text-caption mb-3 text-blue-600 dark:text-blue-300">
+                                {extractedText.length} caracteres processados e prontos para análise
+                              </p>
+                              <div className="rounded-lg border border-blue-200/30 bg-white/50 p-3 dark:border-blue-800/30 dark:bg-black/20">
+                                <p className="text-caption font-mono leading-relaxed">
+                                  {extractedText.slice(0, 200)}...
+                                </p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
             </div>
             <motion.div 
-              className="flex justify-between items-center mt-8"
+              className="mt-8 flex items-center justify-between border-t border-border/50 pt-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-                <Button variant="outline" onClick={prevStep} disabled={currentStep === 1 || isGenerating}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Anterior
+                <Button 
+                  variant="outline" 
+                  onClick={prevStep} 
+                  disabled={currentStep === 1 || isGenerating}
+                  className="hover:shadow-apple-sm h-11 px-6 font-medium transition-all duration-300"
+                >
+                    <ArrowLeft className="mr-2 size-4" /> Anterior
                 </Button>
                 {currentStep < steps.length ? (
-                <Button onClick={nextStep} disabled={isGenerating}>
-                    Próximo <ArrowRight className="ml-2 h-4 w-4" />
+                <Button 
+                  onClick={nextStep} 
+                  disabled={isGenerating}
+                  className="shadow-apple-sm hover:shadow-apple-md h-11 bg-primary px-6 font-medium transition-all duration-300 hover:scale-105 hover:bg-primary/90"
+                >
+                    Próximo <ArrowRight className="ml-2 size-4" />
                 </Button>
                 ) : (
                 <Button 
                     onClick={handleGenerate} 
                     disabled={isGenerating || !instructions}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                    className="shadow-apple-lg hover:shadow-apple-lg h-12 bg-gradient-to-r from-primary to-primary/90 px-8 font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
                 >
-                    {isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...</> : 'Gerar Documento'}
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-3 size-5 animate-spin" /> 
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="mr-3 size-5" />
+                        Gerar Documento
+                      </>
+                    )}
                 </Button>
                 )}
             </motion.div>
         </CardContent>
       </Card>
       
-      <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader>
-          <CardTitle className="font-headline">Documento Gerado</CardTitle>
-          <CardDescription>O resultado da sua solicitação aparecerá aqui.</CardDescription>
+      <Card className="surface-elevated shadow-apple-md hover:shadow-apple-lg flex flex-col transition-all duration-500 lg:col-span-2">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-headline">Documento Gerado</CardTitle>
+          <CardDescription className="text-body-large">O resultado da sua solicitação aparecerá aqui.</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col bg-muted/30 rounded-b-lg">
+        <CardContent className="flex flex-1 flex-col rounded-b-lg bg-gradient-to-br from-background via-background to-muted/30">
           <AnimatePresence mode="wait">
             {isGenerating && (
               <motion.div
@@ -405,32 +519,45 @@ export function GenerationWizard() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="flex-1 flex flex-col items-center justify-center text-center space-y-6"
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-1 flex-col items-center justify-center space-y-8 p-8 text-center"
               >
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="relative"
                   >
-                    <Loader2 className="w-12 h-12 text-primary" />
+                    <div className="shadow-apple-md flex size-16 items-center justify-center rounded-full bg-primary/10">
+                      <Loader2 className="size-8 text-primary" />
+                    </div>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 rounded-full border-2 border-primary/20"
+                    />
                   </motion.div>
-                  <div className="space-y-2">
-                    <p className="font-semibold text-lg">Gerando seu documento...</p>
+                  <div className="space-y-3">
+                    <h3 className="text-headline">Gerando seu documento...</h3>
                     <motion.p
                       key={currentProgressStage}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-sm text-muted-foreground"
+                      transition={{ duration: 0.3 }}
+                      className="text-body-large text-muted-foreground"
                     >
                       {progressStages[currentProgressStage]}
                     </motion.p>
                   </div>
                 </div>
-                <div className="w-full max-w-md space-y-2">
-                  <Progress value={progressPercentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {Math.round(progressPercentage)}% concluído
-                  </p>
+                <div className="w-full max-w-md space-y-4">
+                  <Progress value={progressPercentage} className="shadow-apple-sm h-3" />
+                  <div className="text-caption flex items-center justify-between">
+                    <span>Processando...</span>
+                    <span className="font-medium">
+                      {Math.round(progressPercentage)}% concluído
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -440,35 +567,50 @@ export function GenerationWizard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground p-8 space-y-6"
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-1 flex-col items-center justify-center space-y-8 p-12 text-center"
               >
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 }}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="relative"
                   >
-                    <FileText className="w-16 h-16 mx-auto" />
+                    <div className="shadow-apple-md flex size-20 items-center justify-center rounded-2xl bg-primary/10">
+                      <FileText className="size-10 text-primary" />
+                    </div>
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full bg-green-500"
+                    >
+                      <CheckCircle className="size-3 text-white" />
+                    </motion.div>
                   </motion.div>
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg text-foreground">Pronto para criar seu documento</h3>
-                    <p className="max-w-md text-sm">Preencha as informações ao lado e clique em "Gerar Documento" para ver a mágica acontecer.</p>
+                  <div className="max-w-lg space-y-3">
+                    <h3 className="text-headline">Pronto para criar seu documento</h3>
+                    <p className="text-body-large leading-relaxed text-muted-foreground">
+                      Preencha as informações ao lado e clique em "Gerar Documento" para ver a mágica acontecer.
+                    </p>
                   </div>
                 </div>
                 {agent && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="p-4 bg-background rounded-lg border max-w-md"
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                    className="surface-elevated shadow-apple-sm max-w-md rounded-2xl border border-border/50 p-6"
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-sm text-foreground">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                        <User className="size-4 text-primary" />
+                      </div>
+                      <span className="text-base font-semibold">
                         {agentInfo[agent as keyof typeof agentInfo].name}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-caption leading-relaxed">
                       {agentInfo[agent as keyof typeof agentInfo].description}
                     </p>
                   </motion.div>
@@ -480,10 +622,10 @@ export function GenerationWizard() {
                 key="error"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex-1 flex items-center justify-center"
+                className="flex flex-1 items-center justify-center"
               >
-                <div className="text-destructive text-center">
-                  <p className="font-medium mb-2">Erro na geração</p>
+                <div className="text-center text-destructive">
+                  <p className="mb-2 font-medium">Erro na geração</p>
                   <p className="text-sm">{error}</p>
                 </div>
               </motion.div>
@@ -493,27 +635,41 @@ export function GenerationWizard() {
                 key="document"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex-1 flex flex-col space-y-4"
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-1 flex-col space-y-0"
               >
-                <div className="flex items-center justify-between p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="font-medium text-green-700 dark:text-green-400">Documento gerado com sucesso!</span>
+                <div className="flex items-center justify-between border-b border-border/50 bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:from-green-950/30 dark:to-emerald-950/30">
+                  <div className="flex items-center gap-3">
+                    <div className="shadow-apple-sm flex size-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                      <CheckCircle className="size-4 text-green-600" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-green-800 dark:text-green-200">Documento gerado com sucesso!</span>
+                      <p className="text-caption text-green-600 dark:text-green-300">Pronto para revisão e uso</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                      <Copy className="w-4 h-4 mr-2" />
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={copyToClipboard}
+                      className="hover:shadow-apple-sm font-medium transition-all duration-300"
+                    >
+                      <Copy className="mr-2 size-4" />
                       Copiar
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="hover:shadow-apple-sm font-medium transition-all duration-300"
+                    >
+                      <Download className="mr-2 size-4" />
                       Exportar
                     </Button>
                   </div>
                 </div>
-                <div className="prose prose-sm dark:prose-invert max-w-none p-4 bg-background rounded-md flex-1 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap font-body">{generatedDocument}</pre>
+                <div className="prose prose-sm dark:prose-invert surface-overlay max-w-none flex-1 overflow-y-auto p-6">
+                  <pre className="whitespace-pre-wrap font-body text-base leading-relaxed">{generatedDocument}</pre>
                 </div>
               </motion.div>
             )}

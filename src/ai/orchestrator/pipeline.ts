@@ -3,6 +3,7 @@
  * Executa as etapas sequenciais de geração de documentos
  */
 
+import { LLMRouter } from './router';
 import {
   ProcessingInput,
   ProcessingOutput,
@@ -14,7 +15,6 @@ import {
   OrchestratorConfig,
   GeneratedDocument
 } from './types';
-import { LLMRouter } from './router';
 
 export class DocumentPipeline {
   private config: OrchestratorConfig;
@@ -41,7 +41,13 @@ export class DocumentPipeline {
       stage: '',
       input,
       intermediateResults: {},
-      llmClients: {}, // Seria populado com clientes reais
+      llmClients: {
+        google: null,
+        openai: null,
+        anthropic: null,
+        local: null,
+        custom: null
+      }, // Seria populado com clientes reais
       config: this.config,
       trace
     };

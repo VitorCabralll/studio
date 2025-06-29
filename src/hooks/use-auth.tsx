@@ -1,11 +1,12 @@
-
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
-import { getUserProfile, UserProfile } from '@/services/user-service';
-import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+
+import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
+import { getUserProfile, UserProfile } from '@/services/user-service';
+
 
 interface AuthContextType {
   user: User | null;
@@ -33,76 +34,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const getMockUser = () => ({
-    uid: 'test-user-123',
-    email: 'test@lexai.com',
-    displayName: 'Advogado Teste',
-  } as User);
-
-  const getNewMockUser = () => ({
-    uid: `new-user-${Date.now()}`,
-    email: 'novo@lexai.com',
-    displayName: 'Novo Usuário',
-  } as User);
-
-  const login = () => {
-    if (!isFirebaseConfigured) {
-      setLoading(true);
-      setUser(getMockUser());
-      // Simulate a user who has already completed onboarding and has a workspace
-      setUserProfile({
-        cargo: 'Advogado(a)',
-        areas_atuacao: ['Direito Civil'],
-        primeiro_acesso: false,
-        initial_setup_complete: true,
-        data_criacao: new Date() as any,
-        workspaces: [{ name: "Workspace Pessoal" }],
-      });
-      setLoading(false);
-      router.push('/');
-    }
-  };
-
-  const signup = () => {
-    if (!isFirebaseConfigured) {
-      setLoading(true);
-      const newUser = getNewMockUser();
-      setUser(newUser);
-      // This is a new user, so they need to go through onboarding.
-      const newUserProfile: UserProfile = {
-        cargo: '',
-        areas_atuacao: [],
-        primeiro_acesso: true,
-        initial_setup_complete: false,
-        data_criacao: new Date() as any,
-        workspaces: [],
-      };
-      setUserProfile(newUserProfile);
-      setLoading(false);
-      // The OnboardingGuard will see 'primeiro_acesso: true' and redirect
-      router.push('/onboarding');
-    }
-  };
-
-
-  const logout = () => {
-    if (!isFirebaseConfigured) {
-      setUser(null);
-      setUserProfile(null);
-      router.push('/login');
-    } else {
-      const auth = getAuth(firebaseApp);
-      signOut(auth);
-    }
-  };
-
-  const updateUserProfileState = (data: Partial<UserProfile>) => {
-    setUserProfile(prev => (prev ? { ...prev, ...data } : null));
-  };
-
+  // Persistência do mock no localStorage
   useEffect(() => {
-    // In mock mode, auth state is handled by login/logout buttons
     if (!isFirebaseConfigured) {
+      const storedUser = localStorage.getItem('lexai_mock_user');
+      const storedProfile = localStorage.getItem('lexai_mock_userProfile');
+      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedProfile) setUserProfile(JSON.parse(storedProfile));
       setLoading(false);
       return;
     }
@@ -136,6 +74,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+
+  const getMockUser = () => ({
+    uid: 'test-user-123',
+    email: 'test@lexai.com',
+    displayName: 'Advogado Teste',
+  } as User);
+
+  const getNewMockUser = () => ({
+    uid: `new-user-${Date.now()}`,
+    email: 'novo@lexai.com',
+    displayName: 'Novo Usuário',
+  } as User);
+
+  const login = () => {
+    if (!isFirebaseConfigured) {
+      setLoading(true);
+      const mockUser = getMockUser();
+      setUser(mockUser);
+      const mockProfile = {
+        cargo: 'Advogado(a)',
+        areas_atuacao: ['Direito Civil'],
+        primeiro_acesso: false,
+        initial_setup_complete: true,
+        data_criacao: new Date() as any,
+        workspaces: [{ name: "Workspace Pessoal" }],
+      };
+      setUserProfile(mockProfile);
+      // Persistir no localStorage
+      localStorage.setItem('lexai_mock_user', JSON.stringify(mockUser));
+      localStorage.setItem('lexai_mock_userProfile', JSON.stringify(mockProfile));
+      setLoading(false);
+      router.push('/');
+    }
+  };
+
+  const signup = () => {
+    if (!isFirebaseConfigured) {
+      setLoading(true);
+      const newUser = getNewMockUser();
+      setUser(newUser);
+      const newUserProfile: UserProfile = {
+        cargo: '',
+        areas_atuacao: [],
+        primeiro_acesso: true,
+        initial_setup_complete: false,
+        data_criacao: new Date() as any,
+        workspaces: [],
+      };
+      setUserProfile(newUserProfile);
+      // Persistir no localStorage
+      localStorage.setItem('lexai_mock_user', JSON.stringify(newUser));
+      localStorage.setItem('lexai_mock_userProfile', JSON.stringify(newUserProfile));
+      setLoading(false);
+      router.push('/onboarding');
+    }
+  };
+
+  const logout = () => {
+    if (!isFirebaseConfigured) {
+      setUser(null);
+      setUserProfile(null);
+      localStorage.removeItem('lexai_mock_user');
+      localStorage.removeItem('lexai_mock_userProfile');
+      router.push('/login');
+    } else {
+      const auth = getAuth(firebaseApp);
+      signOut(auth);
+    }
+  };
+
+  const updateUserProfileState = (data: Partial<UserProfile>) => {
+    setUserProfile(prev => {
+      const updated = prev ? { ...prev, ...data } : null;
+      if (!isFirebaseConfigured && updated) {
+        localStorage.setItem('lexai_mock_userProfile', JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
 
   return (
     <AuthContext.Provider value={{ user, userProfile, loading, login, signup, logout, updateUserProfileState }}>

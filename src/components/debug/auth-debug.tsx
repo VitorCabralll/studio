@@ -1,11 +1,12 @@
 'use client';
 
-import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/use-auth';
 
 export function AuthDebug() {
   const { user, userProfile, loading } = useAuth();
@@ -26,7 +27,7 @@ export function AuthDebug() {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 z-50 bg-background/95 backdrop-blur">
+    <Card className="fixed bottom-4 right-4 z-50 w-80 bg-background/95 backdrop-blur">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Auth Debug</CardTitle>
