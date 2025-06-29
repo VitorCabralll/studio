@@ -159,104 +159,66 @@ export function CriarAgenteClient() {
                 </div>
               </motion.div>
             </CardHeader>
-          <CardContent className="space-y-8">
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
-                >
-                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-                  <span className="text-sm text-destructive font-medium">{error}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="space-y-6"
-            >
-              {/* Nome do Agente */}
-              <div className="space-y-3">
-                <Label htmlFor="agent-name" className="text-base font-medium flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-primary" />
-                  Nome do Agente *
-                </Label>
-                <Input 
-                  id="agent-name" 
-                  placeholder="Ex: Especialista em Contratos Imobiliários" 
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  required 
-                  disabled={isCreating}
-                  className="h-12 text-base transition-all focus:ring-2 focus:ring-primary/20"
-                />
-                <p className="text-sm text-muted-foreground">
-                  Dê um nome descritivo que reflita a especialidade do seu agente
-                </p>
-              </div>
-              
-              {/* Matéria do Direito */}
-              <div className="space-y-3">
-                <Label htmlFor="materia-direito" className="text-base font-medium flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-primary" />
-                  Área de Especialização *
-                </Label>
-                <Select required value={materia} onValueChange={setMateria} disabled={isCreating}>
-                  <SelectTrigger id="materia-direito" className="h-12 text-base">
-                    <SelectValue placeholder="Selecione a área de direito..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {legalAreas.map(item => (
-                      <SelectItem key={item} value={item} className="text-base py-3">
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {materia && (
+            <CardContent className="space-y-8">
+              <AnimatePresence>
+                {error && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
                   >
-                    <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="font-medium text-sm">Área selecionada: {materia}</span>
-                    </div>
+                    <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+                    <span className="text-sm text-destructive font-medium">{error}</span>
                   </motion.div>
                 )}
-              </div>
-
-              {/* Upload de Documentos */}
-              <div className="space-y-3">
-                <Label className="text-base font-medium flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-primary" />
-                  Documentos de Treinamento
-                  <span className="text-sm font-normal text-muted-foreground">(Opcional)</span>
-                </Label>
+              </AnimatePresence>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="space-y-6"
+              >
+                {/* Nome do Agente */}
                 <div className="space-y-3">
-                  <FileUpload onFilesChange={setFiles} />
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-3">
-                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                          Como funciona o treinamento personalizado?
-                        </p>
-                        <ul className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
-                          <li>• Envie documentos modelo da sua prática (contratos, petições, etc.)</li>
-                          <li>• O agente aprenderá seu estilo de redação e terminologia</li>
-                          <li>• Documentos são processados localmente e não são armazenados</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  {files.length > 0 && (
+                  <Label htmlFor="agent-name" className="text-base font-medium flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-primary" />
+                    Nome do Agente *
+                  </Label>
+                  <Input 
+                    id="agent-name" 
+                    placeholder="Ex: Especialista em Contratos Imobiliários" 
+                    value={agentName}
+                    onChange={(e) => setAgentName(e.target.value)}
+                    required 
+                    disabled={isCreating}
+                    className="h-12 text-base transition-all focus:ring-2 focus:ring-primary/20"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Dê um nome descritivo que reflita a especialidade do seu agente
+                  </p>
+                </div>
+                
+                {/* Matéria do Direito */}
+                <div className="space-y-3">
+                  <Label htmlFor="materia-direito" className="text-base font-medium flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    Área de Especialização *
+                  </Label>
+                  <Select required value={materia} onValueChange={setMateria} disabled={isCreating}>
+                    <SelectTrigger id="materia-direito" className="h-12 text-base">
+                      <SelectValue placeholder="Selecione a área de direito..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {legalAreas.map(item => (
+                        <SelectItem key={item} value={item} className="text-base py-3">
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {materia && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -264,26 +226,64 @@ export function CriarAgenteClient() {
                     >
                       <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
                         <CheckCircle className="w-4 h-4" />
-                        <span className="font-medium text-sm">
-                          {files.length} documento{files.length > 1 ? 's' : ''} carregado{files.length > 1 ? 's' : ''} para treinamento
-                        </span>
+                        <span className="font-medium text-sm">Área selecionada: {materia}</span>
                       </div>
                     </motion.div>
                   )}
                 </div>
-              </div>
-            </motion.div>
-          </CardContent>
-          <CardFooter className="flex flex-col md:flex-row justify-between gap-4 pt-8 border-t">
+
+                {/* Upload de Documentos */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-primary" />
+                    Documentos de Treinamento
+                    <span className="text-sm font-normal text-muted-foreground">(Opcional)</span>
+                  </Label>
+                  <div className="space-y-3">
+                    <FileUpload onFilesChange={setFiles} />
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Como funciona o treinamento personalizado?
+                          </p>
+                          <ul className="text-xs text-blue-600 dark:text-blue-300 space-y-1">
+                            <li>• Envie documentos modelo da sua prática (contratos, petições, etc.)</li>
+                            <li>• O agente aprenderá seu estilo de redação e terminologia</li>
+                            <li>• Documentos são processados localmente e não são armazenados</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    {files.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800"
+                      >
+                        <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="font-medium text-sm">
+                            {files.length} documento{files.length > 1 ? 's' : ''} carregado{files.length > 1 ? 's' : ''} para treinamento
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </CardContent>
+            <CardFooter className="flex flex-col md:flex-row justify-between gap-4 pt-8 border-t">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button variant="outline" type="button" asChild disabled={isCreating} className="w-full md:w-auto">
-                    <Link href="/">
-                      <ArrowLeft className="mr-2 h-4 w-4" /> 
-                      Voltar ao Dashboard
-                    </Link>
+                  <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> 
+                    Voltar ao Dashboard
+                  </Link>
                 </Button>
               </motion.div>
               
@@ -311,9 +311,10 @@ export function CriarAgenteClient() {
                   )}
                 </Button>
               </motion.div>
-          </CardFooter>
-        </form>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+      </motion.div>
     </div>
   );
 }
