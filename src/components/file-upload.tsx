@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 const OCRProcessor = dynamic(
   () => import('@/components/ocr/ocr-processor').then(mod => ({ default: mod.OCRProcessor })),
   {
+    ssr: false,
     loading: () => (
       <div className="flex items-center justify-center p-8">
         <div className="animate-pulse text-sm text-muted-foreground">Carregando OCR...</div>

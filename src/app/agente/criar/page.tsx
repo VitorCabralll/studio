@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const FileUpload = dynamic(
   () => import('@/components/file-upload').then(mod => ({ default: mod.FileUpload })),
   {
+    ssr: false,
     loading: () => (
       <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
         <div className="animate-pulse">
