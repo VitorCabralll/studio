@@ -1,5 +1,7 @@
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, CheckCircle, ArrowLeft, ArrowRight, FileText, Lightbulb, User, Copy, Download } from 'lucide-react';
 import { useState } from 'react';
 
 import { FileUploadEnhanced } from '@/components/file-upload-enhanced';
@@ -9,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { useFocusManagement } from '@/hooks/use-focus-management';
+
 // Temporarily commented out to fix import errors
 // import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
 // import { contextualDocumentGeneration, ContextualDocumentGenerationInput } from '@/ai/flows/contextual-document-generation';
@@ -24,10 +28,6 @@ type ContextualDocumentGenerationInput = {
   instructions: string;
   attachmentDataUris?: string[];
 };
-import { useFocusManagement } from '@/hooks/use-focus-management';
-
-import { Loader2, CheckCircle, ArrowLeft, ArrowRight, FileText, Lightbulb, User, Copy, Download } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const steps = [
   { id: 1, title: 'Modo de Geração' },
@@ -129,21 +129,33 @@ export function GenerationWizard() {
         enhancedInstructions += `\n\nDados estruturados detectados:\n${JSON.stringify(structuredData.structured, null, 2)}`;
       }
 
-      if (files.length > 0) {
-        const attachmentDataUris = await Promise.all(files.map(fileToDataUri));
-        const input: ContextualDocumentGenerationInput = {
-          instructions: `Gerar um documento no modo "${generationMode}" usando o agente "${agent}" com as seguintes instruções: ${enhancedInstructions}`,
-          attachmentDataUris,
-        };
-        // result = await contextualDocumentGeneration(input);
-        result = { document: `Documento gerado com anexos para: ${input.instructions}` };
+      // Preparar dados para API
+      const attachmentDataUris = files.length > 0 
+        ? await Promise.all(files.map(fileToDataUri))
+        : [];
+
+      const apiRequest = {
+        instructions: enhancedInstructions,
+        attachments: attachmentDataUris,
+        agent: agent as 'geral' | 'civil' | 'stj',
+        mode: generationMode
+      };
+
+      // Chamar API real de geração
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiRequest)
+      });
+
+      const apiResult = await response.json();
+      
+      if (apiResult.success) {
+        result = { document: apiResult.document };
       } else {
-        const input: GenerateDocumentOutlineInput = {
-          instructions: `Gerar um documento usando o agente "${agent}" com as seguintes instruções: ${enhancedInstructions}`,
-          format: generationMode,
-        };
-        // result = await generateDocumentOutline(input);
-        result = { document: `Documento gerado em modo ${generationMode} para: ${input.instructions}` };
+        throw new Error(apiResult.error?.message || 'Erro na geração do documento');
       }
       
       clearInterval(progressInterval);
@@ -591,7 +603,7 @@ export function GenerationWizard() {
                   <div className="max-w-lg space-y-3">
                     <h3 className="text-headline">Pronto para criar seu documento</h3>
                     <p className="text-body-large leading-relaxed text-muted-foreground">
-                      Preencha as informações ao lado e clique em "Gerar Documento" para ver a mágica acontecer.
+                      Preencha as informações ao lado e clique em &quot;Gerar Documento&quot; para ver a mágica acontecer.
                     </p>
                   </div>
                 </div>

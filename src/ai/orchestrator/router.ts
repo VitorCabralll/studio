@@ -8,7 +8,6 @@ import {
   RoutingDecision, 
   RoutingCriteria, 
   TaskType, 
-  LegalArea,
   ProcessingInput 
 } from './types';
 

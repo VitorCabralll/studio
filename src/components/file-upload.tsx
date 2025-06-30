@@ -1,29 +1,15 @@
 "use client"
 
-import { UploadCloud, File, X, ScanText, FileImage } from 'lucide-react';
+import { UploadCloud, File, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 
-// Lazy load do OCR processor
-const OCRProcessor = dynamic(
-  () => import('@/components/ocr/ocr-processor').then(mod => ({ default: mod.OCRProcessor })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-pulse text-sm text-muted-foreground">Carregando OCR...</div>
-      </div>
-    ),
-  }
-);
+// OCR processor temporarily removed
 
 interface FileUploadProps {
   onFilesChange: (files: File[]) => void;
@@ -34,12 +20,9 @@ interface FileUploadProps {
 
 export function FileUpload({ 
   onFilesChange, 
-  onTextExtracted,
-  enableOCR = true,
   className 
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [extractedTexts, setExtractedTexts] = useState<string[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = [...files, ...acceptedFiles];

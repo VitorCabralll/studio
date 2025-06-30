@@ -6,8 +6,8 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import { DocumentPipeline } from './pipeline';
 import { DEFAULT_ORCHESTRATOR_CONFIG } from './config';
+import { DocumentPipeline } from './pipeline';
 import { ProcessingInput } from './types';
 
 async function testOrchestrator() {

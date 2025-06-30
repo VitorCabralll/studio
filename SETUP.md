@@ -133,20 +133,18 @@ npm run dev
 # Acesse: http://localhost:3000
 ```
 
-### Firebase Functions (Orquestrador)
+### Firebase Emulators (Desenvolvimento Local)
 ```bash
-# Terminal 2: Firebase Functions
-cd functions
-npm install
-npm run serve
-# Functions disponíveis em: http://localhost:5001
-```
-
-### Firebase Emulators (Opcional)
-```bash
-# Terminal 3: Emulators completos
+# Terminal 2: Firebase Emulators completos
 firebase emulators:start
-# Suite completa em: http://localhost:4000
+
+# Serviços disponíveis:
+# - App Hosting: http://localhost:5002
+# - Functions: http://localhost:5001  
+# - Firestore: http://localhost:8080
+# - Authentication: http://localhost:9099
+# - Storage: http://localhost:9199
+# - UI Dashboard: http://localhost:4000
 ```
 
 ---

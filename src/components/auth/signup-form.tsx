@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/magic-ui";
 import { Eye, EyeOff, Mail, Lock, User, Scale, Building, Phone } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from '@/hooks/use-auth';
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +26,7 @@ export function SignupForm() {
     acceptTerms: false,
     acceptNewsletter: false
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const { signup, loginWithGoogle, loading, error, clearError } = useAuth();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -44,13 +45,21 @@ export function SignupForm() {
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log("Signup:", formData);
-    setIsLoading(false);
+    if (formData.password.length < 6) {
+      alert("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    await signup(formData.email, formData.password, {
+      name: formData.name,
+      company: formData.company,
+      phone: formData.phone,
+      oab: formData.oab
+    });
+  };
+
+  const handleGoogleSignup = async () => {
+    await loginWithGoogle();
   };
 
   return (
@@ -88,6 +97,17 @@ export function SignupForm() {
             </CardHeader>
             
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg">
+                  {error}
+                  <button 
+                    onClick={clearError}
+                    className="ml-2 text-red-800 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}
                 <div className="space-y-2">
@@ -274,9 +294,9 @@ export function SignupForm() {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium shadow-lg"
-                    disabled={isLoading}
+                    disabled={loading}
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         <span>Criando conta...</span>
@@ -306,7 +326,8 @@ export function SignupForm() {
                 <Button
                   variant="outline"
                   className="w-full border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  onClick={() => console.log("Google signup")}
+                  onClick={handleGoogleSignup}
+                  disabled={loading}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path

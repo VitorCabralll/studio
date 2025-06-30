@@ -8,8 +8,9 @@ LexAI é uma plataforma SaaS para automação de documentos jurídicos usando Ne
 - `npm run build` - Build de produção
 - `npm run lint` - Executa o linter
 - `npm run typecheck` - Verifica tipos TypeScript
-- `npm run genkit:dev` - Inicia Genkit para desenvolvimento de IA
-- `npm run genkit:watch` - Genkit em modo watch
+- `npm run test:orchestrator` - Testa o orquestrador de IA
+- `firebase emulators:start` - Inicia emulators Firebase (desenvolvimento local)
+- `firebase deploy` - Deploy para produção
 
 ## Stack Tecnológica
 - **Frontend**: Next.js 15 (App Router), React 18, TypeScript

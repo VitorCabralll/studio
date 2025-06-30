@@ -5,15 +5,15 @@ import { PlusCircle, Users, Settings, Trash2, Loader2, Briefcase, Crown, ArrowRi
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import { useAuth } from '@/hooks/use-auth';
 import { updateUserProfile } from '@/services/user-service';
-import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 
 
 interface Workspace {
@@ -27,11 +27,7 @@ const staticWorkspaces: Workspace[] = [
   { name: "Projetos Especiais", members: 3, isOwner: true },
 ];
 
-const workspaceVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-  hover: { y: -5, transition: { duration: 0.2 } }
-};
+// Animation variants removed for now
 
 export default function WorkspacePage() {
   return (
@@ -156,7 +152,7 @@ function WorkspacePageContent() {
                       <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Dica</span>
                     </div>
                     <p className="text-caption leading-relaxed text-blue-600 dark:text-blue-300">
-                      Use nomes descritivos como "Direito Civil", "Equipe Trabalhista" ou "Projetos 2024"
+                      Use nomes descritivos como &quot;Direito Civil&quot;, &quot;Equipe Trabalhista&quot; ou &quot;Projetos 2024&quot;
                     </p>
                   </div>
                 </div>

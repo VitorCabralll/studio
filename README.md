@@ -123,7 +123,9 @@ studio-1/
 │   ├── services/                # Firebase services
 │   └── lib/                     # Utilitários
 │
-├── functions/                   # Firebase Functions
+├── functions/                   # Firebase Functions (TypeScript)
+├── firestore.rules              # Regras de segurança Firestore
+├── storage.rules                # Regras de segurança Storage
 ├── docs/                        # Documentação adicional
 ├── .env.example                 # Template de variáveis
 ├── SETUP.md                     # Guia de configuração
@@ -161,11 +163,11 @@ studio-1/
 
 3. **Execute o projeto:**
    ```bash
-   # Frontend Next.js
+   # Desenvolvimento completo com Firebase Emulators
+   firebase emulators:start
+   
+   # OU apenas frontend (sem backend)
    npm run dev
-
-   # Firebase Functions (novo terminal)
-   cd functions && npm run serve
    ```
 
 4. **Teste o orquestrador:**

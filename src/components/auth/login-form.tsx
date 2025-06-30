@@ -15,14 +15,18 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle, loading, error, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    login(); // Chama o login mock
-    setIsLoading(false);
+    if (!email || !password) {
+      return;
+    }
+    await login(email, password);
+  };
+
+  const handleGoogleLogin = async () => {
+    await loginWithGoogle();
   };
 
   return (
@@ -60,6 +64,17 @@ export function LoginForm() {
             </CardHeader>
             
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg">
+                  {error}
+                  <button 
+                    onClick={clearError}
+                    className="ml-2 text-red-800 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email */}
                 <div className="space-y-2">
@@ -128,9 +143,9 @@ export function LoginForm() {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium shadow-lg"
-                    disabled={isLoading}
+                    disabled={loading}
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         <span>Entrando...</span>
@@ -160,7 +175,8 @@ export function LoginForm() {
                 <Button
                   variant="outline"
                   className="w-full border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  onClick={() => console.log("Google login")}
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path

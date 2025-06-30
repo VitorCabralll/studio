@@ -3,16 +3,13 @@
  * Implementa a lógica de cada etapa da geração de documentos
  */
 
+import { createLLMClient } from './clients';
 import {
   PipelineProcessor,
   PipelineContext,
   ProcessingInput,
-  LLMRequest,
-  LLMResponse,
-  ContextItem
+  LLMResponse
 } from './types';
-import { createLLMClient } from './clients';
-import { LLMRouter } from './router';
 
 /**
  * Classe base para processadores com funcionalidade comum de LLM
@@ -26,8 +23,10 @@ abstract class BaseLLMProcessor implements PipelineProcessor {
     criteria?: any
   ): Promise<LLMResponse> {
     // FORÇA O USO APENAS DO GOOGLE AI
-    const documentConfig = context.input.documentType ? 
-      require('./config').DOCUMENT_TYPE_CONFIGS[context.input.documentType] : null;
+    const { DOCUMENT_TYPE_CONFIGS } = await import('./config');
+    const documentConfig = context.input.documentType && 
+      context.input.documentType in DOCUMENT_TYPE_CONFIGS ? 
+      DOCUMENT_TYPE_CONFIGS[context.input.documentType as keyof typeof DOCUMENT_TYPE_CONFIGS] : null;
     
     // Determina qual modelo Gemini usar
     const model = criteria?.preferredModel || 
@@ -70,7 +69,7 @@ export class SummarizationProcessor extends BaseLLMProcessor {
     }
 
     // Seleciona LLM para sumarização (tarefa simples, modelo barato)
-    const routingDecision = context.config.pipeline.find(p => p.name === 'summarization');
+    context.config.pipeline.find(p => p.name === 'summarization');
     
     const prompt = this.buildSummarizationPrompt(ocrContent, processingInput);
     
@@ -249,8 +248,14 @@ Forneça estrutura clara e hierárquica.
  */
 export class ContentGenerationProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<any> {
-    const structure = input;
+    // Corrigido: obter structure dos resultados intermediários
+    const structure = context.intermediateResults['structure_definition'];
     const sections: Record<string, string> = {};
+    
+    // Validação: garantir que structure.sections existe e é iterável
+    if (!structure || !Array.isArray(structure.sections)) {
+      throw new Error('Invalid structure: sections not found or not iterable');
+    }
     
     // Gera conteúdo para cada seção
     for (const section of structure.sections) {

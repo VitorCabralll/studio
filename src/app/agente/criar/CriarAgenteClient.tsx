@@ -5,15 +5,13 @@ import { ArrowLeft, Loader2, AlertCircle, Bot, Brain, FileText, Upload, ArrowRig
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-
 // Lazy load do componente de upload de arquivos
 const FileUpload = dynamic(
   () => import('@/components/file-upload').then(mod => ({ default: mod.FileUpload })),

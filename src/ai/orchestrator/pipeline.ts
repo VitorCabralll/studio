@@ -198,7 +198,7 @@ export class DocumentPipeline {
   private async retryStage(
     stage: PipelineStage, 
     context: PipelineContext, 
-    lastError: ProcessingError
+    _lastError: ProcessingError
   ): Promise<void> {
     const retryConfig = stage.retryConfig!;
     let attempt = 1;
@@ -269,7 +269,7 @@ export class DocumentPipeline {
   /**
    * Montagem de fallback se o estágio de assembly falhar
    */
-  private fallbackAssembly(sections: any, structure: any): string {
+  private fallbackAssembly(sections: any, _structure: any): string {
     if (typeof sections === 'string') return sections;
     
     if (typeof sections === 'object') {
