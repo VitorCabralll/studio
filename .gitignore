@@ -43,4 +43,10 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+.firebase/
 .env
+
+# Firebase Functions have their own package.json
+# They should be deployed separately, not with App Hosting
+functions/node_modules/
+functions/lib/
