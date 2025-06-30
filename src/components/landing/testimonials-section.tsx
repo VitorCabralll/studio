@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Star, Quote } from "lucide-react";
 import { FadeIn } from "@/components/magic-ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
@@ -45,35 +45,35 @@ const stats = [
 
 export function TestimonialsSection() {
   return (
-    <section className="py-24 bg-gray-50 dark:bg-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FadeIn className="text-center mb-16">
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+    <section className="bg-gray-50 py-24 dark:bg-gray-800">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <FadeIn className="mb-16 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
             Depoimentos
           </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+          <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
             Advogados que já
             <span className="block text-blue-600 dark:text-blue-400">transformaram sua prática</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
             Veja como o LexAI está ajudando escritórios de todos os tamanhos
           </p>
         </FadeIn>
 
         {/* Stats */}
         <FadeIn delay={0.2} className="mb-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((stat, index) => (
               <div key={stat.label} className="text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
-                  className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2"
+                  className="mb-2 text-3xl font-bold text-blue-600 dark:text-blue-400 md:text-4xl"
                 >
                   {stat.value}
                 </motion.div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   {stat.label}
                 </p>
               </div>
@@ -82,28 +82,28 @@ export function TestimonialsSection() {
         </FadeIn>
 
         {/* Testimonials */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <FadeIn key={testimonial.name} delay={index * 0.2}>
-              <Card className="h-full bg-white dark:bg-gray-900 shadow-lg border-0 hover:shadow-xl transition-shadow duration-300">
+              <Card className="h-full border-0 bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl dark:bg-gray-900">
                 <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <Quote className="w-8 h-8 text-blue-600 dark:text-blue-400 opacity-50" />
-                    <div className="flex ml-auto">
+                  <div className="mb-4 flex items-center">
+                    <Quote className="size-8 text-blue-600 opacity-50 dark:text-blue-400" />
+                    <div className="ml-auto flex">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                        <Star key={i} className="size-4 fill-current text-yellow-400" />
                       ))}
                     </div>
                   </div>
                   
-                  <blockquote className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+                  <blockquote className="mb-6 leading-relaxed text-gray-700 dark:text-gray-300">
                     "{testimonial.content}"
                   </blockquote>
                   
                   <div className="flex items-center">
-                    <Avatar className="w-12 h-12 mr-4">
+                    <Avatar className="mr-4 size-12">
                       <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                      <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-semibold">
+                      <AvatarFallback className="bg-blue-100 font-semibold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
                         {testimonial.initials}
                       </AvatarFallback>
                     </Avatar>
@@ -127,15 +127,15 @@ export function TestimonialsSection() {
 
         {/* CTA */}
         <FadeIn delay={0.8} className="mt-16 text-center">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+            <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
               Pronto para se juntar a eles?
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+            <p className="mx-auto mb-6 max-w-2xl text-gray-600 dark:text-gray-300">
               Comece seu teste gratuito hoje e veja como o LexAI pode transformar sua prática jurídica
             </p>
             <motion.button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors shadow-lg"
+              className="rounded-lg bg-blue-600 px-8 py-3 font-medium text-white shadow-lg transition-colors hover:bg-blue-700"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

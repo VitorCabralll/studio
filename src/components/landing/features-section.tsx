@@ -1,8 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FadeIn } from "@/components/magic-ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Zap, 
   Shield, 
@@ -13,6 +11,8 @@ import {
   CheckCircle,
   ArrowRight
 } from "lucide-react";
+import { FadeIn } from "@/components/magic-ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const features = [
   {
@@ -67,41 +67,41 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 bg-white dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FadeIn className="text-center mb-16">
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+    <section className="bg-white py-24 dark:bg-gray-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <FadeIn className="mb-16 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
             Funcionalidades
           </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+          <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
             Tudo que você precisa para
             <span className="block text-blue-600 dark:text-blue-400">automatizar sua prática jurídica</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
             Funcionalidades desenvolvidas especificamente para advogados brasileiros
           </p>
         </FadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
             <FadeIn key={feature.title} delay={index * 0.1}>
-              <Card className="group h-full hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:-translate-y-1">
+              <Card className="group h-full border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <CardHeader className="pb-4">
-                  <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                  <div className={`size-12 rounded-lg ${feature.bgColor} mb-4 flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+                    <feature.icon className={`size-6 ${feature.color}`} />
                   </div>
-                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <CardTitle className="text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                     {feature.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <CardDescription className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                  <CardDescription className="mb-4 leading-relaxed text-gray-600 dark:text-gray-300">
                     {feature.description}
                   </CardDescription>
                   <ul className="space-y-2">
                     {feature.details.map((detail, detailIndex) => (
                       <li key={detailIndex} className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                        <CheckCircle className="mr-2 size-4 shrink-0 text-green-500" />
                         {detail}
                       </li>
                     ))}
@@ -114,20 +114,20 @@ export function FeaturesSection() {
 
         {/* CTA Section */}
         <FadeIn delay={0.8} className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-2xl p-8 border border-blue-100 dark:border-blue-800">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-8 dark:border-blue-800 dark:from-blue-950/20 dark:to-purple-950/20">
+            <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
               Pronto para revolucionar sua prática jurídica?
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+            <p className="mx-auto mb-6 max-w-2xl text-gray-600 dark:text-gray-300">
               Junte-se a centenas de advogados que já economizam horas semanais com LexAI
             </p>
             <motion.button
-              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors group"
+              className="group inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               Começar Teste Gratuito
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
             </motion.button>
           </div>
         </FadeIn>

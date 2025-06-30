@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface AnimatedListItem {
   id: string;
@@ -73,8 +73,8 @@ export function AnimatedNotification({
         items={notifications.map((notification) => ({
           id: notification.id,
           content: (
-            <div className="flex items-start space-x-3 rounded-lg border p-3 shadow-sm bg-white dark:bg-gray-800">
-              <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+            <div className="flex items-start space-x-3 rounded-lg border bg-white p-3 shadow-sm dark:bg-gray-800">
+              <div className="flex size-8 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
                 {notification.name.charAt(0)}
               </div>
               <div className="flex-1 space-y-1">

@@ -1,12 +1,16 @@
 # 🚀 Guia de Setup - LexAI
 
+> **📊 Status:** Documentação atualizada - Dezembro 2024  
+> **⏱️ Tempo estimado:** 30-45 minutos para setup completo
+
 ## Pré-requisitos
 
-- **Node.js 20+** (recomendado: use nvm)
-- **npm** ou **yarn**
-- **Git**
-- **Conta Firebase** (plano Blaze para Functions)
-- **APIs de IA** (OpenAI, Google AI, Anthropic)
+- **Node.js 20+** (recomendado: use nvm para gerenciamento de versões)
+- **npm** ou **yarn** (npm 10+ recomendado)
+- **Git** (para clone do repositório)
+- **Conta Firebase** (plano Blaze necessário para Cloud Functions)
+- **APIs de IA** (pelo menos uma: OpenAI, Google AI ou Anthropic)
+- **VSCode** (recomendado com extensões TypeScript/ESLint)
 
 ---
 
@@ -15,12 +19,18 @@
 ### 1. Clone e Instale Dependências
 
 ```bash
+# Clone o repositório
 git clone https://github.com/VitorCabralll/studio-1.git
 cd studio-1
+
+# Instale as dependências (recomendado npm)
 npm install
 
 # Ou usando yarn
 yarn install
+
+# Verifique se as dependências foram instaladas corretamente
+npm run typecheck
 ```
 
 ### 2. Configure Variáveis de Ambiente
@@ -30,8 +40,10 @@ yarn install
 cp .env.example .env.local
 
 # Edite com suas configurações
-nano .env.local  # ou seu editor preferido
+nano .env.local  # ou seu editor preferido (code .env.local para VSCode)
 ```
+
+**⚠️ Importante:** O arquivo `.env.local` contém informações sensíveis e nunca deve ser commitado no Git.
 
 ### 3. Configure Firebase
 
@@ -53,20 +65,23 @@ firebase use --add your-project-id
 
 ## 🔑 Configuração das APIs de IA
 
-### OpenAI
+### OpenAI (Recomendado para início)
 1. Acesse [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Crie uma nova API key
-3. Adicione em `.env.local`: `OPENAI_API_KEY=sk-...`
+2. Crie uma nova API key com permissões para GPT-4
+3. Configure billing e defina limits de uso
+4. Adicione em `.env.local`: `OPENAI_API_KEY=sk-proj-...`
 
-### Google AI (Gemini)
+### Google AI (Gemini) - Gratuito para desenvolvimento
 1. Acesse [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Crie uma API key
-3. Adicione em `.env.local`: `GOOGLE_AI_API_KEY=...`
+2. Crie uma API key (sem necessidade de billing inicial)
+3. Adicione em `.env.local`: `GOOGLE_AI_API_KEY=AIza...`
 
-### Anthropic Claude
+### Anthropic Claude (Opcional)
 1. Acesse [Anthropic Console](https://console.anthropic.com/)
-2. Crie uma API key
+2. Crie uma API key e configure billing
 3. Adicione em `.env.local`: `ANTHROPIC_API_KEY=sk-ant-...`
+
+**💡 Dica:** Para desenvolvimento, recomendamos começar com Google AI (gratuito) e depois adicionar OpenAI conforme necessário.
 
 ---
 
@@ -75,94 +90,102 @@ firebase use --add your-project-id
 ### 1. Firebase Web App Config
 ```bash
 # No Firebase Console > Project Settings > Web apps
-# Copie as configurações e adicione em .env.local:
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-# ... outras configs
+# Crie um novo app web se necessário
+# Copie TODAS as configurações e adicione em .env.local:
+NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="123456789"
+NEXT_PUBLIC_FIREBASE_APP_ID="1:123456789:web:abcdef123456"
 ```
 
 ### 2. Firebase Admin SDK
 ```bash
 # No Firebase Console > Project Settings > Service Accounts
-# Gere nova chave privada (JSON)
+# Clique em "Generate new private key" e baixe o arquivo JSON
 # Extraia os campos e adicione em .env.local:
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@your-project.iam.gserviceaccount.com
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-...@your-project.iam.gserviceaccount.com"
+FIREBASE_PROJECT_ID="your-project-id"
 ```
 
-### 3. Firestore Rules
+**⚠️ Segurança:** Mantenha a chave privada segura e nunca a exponha publicamente.
+
+### 3. Configurar Domínios Autorizados
+```bash
+# No Firebase Console > Authentication > Settings > Authorized domains
+# Adicione os domínios que você usará:
+# - localhost (já incluído)
+# - your-domain.com (para produção)
+# - your-vercel-app.vercel.app (se usando Vercel)
+```
+
+### 4. Firestore Rules (já configuradas)
 ```javascript
-// firestore.rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Usuários podem acessar apenas seus dados
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Workspaces - apenas membros
-    match /workspaces/{workspaceId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.members;
-    }
-    
-    // Agentes - apenas do workspace
-    match /workspaces/{workspaceId}/agents/{agentId} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Documentos gerados - apenas do usuário
-    match /documents/{documentId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-    }
-  }
-}
+// O arquivo firestore.rules já está configurado com:
+// - Acesso restrito por usuário autenticado
+// - Isolamento por workspace
+// - Segurança adequada para produção
+// Deploy automático com: firebase deploy --only firestore:rules
 ```
 
 ---
 
 ## 🏃‍♂️ Executando o Projeto
 
-### Desenvolvimento Frontend
+### Opção 1: Desenvolvimento Frontend Simples (Recomendado)
 ```bash
-# Terminal 1: Frontend Next.js
+# Desenvolvimento apenas frontend (mais rápido)
 npm run dev
+
 # Acesse: http://localhost:3000
+# ✅ Usa Firebase em produção
+# ✅ Ideal para desenvolvimento de UI/UX
+# ✅ Startup rápido (5-10 segundos)
 ```
 
-### Firebase Emulators (Desenvolvimento Local)
+### Opção 2: Desenvolvimento Completo com Emulators
 ```bash
-# Terminal 2: Firebase Emulators completos
+# Terminal 1: Firebase Emulators
 firebase emulators:start
 
+# Terminal 2: Frontend Next.js
+npm run dev
+
 # Serviços disponíveis:
-# - App Hosting: http://localhost:5002
-# - Functions: http://localhost:5001  
-# - Firestore: http://localhost:8080
+# - Frontend: http://localhost:3000
+# - Firestore UI: http://localhost:4000
+# - Functions: http://localhost:5001
 # - Authentication: http://localhost:9099
-# - Storage: http://localhost:9199
-# - UI Dashboard: http://localhost:4000
+# ✅ Ambiente completamente isolado
+# ✅ Ideal para desenvolvimento de backend
 ```
+
+**💡 Recomendação:** Use Opção 1 para desenvolvimento de frontend e Opção 2 apenas quando necessário testar Functions.
 
 ---
 
 ## 🧪 Testando o Orquestrador
 
-### Teste Básico
+### Teste Básico do Orquestrador
 ```bash
-# Execute os exemplos do orquestrador
+# Execute os exemplos do orquestrador (requer API keys configuradas)
 npm run test:orchestrator
 
 # Ou execute diretamente
 npx tsx src/ai/orchestrator/example.ts
+
+# Teste específico de um LLM
+OPENAI_API_KEY=sk-... npx tsx src/ai/orchestrator/test-example.ts
 ```
 
-### Teste via API
+### Teste via API (Com projeto rodando)
 ```bash
-# Com o projeto rodando, teste via curl:
+# Teste simples da API
+curl -X GET http://localhost:3000/api/orchestrator/test
+
+# Teste de processamento completo
 curl -X POST http://localhost:3000/api/orchestrator/process \
   -H "Content-Type: application/json" \
   -d '{
@@ -177,6 +200,12 @@ curl -X POST http://localhost:3000/api/orchestrator/process \
       }
     ]
   }'
+
+# Teste através da interface web (recomendado)
+# 1. Faça login em http://localhost:3000
+# 2. Complete o onboarding
+# 3. Crie um agente
+# 4. Teste a geração de documento
 ```
 
 ---
@@ -213,53 +242,166 @@ studio-1/
 
 ```bash
 # Desenvolvimento
-npm run dev                      # Inicia frontend
+npm run dev                      # Inicia frontend (Turbopack)
 npm run build                    # Build de produção
-npm run lint                     # Executa linting
-npm run type-check              # Verifica tipos TypeScript
+npm run start                    # Serve build de produção
+npm run lint                     # Executa ESLint
+npm run lint -- --fix            # Corrige erros automáticos
+npm run typecheck               # Verifica tipos TypeScript
+
+# Testes
+npm run test:orchestrator        # Testa orquestrador de IA
 
 # Firebase
 firebase deploy                  # Deploy completo
-firebase deploy --only functions # Deploy apenas functions
-firebase deploy --only hosting  # Deploy apenas frontend
+firebase deploy --only hosting   # Deploy apenas frontend
+firebase deploy --only firestore # Deploy apenas rules
+firebase emulators:start         # Inicia emulators locais
 
-# Debugging
-npm run debug:orchestrator       # Debug do orquestrador
-npm run analyze:bundle          # Análise do bundle
+# Debugging e Análise
+npx next info                    # Info do ambiente Next.js
+npm ls                           # Lista dependências
 ```
 
 ---
 
 ## ❗ Troubleshooting
 
-### Erro: "Firebase not initialized"
-- Verifique se `.env.local` está configurado
-- Confirme se o projeto Firebase está ativo
-- Execute `firebase use --add your-project-id`
+### 🔥 Firebase: "auth/unauthorized-domain"
+```bash
+# Solução:
+# 1. Acesse Firebase Console > Authentication > Settings > Authorized domains
+# 2. Adicione seu domínio atual (ex: localhost:3000, seu-domain.vercel.app)
+# 3. Aguarde alguns minutos para propagação
+```
 
-### Erro: "API key invalid"
-- Verifique se as chaves das APIs de IA estão corretas
-- Confirme se as APIs estão habilitadas nos respectivos consoles
-- Verifique se há créditos/quota disponível
+### 🔥 Firebase: "not initialized" ou configuração inválida
+```bash
+# Verifique se todas as variáveis estão em .env.local:
+echo "Verificando configuração Firebase:"
+node -e "console.log(process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ API Key OK' : '❌ API Key missing')"
 
-### Erro: "Module not found"
-- Execute `npm install` novamente
-- Limpe cache: `npm run clean` (se disponível)
-- Verifique se está na versão correta do Node.js
+# Reconfigure o projeto se necessário:
+firebase use --add your-project-id
+firebase projects:list
+```
 
-### Performance Lenta
-- Verifique se está usando Next.js em modo desenvolvimento
-- Para produção, use `npm run build && npm start`
-- Monitore uso de APIs com `ENABLE_TRACING=true`
+### 🤖 API de IA: "key invalid" ou "quota exceeded"
+```bash
+# OpenAI - verifique quota e billing:
+# https://platform.openai.com/usage
+
+# Google AI - verifique se está dentro dos limits gratuitos:
+# https://aistudio.google.com/app/apikey
+
+# Teste a chave diretamente:
+curl -H "Authorization: Bearer $OPENAI_API_KEY" \
+  https://api.openai.com/v1/models
+```
+
+### 📦 Node.js: "Module not found" ou erros de dependência
+```bash
+# Limpe tudo e reinstale:
+rm -rf node_modules package-lock.json
+npm install
+
+# Verifique versão do Node.js:
+node --version  # deve ser 20+
+npm --version   # deve ser 10+
+
+# Use nvm se necessário:
+nvm install 20
+nvm use 20
+```
+
+### 🐌 Performance Lenta
+```bash
+# Em desenvolvimento (normal ser mais lento):
+npm run dev
+
+# Para testar performance real:
+npm run build
+npm start
+
+# Ative tracing para debug:
+ENABLE_TRACING=true npm run dev
+```
+
+### 🔐 Erro de CORS ou "Access denied"
+```bash
+# Verifique se está acessando de domínio autorizado
+# Adicione nos Authorized domains do Firebase Auth
+# Para desenvolvimento local, use sempre http://localhost:3000
+```
+
+### 📱 Interface não carrega ou tela branca
+```bash
+# Verifique console do navegador (F12)
+# Problemas comuns:
+# 1. Variáveis de ambiente não carregadas
+# 2. Erro de hidratação SSR
+# 3. Problema de autenticação
+
+# Debug mode:
+NODE_ENV=development npm run dev
+```
 
 ---
+
+## 🎯 Verificação Final
+
+Após o setup, verifique se tudo está funcionando:
+
+```bash
+# 1. Verificar build
+npm run typecheck
+npm run lint
+
+# 2. Testar orquestrador (se APIs configuradas)
+npm run test:orchestrator
+
+# 3. Iniciar projeto
+npm run dev
+
+# 4. Testar no navegador:
+# - http://localhost:3000 deve carregar
+# - Login com Google deve funcionar
+# - Onboarding deve fluir normalmente
+```
 
 ## 📞 Suporte
 
 - **Issues**: [GitHub Issues](https://github.com/VitorCabralll/studio-1/issues)
-- **Documentação**: Consulte os arquivos `.md` na raiz do projeto
-- **API Reference**: Veja `src/ai/orchestrator/types.ts` para tipos completos
+- **Documentação**: Consulte `README.md` e `CLAUDE.md` para referência completa
+- **API Reference**: `src/ai/orchestrator/types.ts` para tipos do orquestrador
+- **Architecture**: Veja `src/ai/orchestrator/README.md` para detalhes técnicos
+
+## 🚦 Status de Funcionalidades
+
+| Funcionalidade | Status | Como Testar |
+|----------------|--------|--------------|
+| ✅ **Autenticação** | Completo | Login/Signup funcionando |
+| ✅ **Onboarding** | Completo | Fluxo após primeiro login |
+| ✅ **OCR Local** | Completo | Upload de PDFs na interface |
+| ✅ **Orquestrador IA** | Completo | `npm run test:orchestrator` |
+| ✅ **Interface de Geração** | Completo | Criar agente → Gerar documento |
+| 🔄 **Exportação PDF** | Parcial | Texto funciona, PDF pendente |
+| ⬜ **APIs Públicas** | Pendente | Sem autenticação ainda |
 
 ---
 
-**✅ Pronto! Agora você pode desenvolver e testar o LexAI localmente.**
+## 🎉 Setup Concluído!
+
+**Próximos passos:**
+1. ✅ **Explore a interface** - Faça login e complete o onboarding
+2. 🤖 **Crie seu primeiro agente** - Upload de template .docx
+3. 📄 **Gere um documento** - Teste o pipeline completo
+4. 🔧 **Configure APIs de IA** - Para funcionalidade completa
+5. 📚 **Leia a documentação** - `README.md` e `CLAUDE.md`
+
+**Recursos úteis:**
+- 🐛 **Debug Auth**: Botão no canto inferior direito para debug de autenticação
+- 🔍 **Logs detalhados**: Console do navegador (F12) mostra informações úteis
+- 🧪 **Modo de teste**: Use Google AI (gratuito) para desenvolvimento
+
+**🚀 Happy coding com LexAI!**

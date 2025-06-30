@@ -11,9 +11,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (loading || !router) {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || loading || !router) {
       return;
     }
     
@@ -29,9 +35,21 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If user is authenticated, but profile is not loaded yet, wait.
+    // If user is authenticated, but profile is not loaded yet, wait with timeout
     if (!userProfile) {
-      return;
+      // Se demorar mais de 15 segundos para carregar perfil, assumir erro e redirecionar
+      const timeoutId = setTimeout(() => {
+        if (mounted && user && !userProfile) {
+          console.warn('Timeout ao carregar perfil do usuário, redirecionando para onboarding');
+          if (pathname !== '/onboarding') {
+            router.replace('/onboarding');
+          }
+        }
+      }, 15000);
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
 
     // --- User is authenticated and profile is loaded from this point ---
@@ -74,7 +92,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       setIsVerified(true);
     }
 
-  }, [user, userProfile, loading, pathname, router]);
+  }, [mounted, user, userProfile, loading, pathname, router]);
 
   if (!isVerified) {
     return (

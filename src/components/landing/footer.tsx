@@ -32,33 +32,33 @@ export function Footer() {
 
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
           {/* Logo e descrição */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Scale className="w-5 h-5 text-white" />
+            <div className="mb-4 flex items-center space-x-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600">
+                <Scale className="size-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-xl font-bold text-transparent">
                 LexAI
               </span>
             </div>
-            <p className="text-gray-400 mb-6 leading-relaxed">
+            <p className="mb-6 leading-relaxed text-gray-400">
               Plataforma de IA especializada em documentos jurídicos brasileiros. 
               Automatize sua prática e foque no que realmente importa.
             </p>
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center">
-                <Mail className="w-4 h-4 mr-2" />
+                <Mail className="mr-2 size-4" />
                 contato@lexai.com.br
               </div>
               <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2" />
+                <Phone className="mr-2 size-4" />
                 (11) 9999-9999
               </div>
               <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-2" />
+                <MapPin className="mr-2 size-4" />
                 São Paulo, SP
               </div>
             </div>
@@ -66,13 +66,13 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Produto</h3>
+            <h3 className="mb-4 font-semibold text-white">Produto</h3>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </a>
@@ -82,13 +82,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Legal</h3>
+            <h3 className="mb-4 font-semibold text-white">Legal</h3>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </a>
@@ -98,13 +98,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Suporte</h3>
+            <h3 className="mb-4 font-semibold text-white">Suporte</h3>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </a>
@@ -114,13 +114,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Empresa</h3>
+            <h3 className="mb-4 font-semibold text-white">Empresa</h3>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="text-gray-400 transition-colors duration-200 hover:text-white"
                   >
                     {link.name}
                   </a>
@@ -131,19 +131,19 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
+        <div className="mt-12 border-t border-gray-800 pt-8">
+          <div className="flex flex-col items-center justify-between md:flex-row">
+            <p className="text-sm text-gray-400">
               © 2024 LexAI. Todos os direitos reservados.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <div className="mt-4 flex space-x-6 md:mt-0">
+              <a href="/terms" className="text-sm text-gray-400 transition-colors hover:text-white">
                 Termos
               </a>
-              <a href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
+              <a href="/privacy" className="text-sm text-gray-400 transition-colors hover:text-white">
                 Privacidade
               </a>
-              <a href="/cookies" className="text-gray-400 hover:text-white text-sm transition-colors">
+              <a href="/cookies" className="text-sm text-gray-400 transition-colors hover:text-white">
                 Cookies
               </a>
             </div>

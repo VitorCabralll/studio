@@ -1,10 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FadeIn } from "@/components/magic-ui";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { 
   Check, 
   Zap, 
@@ -13,6 +9,10 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
+import { FadeIn } from "@/components/magic-ui";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const plans = [
   {
@@ -81,26 +81,26 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section className="py-24 bg-white dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <FadeIn className="text-center mb-16">
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+    <section className="bg-white py-24 dark:bg-gray-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <FadeIn className="mb-16 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
             Preços
           </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+          <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
             Planos que crescem
             <span className="block text-blue-600 dark:text-blue-400">com seu escritório</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
             Todos os planos incluem 14 dias de teste gratuito. Sem taxa de setup, cancele quando quiser.
           </p>
         </FadeIn>
 
         {/* Pricing Toggle */}
-        <FadeIn delay={0.2} className="flex justify-center mb-12">
-          <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+        <FadeIn delay={0.2} className="mb-12 flex justify-center">
+          <div className="rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
             <div className="grid grid-cols-2 gap-1">
-              <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md">
+              <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">
                 Mensal
               </button>
               <button className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -110,27 +110,27 @@ export function PricingSection() {
           </div>
         </FadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {plans.map((plan, index) => (
             <FadeIn key={plan.name} delay={index * 0.1}>
-              <Card className={`relative h-full ${plan.color} ${plan.popular ? 'scale-105 shadow-2xl' : 'shadow-lg'} hover:shadow-xl transition-all duration-300`}>
+              <Card className={`relative h-full ${plan.color} ${plan.popular ? 'scale-105 shadow-2xl' : 'shadow-lg'} transition-all duration-300 hover:shadow-xl`}>
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-blue-600 text-white px-4 py-1">
-                      <Sparkles className="w-3 h-3 mr-1" />
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-blue-600 px-4 py-1 text-white">
+                      <Sparkles className="mr-1 size-3" />
                       Mais Popular
                     </Badge>
                   </div>
                 )}
                 
-                <CardHeader className="text-center pb-6">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <plan.icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                <CardHeader className="pb-6 text-center">
+                  <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                    <plan.icon className="size-6 text-gray-600 dark:text-gray-400" />
                   </div>
                   <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
                     {plan.name}
                   </CardTitle>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {plan.description}
                   </p>
                   <div className="mt-4">
@@ -144,10 +144,10 @@ export function PricingSection() {
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                  <Button className={`w-full mb-6 ${plan.buttonStyle}`}>
+                  <Button className={`mb-6 w-full ${plan.buttonStyle}`}>
                     <span className="flex items-center">
                       Começar Teste Gratuito
-                      <ArrowRight className="ml-2 w-4 h-4" />
+                      <ArrowRight className="ml-2 size-4" />
                     </span>
                   </Button>
 
@@ -160,8 +160,8 @@ export function PricingSection() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 + featureIndex * 0.05 }}
                       >
-                        <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300 text-sm">
+                        <Check className="mr-3 mt-0.5 size-5 shrink-0 text-green-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
                           {feature}
                         </span>
                       </motion.li>
@@ -169,10 +169,10 @@ export function PricingSection() {
                   </ul>
 
                   {plan.name === "Enterprise" && (
-                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                    <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+                      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                         Precisa de algo específico?{" "}
-                        <button className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                        <button className="font-medium text-blue-600 hover:underline dark:text-blue-400">
                           Fale conosco
                         </button>
                       </p>
@@ -186,11 +186,11 @@ export function PricingSection() {
 
         {/* FAQ Section */}
         <FadeIn delay={0.8} className="mt-16">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-6">
+          <div className="rounded-2xl bg-gray-50 p-8 dark:bg-gray-800">
+            <h3 className="mb-6 text-center text-xl font-bold text-gray-900 dark:text-white">
               Perguntas Frequentes
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {[
                 {
                   question: "Posso cancelar a qualquer momento?",
@@ -226,15 +226,15 @@ export function PricingSection() {
         <FadeIn delay={1} className="mt-12 text-center">
           <div className="flex items-center justify-center space-x-8 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <div className="mr-2 size-2 rounded-full bg-green-500"></div>
               14 dias grátis
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              <div className="mr-2 size-2 rounded-full bg-blue-500"></div>
               Sem cartão obrigatório
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              <div className="mr-2 size-2 rounded-full bg-purple-500"></div>
               Cancele quando quiser
             </div>
           </div>

@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Eye, EyeOff, Mail, Lock, User, Scale, Building, Phone } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/magic-ui";
-import { Eye, EyeOff, Mail, Lock, User, Scale, Building, Phone } from "lucide-react";
-import Link from "next/link";
 import { useAuth } from '@/hooks/use-auth';
 
 export function SignupForm() {
@@ -63,7 +63,7 @@ export function SignupForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <FadeIn className="w-full max-w-lg">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -71,23 +71,23 @@ export function SignupForm() {
           transition={{ duration: 0.5 }}
         >
           {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center space-x-2 group">
+          <div className="mb-8 text-center">
+            <Link href="/" className="group inline-flex items-center space-x-2">
               <motion.div 
-                className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center"
+                className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
-                <Scale className="w-7 h-7 text-white" />
+                <Scale className="size-7 text-white" />
               </motion.div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-bold text-transparent">
                 LexAI
               </span>
             </Link>
           </div>
 
-          <Card className="border-0 shadow-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-2">
+          <Card className="border-0 bg-white/80 shadow-xl backdrop-blur-sm dark:bg-gray-900/80">
+            <CardHeader className="space-y-2 text-center">
               <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
                 Comece gratuitamente
               </CardTitle>
@@ -98,11 +98,11 @@ export function SignupForm() {
             
             <CardContent className="space-y-4">
               {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
                   {error}
                   <button 
                     onClick={clearError}
-                    className="ml-2 text-red-800 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
+                    className="ml-2 text-red-800 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
                   >
                     ×
                   </button>
@@ -115,14 +115,14 @@ export function SignupForm() {
                     Nome completo *
                   </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
                       id="name"
                       type="text"
                       placeholder="Seu nome completo"
                       value={formData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
-                      className="pl-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="border-gray-200 bg-white/50 pl-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       required
                     />
                   </div>
@@ -134,34 +134,34 @@ export function SignupForm() {
                     Email profissional *
                   </Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="seu@escritorio.com"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="pl-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="border-gray-200 bg-white/50 pl-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Phone and Company Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Telefone
                     </Label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                       <Input
                         id="phone"
                         type="tel"
                         placeholder="(11) 99999-9999"
                         value={formData.phone}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
-                        className="pl-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="border-gray-200 bg-white/50 pl-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       />
                     </div>
                   </div>
@@ -171,14 +171,14 @@ export function SignupForm() {
                       Escritório/Empresa
                     </Label>
                     <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Building className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                       <Input
                         id="company"
                         type="text"
                         placeholder="Nome do escritório"
                         value={formData.company}
                         onChange={(e) => handleInputChange("company", e.target.value)}
-                        className="pl-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="border-gray-200 bg-white/50 pl-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       />
                     </div>
                   </div>
@@ -195,7 +195,7 @@ export function SignupForm() {
                     placeholder="SP 123456"
                     value={formData.oab}
                     onChange={(e) => handleInputChange("oab", e.target.value)}
-                    className="bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                    className="border-gray-200 bg-white/50 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                   />
                 </div>
 
@@ -205,7 +205,7 @@ export function SignupForm() {
                     Senha *
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
@@ -213,15 +213,15 @@ export function SignupForm() {
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       minLength={8}
-                      className="pl-10 pr-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="border-gray-200 bg-white/50 px-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
                 </div>
@@ -232,22 +232,22 @@ export function SignupForm() {
                     Confirmar senha *
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirme sua senha"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      className="pl-10 pr-10 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="border-gray-200 bg-white/50 px-10 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800/50 dark:focus:border-blue-400"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
                 </div>
@@ -261,13 +261,13 @@ export function SignupForm() {
                       onCheckedChange={(checked) => handleInputChange("acceptTerms", checked as boolean)}
                       className="mt-1"
                     />
-                    <Label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <Label htmlFor="terms" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                       Aceito os{" "}
-                      <Link href="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <Link href="/terms" className="text-blue-600 hover:underline dark:text-blue-400">
                         Termos de Uso
                       </Link>{" "}
                       e{" "}
-                      <Link href="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <Link href="/privacy" className="text-blue-600 hover:underline dark:text-blue-400">
                         Política de Privacidade
                       </Link>
                     </Label>
@@ -293,12 +293,12 @@ export function SignupForm() {
                 >
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium shadow-lg"
+                    className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-3 font-medium text-white shadow-lg hover:from-blue-700 hover:to-purple-700"
                     disabled={loading}
                   >
                     {loading ? (
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         <span>Criando conta...</span>
                       </div>
                     ) : (
@@ -314,7 +314,7 @@ export function SignupForm() {
                   <div className="w-full border-t border-gray-200 dark:border-gray-700" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">ou</span>
+                  <span className="bg-white px-2 text-gray-500 dark:bg-gray-900">ou</span>
                 </div>
               </div>
 
@@ -325,11 +325,11 @@ export function SignupForm() {
               >
                 <Button
                   variant="outline"
-                  className="w-full border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="w-full border-gray-200 bg-white/50 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:bg-gray-800"
                   onClick={handleGoogleSignup}
                   disabled={loading}
                 >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <svg className="mr-2 size-5" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -357,7 +357,7 @@ export function SignupForm() {
                   Já tem uma conta?{" "}
                   <Link 
                     href="/login" 
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
                     Faça login
                   </Link>
