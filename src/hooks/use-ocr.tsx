@@ -3,12 +3,21 @@
 import { useState, useCallback, useRef } from 'react';
 import { createWorker, Worker, recognize } from 'tesseract.js';
 
+/**
+ * Result object returned from OCR processing
+ */
 export interface OCRResult {
+  /** Extracted text content */
   text: string;
+  /** Overall confidence score (0-1) */
   confidence: number;
+  /** Individual words with position and confidence data */
   words: Array<{
+    /** Word text */
     text: string;
+    /** Word confidence score (0-1) */
     confidence: number;
+    /** Bounding box coordinates */
     bbox: {
       x0: number;
       y0: number;
@@ -18,20 +27,84 @@ export interface OCRResult {
   }>;
 }
 
+/**
+ * Progress information during OCR processing
+ */
 export interface OCRProgress {
+  /** Current processing status */
   status: string;
+  /** Progress percentage (0-100) */
   progress: number;
+  /** Human-readable progress message */
   message: string;
 }
 
+/**
+ * Configuration options for OCR processing
+ */
 interface UseOCROptions {
+  /** Language(s) for OCR recognition. Default: 'por+eng' (Portuguese + English) */
   language?: string;
+  /** Enable character whitelist filtering */
   enableWhitelist?: boolean;
+  /** Character whitelist string (only these characters will be recognized) */
   whitelist?: string;
+  /** Enable automatic deskewing of tilted images */
   enableDeskew?: boolean;
+  /** Enable automatic rotation detection and correction */
   enableRotation?: boolean;
 }
 
+/**
+ * Hook for OCR (Optical Character Recognition) processing using Tesseract.js.
+ * 
+ * Provides functionality to extract text from images and PDF files locally in the browser.
+ * Optimized for legal documents with Portuguese and English language support.
+ * 
+ * Features:
+ * - Local processing (no server upload required)
+ * - Progress tracking with real-time updates
+ * - Automatic image preprocessing (deskew, rotation)
+ * - Support for multiple image formats
+ * - Confidence scoring for reliability assessment
+ * - Word-level positioning data
+ * 
+ * @param options - Configuration options for OCR processing
+ * @returns Object with OCR processing methods and state
+ * 
+ * @example
+ * ```tsx
+ * function DocumentUpload() {
+ *   const { processImage, isProcessing, progress, error } = useOCR({
+ *     language: 'por+eng',
+ *     enableDeskew: true
+ *   });
+ * 
+ *   const handleFile = async (file: File) => {
+ *     try {
+ *       const result = await processImage(file);
+ *       console.log('Extracted text:', result.text);
+ *       console.log('Confidence:', result.confidence);
+ *     } catch (err) {
+ *       console.error('OCR failed:', err);
+ *     }
+ *   };
+ * 
+ *   return (
+ *     <div>
+ *       <input type="file" onChange={(e) => handleFile(e.target.files[0])} />
+ *       {isProcessing && (
+ *         <div>
+ *           <p>{progress.message}</p>
+ *           <progress value={progress.progress} max={100} />
+ *         </div>
+ *       )}
+ *       {error && <p>Error: {error}</p>}
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export function useOCR(options: UseOCROptions = {}) {
   const {
     language = 'por+eng', // Português + Inglês para documentos jurídicos

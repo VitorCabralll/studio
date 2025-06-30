@@ -7,17 +7,42 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 
-
+/**
+ * Context type for authentication state and methods.
+ * Provides complete authentication functionality for the LexAI application.
+ */
 interface AuthContextType {
+  /** Current authenticated Firebase user or null if not logged in */
   user: User | null;
+  /** Extended user profile data from Firestore or null if not loaded */
   userProfile: UserProfile | null;
+  /** Whether authentication state is being determined */
   loading: boolean;
+  /** Current authentication error message or null */
   error: string | null;
+  /** 
+   * Login with email and password
+   * @param email - User's email address
+   * @param password - User's password
+   */
   login: (email: string, password: string) => Promise<void>;
+  /** 
+   * Create new account with email and password
+   * @param email - User's email address
+   * @param password - User's password  
+   * @param userData - Optional additional user data for profile creation
+   */
   signup: (email: string, password: string, userData?: any) => Promise<void>;
+  /** Login using Google OAuth popup */
   loginWithGoogle: () => Promise<void>;
+  /** Sign out current user and clear state */
   logout: () => void;
+  /** 
+   * Update user profile state locally (for optimistic updates)
+   * @param data - Partial profile data to update
+   */
   updateUserProfileState: (data: Partial<UserProfile>) => void;
+  /** Clear current error state */
   clearError: () => void;
 }
 
@@ -34,6 +59,27 @@ const AuthContext = createContext<AuthContextType>({
   clearError: () => {},
 });
 
+/**
+ * Authentication Provider component that manages Firebase auth state and user profiles.
+ * 
+ * Features:
+ * - Firebase Authentication integration
+ * - Automatic profile loading from Firestore
+ * - Google OAuth support
+ * - Race condition prevention
+ * - Mock mode for development without Firebase
+ * - Automatic redirection based on user state
+ * 
+ * @param children - React children to wrap with auth context
+ * @returns JSX element providing authentication context
+ * 
+ * @example
+ * ```tsx
+ * <AuthProvider>
+ *   <App />
+ * </AuthProvider>
+ * ```
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -286,6 +332,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+/**
+ * Hook to access authentication context and methods.
+ * 
+ * Must be used within an AuthProvider component.
+ * 
+ * @returns AuthContextType with current auth state and methods
+ * 
+ * @throws Error if used outside of AuthProvider
+ * 
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const { user, loading, login, logout } = useAuth();
+ *   
+ *   if (loading) return <div>Loading...</div>;
+ *   
+ *   return (
+ *     <div>
+ *       {user ? (
+ *         <button onClick={logout}>Logout {user.email}</button>
+ *       ) : (
+ *         <button onClick={() => login('email', 'password')}>Login</button>
+ *       )}
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
