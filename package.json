@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build && npm run analyze",
+    "build:prod": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:orchestrator": "npx tsx src/ai/orchestrator/test-example.ts"
+    "test:orchestrator": "npx tsx src/ai/orchestrator/test-example.ts",
+    "analyze": "node scripts/optimize-build.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
