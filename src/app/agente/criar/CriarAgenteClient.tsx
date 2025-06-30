@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Lazy load do componente de upload de arquivos
 const FileUpload = dynamic(
-  () => import('@/components/file-upload').then(mod => ({ default: mod.FileUpload })),
+  () => import('@/components/file-upload-enhanced').then(mod => ({ default: mod.FileUploadEnhanced })),
   {
     loading: () => (
       <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">

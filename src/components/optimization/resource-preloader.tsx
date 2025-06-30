@@ -36,7 +36,7 @@ export function ResourcePreloader() {
 
     // Preload file upload para páginas de criação de agente
     if (currentPath.includes('/agente/criar')) {
-      import('@/components/file-upload').catch(() => {
+      import('@/components/file-upload-enhanced').catch(() => {
         // Silently fail se o preload falhar
       });
     }
