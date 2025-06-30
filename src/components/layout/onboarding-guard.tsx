@@ -66,9 +66,9 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // 3. User is fully onboarded. Redirect from setup pages to dashboard.
-    const forbiddenPaths = ['/login', '/signup', '/onboarding', '/workspace', '/workspace/success'];
-    if (forbiddenPaths.some(p => pathname.startsWith(p))) {
+    // 3. User is fully onboarded. Allow access to all pages except setup pages.
+    const setupPages = ['/login', '/signup', '/onboarding'];
+    if (setupPages.some(p => pathname.startsWith(p))) {
       router.replace('/');
     } else {
       setIsVerified(true);

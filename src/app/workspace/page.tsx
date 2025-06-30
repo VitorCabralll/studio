@@ -51,9 +51,15 @@ function WorkspacePageContent() {
       const newWorkspace = { name: newWorkspaceName.trim() };
       const updatedWorkspaces = [...existingWorkspaces, newWorkspace];
 
-      const result = await updateUserProfile(user.uid, { workspaces: updatedWorkspaces });
+      const result = await updateUserProfile(user.uid, { 
+        workspaces: updatedWorkspaces,
+        initial_setup_complete: true  // ✅ Marcar setup como completo
+      });
       if (result.success) {
-        updateUserProfileState({ workspaces: updatedWorkspaces });
+        updateUserProfileState({ 
+          workspaces: updatedWorkspaces,
+          initial_setup_complete: true  // ✅ Atualizar estado local
+        });
         router.push('/workspace/success');
       } else {
         console.error("Erro ao criar workspace:", result.error);
