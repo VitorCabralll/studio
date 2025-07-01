@@ -156,7 +156,7 @@ export function useOCR(options: UseOCROptions = {}) {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  }, [language, enableWhitelist, whitelist, enableDeskew]);
+  }, [language, enableWhitelist, whitelist]);
 
   // Processar imagem para OCR
   const processImage = useCallback(async (

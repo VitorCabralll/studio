@@ -24,17 +24,12 @@ export interface LLMRequest {
   stopSequences?: string[];
 }
 
-export interface LLMUsage {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  cost?: number;
-}
+import type { TokenUsage } from '../types';
 
 export interface LLMResponse {
   content: string;
-  finishReason: 'stop' | 'length' | 'content_filter' | 'error';
-  usage?: LLMUsage;
+  finishReason: 'stop' | 'length' | 'function_call' | 'content_filter' | 'error';
+  usage?: TokenUsage;
   model?: string;
   id?: string;
 }
@@ -84,7 +79,7 @@ export abstract class BaseLLMClient {
     }
   }
 
-  protected calculateCost(usage: LLMUsage, inputPrice: number, outputPrice: number): number {
+  protected calculateCost(usage: TokenUsage, inputPrice: number, outputPrice: number): number {
     const inputCost = (usage.promptTokens / 1000000) * inputPrice;
     const outputCost = (usage.completionTokens / 1000000) * outputPrice;
     return inputCost + outputCost;

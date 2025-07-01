@@ -2,7 +2,7 @@
  * API Route para status e informações do orquestrador
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { defaultOrchestrator } from '@/ai/orchestrator';
 
 interface OrchestratorStatus {

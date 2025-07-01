@@ -24,11 +24,12 @@ const profileSchema = z.object({
   areas_atuacao: z.array(z.string()).min(1, 'Selecione pelo menos uma área de atuação.'),
 });
 
-const stepVariants = {
-  enter: { opacity: 0, x: 50 },
-  center: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -50 }
-};
+// Animation variants for future use
+// const stepVariants = {
+//   enter: { opacity: 0, x: 50 },
+//   center: { opacity: 1, x: 0 },
+//   exit: { opacity: 0, x: -50 }
+// };
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 

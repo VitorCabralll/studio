@@ -17,17 +17,7 @@ import { useFocusManagement } from '@/hooks/use-focus-management';
 // import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
 // import { contextualDocumentGeneration, ContextualDocumentGenerationInput } from '@/ai/flows/contextual-document-generation';
 
-// Temporary types
-type GenerateDocumentOutlineInput = {
-  instructions: string;
-  attachments?: string[];
-  format?: 'outline' | 'full';
-};
-
-type ContextualDocumentGenerationInput = {
-  instructions: string;
-  attachmentDataUris?: string[];
-};
+// Temporary types (commented out - not currently used)
 
 const steps = [
   { id: 1, title: 'Modo de Geração' },

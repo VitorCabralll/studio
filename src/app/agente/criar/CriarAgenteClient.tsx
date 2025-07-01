@@ -107,7 +107,7 @@ export function CriarAgenteClient() {
         className="relative z-10 w-full max-w-4xl"
       >
         <Card className="surface-elevated shadow-apple-lg border-2 border-border/50">
-          <form onSubmit={handleCreateAgent} onKeyPress={handleKeyPress}>
+          <form onSubmit={handleCreateAgent} onKeyDown={handleKeyPress}>
             <CardHeader className="space-y-8 pb-8 text-center">
               {/* Logo/Icon */}
               <motion.div

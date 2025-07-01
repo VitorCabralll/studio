@@ -101,8 +101,8 @@ export interface LLMRequest {
 
 export interface LLMResponse {
   content: string;
-  finishReason: 'stop' | 'length' | 'function_call' | 'error';
-  usage: TokenUsage;
+  finishReason: 'stop' | 'length' | 'function_call' | 'content_filter' | 'error';
+  usage?: TokenUsage;
   functionCall?: FunctionCall;
   metadata?: Record<string, any>;
 }

@@ -59,7 +59,7 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 // Web Worker for heavy computations
-export function createWorker(workerFunction: Function): Worker {
+export function createWorker(workerFunction: () => void): Worker {
   const blob = new Blob([`(${workerFunction.toString()})()`], {
     type: 'application/javascript'
   });

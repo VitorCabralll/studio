@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from './fonts';
 import { ErrorBoundary } from '@/components/layout/error-boundary';
 import { SkipLinks } from '@/components/layout/skip-links';
@@ -7,8 +9,6 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import './globals.css';
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import dynamic from 'next/dynamic';
 
 // Lazy load do componente de debug apenas em desenvolvimento
 const AuthDebug = dynamic(
