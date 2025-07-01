@@ -8,7 +8,6 @@ LexAI é uma plataforma SaaS para automação de documentos jurídicos usando Ne
 - `npm run build` - Build de produção
 - `npm run lint` - Executa o linter
 - `npm run typecheck` - Verifica tipos TypeScript
-- `npm run test:orchestrator` - Testa o orquestrador de IA
 - `firebase emulators:start` - Inicia emulators Firebase (desenvolvimento local)
 - `firebase deploy` - Deploy para produção
 
@@ -34,11 +33,18 @@ LexAI é uma plataforma SaaS para automação de documentos jurídicos usando Ne
 - Firebase para backend
 - Validação com Zod
 
+## Configuração de Produção
+- **OBRIGATÓRIO**: Todas as variáveis Firebase devem estar configuradas
+- **OBRIGATÓRIO**: APIs de IA (OpenAI, Google AI, Anthropic) configuradas
+- **OBRIGATÓRIO**: Validação automática de ambiente na inicialização
+- **Modo Mock Removido**: Aplicação roda apenas com Firebase
+
 ## Segurança
 - Nunca expor chaves de API no frontend
 - Processar OCR localmente (cliente)
 - Validar todos os uploads
 - Isolamento por workspace
+- Configuração Firebase obrigatória em produção
 
 ## Arquivos de Referência
 Ver @README.md para visão completa do projeto

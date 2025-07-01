@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged, User, signOut, signInWithEmailAndPassword,
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
+import { firebaseApp } from '@/lib/firebase';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 
 /**
@@ -67,7 +67,6 @@ const AuthContext = createContext<AuthContextType>({
  * - Automatic profile loading from Firestore
  * - Google OAuth support
  * - Race condition prevention
- * - Mock mode for development without Firebase
  * - Automatic redirection based on user state
  * 
  * @param children - React children to wrap with auth context
@@ -89,22 +88,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // Marcar componente como montado e persistência do mock
+  // Initialize Firebase auth state listener
   useEffect(() => {
     setMounted(true);
     
-    if (!isFirebaseConfigured) {
-      // Verificar se está no cliente antes de acessar localStorage
-      if (typeof window !== 'undefined') {
-        const storedUser = localStorage.getItem('lexai_mock_user');
-        const storedProfile = localStorage.getItem('lexai_mock_userProfile');
-        if (storedUser) setUser(JSON.parse(storedUser));
-        if (storedProfile) setUserProfile(JSON.parse(storedProfile));
-      }
-      setLoading(false);
-      return;
-    }
-
     const auth = getAuth(firebaseApp);
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -154,18 +141,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [mounted, authProcessing]);
 
-  const getMockUser = (email?: string, displayName?: string) => ({
-    uid: 'test-user-123',
-    email: email || 'test@lexai.com',
-    displayName: displayName || 'Advogado Teste',
-  } as User);
-
-  const getNewMockUser = (email?: string) => ({
-    uid: `new-user-${Date.now()}`,
-    email: email || 'novo@lexai.com',
-    displayName: 'Novo Usuário',
-  } as User);
-
   const login = async (email: string, password: string) => {
     if (authProcessing) {
       console.log('Auth processing em andamento, ignorando login');
@@ -175,31 +150,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      if (!isFirebaseConfigured) {
-        // Mock login
-        if (email === 'test@lexai.com' && password === 'test123') {
-          const mockUser = getMockUser();
-          setUser(mockUser);
-          const mockProfile = {
-            cargo: 'Advogado(a)',
-            areas_atuacao: ['Direito Civil'],
-            primeiro_acesso: false,
-            initial_setup_complete: true,
-            data_criacao: new Date() as any,
-            workspaces: [{ name: "Workspace Pessoal" }],
-          };
-          setUserProfile(mockProfile);
-          localStorage.setItem('lexai_mock_user', JSON.stringify(mockUser));
-          localStorage.setItem('lexai_mock_userProfile', JSON.stringify(mockProfile));
-          router.push('/');
-        } else {
-          throw new Error('Email ou senha incorretos');
-        }
-      } else {
-        const auth = getAuth(firebaseApp);
-        await signInWithEmailAndPassword(auth, email, password);
-        router.push('/');
-      }
+      const auth = getAuth(firebaseApp);
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/');
     } catch (error: any) {
       console.error('Erro no login:', error);
       setError(error.message || 'Erro ao fazer login');
@@ -217,27 +170,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      if (!isFirebaseConfigured) {
-        // Mock signup
-        const newUser = getNewMockUser(email);
-        setUser(newUser);
-        const newUserProfile: UserProfile = {
-          cargo: userData?.cargo || '',
-          areas_atuacao: userData?.areas_atuacao || [],
-          primeiro_acesso: true,
-          initial_setup_complete: false,
-          data_criacao: new Date() as any,
-          workspaces: [],
-        };
-        setUserProfile(newUserProfile);
-        localStorage.setItem('lexai_mock_user', JSON.stringify(newUser));
-        localStorage.setItem('lexai_mock_userProfile', JSON.stringify(newUserProfile));
-        router.push('/onboarding');
-      } else {
-        const auth = getAuth(firebaseApp);
-        await createUserWithEmailAndPassword(auth, email, password);
-        router.push('/onboarding');
-      }
+      const auth = getAuth(firebaseApp);
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push('/onboarding');
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
       setError(error.message || 'Erro ao criar conta');
@@ -255,30 +190,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      if (!isFirebaseConfigured) {
-        // Mock Google login
-        const mockUser = getMockUser('google@lexai.com', 'Usuário Google');
-        setUser(mockUser);
-        const mockProfile = {
-          cargo: '',
-          areas_atuacao: [],
-          primeiro_acesso: true,
-          initial_setup_complete: false,
-          data_criacao: new Date() as any,
-          workspaces: [],
-        };
-        setUserProfile(mockProfile);
-        localStorage.setItem('lexai_mock_user', JSON.stringify(mockUser));
-        localStorage.setItem('lexai_mock_userProfile', JSON.stringify(mockProfile));
-        router.push('/onboarding');
-      } else {
-        const auth = getAuth(firebaseApp);
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        
-        // Não redirecionar nem fazer mais nada - onAuthStateChanged cuidará de tudo
-        console.log('Login com Google realizado com sucesso');
-      }
+      const auth = getAuth(firebaseApp);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      
+      // Não redirecionar nem fazer mais nada - onAuthStateChanged cuidará de tudo
+      console.log('Login com Google realizado com sucesso');
     } catch (error: any) {
       console.error('Erro no login com Google:', error);
       setError(error.message || 'Erro ao fazer login com Google');
@@ -288,24 +205,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    if (!isFirebaseConfigured) {
-      setUser(null);
-      setUserProfile(null);
-      localStorage.removeItem('lexai_mock_user');
-      localStorage.removeItem('lexai_mock_userProfile');
-      router.push('/login');
-    } else {
-      const auth = getAuth(firebaseApp);
-      signOut(auth);
-    }
+    const auth = getAuth(firebaseApp);
+    signOut(auth);
   };
 
   const updateUserProfileState = (data: Partial<UserProfile>) => {
     setUserProfile(prev => {
       const updated = prev ? { ...prev, ...data } : null;
-      if (!isFirebaseConfigured && updated) {
-        localStorage.setItem('lexai_mock_userProfile', JSON.stringify(updated));
-      }
       return updated;
     });
   };

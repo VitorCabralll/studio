@@ -1,8 +1,8 @@
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
 
-import { firebaseApp, isFirebaseConfigured } from '@/lib/firebase';
+import { firebaseApp } from '@/lib/firebase';
 
-const db = isFirebaseConfigured ? getFirestore(firebaseApp) : null;
+const db = getFirestore(firebaseApp);
 
 // Tipos para resultado de operações com tratamento de erro
 export interface ServiceResult<T> {
@@ -83,19 +83,6 @@ export interface UserProfile {
 
 export async function getUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
   try {
-    // Modo mock quando Firebase não está configurado
-    if (!isFirebaseConfigured || !db) {
-      const mockProfile: UserProfile = {
-        cargo: '',
-        areas_atuacao: [],
-        primeiro_acesso: true,
-        initial_setup_complete: false,
-        data_criacao: new Date(),
-        workspaces: [],
-      };
-      return { data: mockProfile, error: null, success: true };
-    }
-
     // Validação de entrada
     if (!uid || uid.trim() === '') {
       return {
@@ -186,17 +173,6 @@ export async function createUserProfile(
       };
     }
 
-    // Modo mock quando Firebase não está configurado
-    if (!isFirebaseConfigured || !db) {
-      console.log(`[MOCK] Criando perfil para usuário ${uid}`, data);
-      const mockProfile: UserProfile = {
-        ...data,
-        initial_setup_complete: data.initial_setup_complete || false,
-        data_criacao: new Date(),
-        workspaces: data.workspaces || []
-      };
-      return { data: mockProfile, error: null, success: true };
-    }
 
     const userDocRef = doc(db, 'usuarios', uid);
     const profileData = {
@@ -253,11 +229,6 @@ export async function updateUserProfile(
       };
     }
 
-    // Modo mock quando Firebase não está configurado
-    if (!isFirebaseConfigured || !db) {
-      console.log(`[MOCK] Atualizando perfil para usuário ${uid}`, data);
-      return { data, error: null, success: true };
-    }
 
     const userDocRef = doc(db, 'usuarios', uid);
     

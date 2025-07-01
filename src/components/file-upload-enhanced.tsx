@@ -8,6 +8,8 @@ import { useDropzone } from 'react-dropzone';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { useDocumentProcessor } from '@/hooks/use-document-processor';
 import { cn } from '@/lib/utils';
 
 
@@ -27,6 +29,8 @@ const OCRProcessor = dynamic(
 interface FileUploadEnhancedProps {
   onFilesChange: (files: File[]) => void;
   onTextExtracted?: (text: string, structured?: any) => void;
+  onTextsProcessed?: (extractedTexts: any[]) => void;
+  documentId?: string;
   enableOCR?: boolean;
   className?: string;
 }
@@ -34,17 +38,39 @@ interface FileUploadEnhancedProps {
 export function FileUploadEnhanced({ 
   onFilesChange, 
   onTextExtracted,
+  onTextsProcessed,
+  documentId,
   enableOCR = true,
   className 
 }: FileUploadEnhancedProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [extractedTexts, setExtractedTexts] = useState<string[]>([]);
+  
+  // Hook do Document Processor
+  const { 
+    processFiles, 
+    processing, 
+    progress, 
+    status,
+    error: processingError,
+    extractedTexts: processedTexts,
+    clearError 
+  } = useDocumentProcessor();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const newFiles = [...files, ...acceptedFiles];
     setFiles(newFiles);
     onFilesChange(newFiles);
-  }, [files, onFilesChange]);
+    
+    // Processar documentos automaticamente se habilitado e documentId fornecido
+    if (enableOCR && documentId && acceptedFiles.length > 0) {
+      clearError();
+      const processedTexts = await processFiles(acceptedFiles, documentId);
+      if (processedTexts) {
+        onTextsProcessed?.(processedTexts);
+      }
+    }
+  }, [files, onFilesChange, enableOCR, documentId, processFiles, onTextsProcessed, clearError]);
 
   const removeFile = useCallback((fileToRemove: File) => {
     const newFiles = files.filter(file => file !== fileToRemove);
@@ -115,7 +141,7 @@ export function FileUploadEnhanced({
               </h3>
               <p className="text-body-large mx-auto max-w-md leading-relaxed text-muted-foreground">
                 Clique para selecionar arquivos ou arraste e solte aqui. 
-                {enableOCR && <span className="font-medium text-blue-600">Texto será extraído automaticamente</span>}
+                {enableOCR && <span className="font-medium text-blue-600">Texto será extraído via OCR local (arquivos não são salvos)</span>}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <Badge variant="secondary" className="bg-muted/50 text-xs text-muted-foreground">
@@ -133,6 +159,42 @@ export function FileUploadEnhanced({
         </motion.div>
       </div>
     </motion.div>
+  );
+
+  const renderProcessingProgress = () => (
+    <AnimatePresence>
+      {(processing || progress > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="space-y-3"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+              <ScanText className="size-4 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                {processing ? 'Processando documentos...' : 'Processamento concluído!'}
+              </p>
+              {status && (
+                <p className="text-xs text-muted-foreground">{status}</p>
+              )}
+              <Progress value={progress} className="mt-1 h-1" />
+            </div>
+            {progress === 100 && (
+              <CheckCircle className="size-5 text-green-600" />
+            )}
+          </div>
+          {processingError && (
+            <div className="rounded-lg bg-red-50 p-3 dark:bg-red-950/30">
+              <p className="text-sm text-red-600 dark:text-red-400">{processingError}</p>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 
   const renderFileList = () => (
@@ -244,6 +306,7 @@ export function FileUploadEnhanced({
   return (
     <div className={cn("space-y-6", className)}>
       {renderUploadArea()}
+      {enableOCR && renderProcessingProgress()}
       {renderFileList()}
       
       {/* OCR automático para arquivos de imagem/PDF */}
