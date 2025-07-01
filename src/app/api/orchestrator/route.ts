@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { defaultOrchestrator } from '@/ai/orchestrator';
+import { orchestratorClient } from '@/services/orchestrator-client';
 import { adminAuth } from '@/lib/firebase-admin';
 
 interface OrchestratorStatus {
@@ -56,27 +56,46 @@ export async function GET(request: NextRequest): Promise<NextResponse<Orchestrat
       }, { status: 401 });
     }
 
-    // Obter configuração do orquestrador
-    const config = defaultOrchestrator.getConfig();
+    // Obter status das Functions
+    const functionsStatus = await orchestratorClient.healthCheck();
     
     // Verificar status das APIs (sem chamar - apenas verificar chaves)
-    const llmStatus = config.llmConfigs.map(llm => ({
-      provider: llm.provider,
-      model: llm.model,
-      available: true, // Assumir disponível se configurado
-      hasApiKey: checkApiKey(llm.provider)
-    }));
+    const llmStatus = [
+      {
+        provider: 'google',
+        model: 'gemini-1.5-pro',
+        available: true,
+        hasApiKey: checkApiKey('google')
+      },
+      {
+        provider: 'openai',
+        model: 'gpt-4',
+        available: true,
+        hasApiKey: checkApiKey('openai')
+      },
+      {
+        provider: 'anthropic',
+        model: 'claude-3-opus',
+        available: true,
+        hasApiKey: checkApiKey('anthropic')
+      }
+    ];
 
     // Informações do pipeline
     const pipelineInfo = {
-      stages: config.pipeline.length,
-      estimatedTime: estimateProcessingTime(config.pipeline)
+      stages: 5, // Pipeline padrão tem 5 etapas
+      estimatedTime: '45s - 2m'
     };
 
     return NextResponse.json({
       status: 'ok',
       llms: llmStatus,
-      pipeline: pipelineInfo
+      pipeline: pipelineInfo,
+      functions: {
+        status: functionsStatus.status,
+        version: functionsStatus.version,
+        llmCount: functionsStatus.llmCount
+      }
     });
 
   } catch (error) {
@@ -107,16 +126,3 @@ function checkApiKey(provider: string): boolean {
   }
 }
 
-// Estimar tempo de processamento baseado no pipeline
-function estimateProcessingTime(stages: any[]): string {
-  const baseTimePerStage = 10; // segundos
-  const totalSeconds = stages.length * baseTimePerStage;
-  
-  if (totalSeconds < 60) {
-    return `${totalSeconds}s`;
-  } else {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}m ${seconds}s`;
-  }
-}

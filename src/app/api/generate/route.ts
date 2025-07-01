@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateDocument } from '@/ai/orchestrator';
+import { generateDocument } from '@/services/orchestrator-client';
 import { adminAuth } from '@/lib/firebase-admin';
 import type { ProcessingInput, DocumentType, LegalArea } from '@/ai/orchestrator/types';
 
