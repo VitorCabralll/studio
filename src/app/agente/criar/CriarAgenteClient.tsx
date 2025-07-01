@@ -28,25 +28,28 @@ const FileUpload = dynamic(
 );
 
 import { useAuth } from '@/hooks/use-auth';
+import { useWorkspace } from '@/hooks/use-workspace';
 import { useToast } from "@/hooks/use-toast";
 import { legalAreas } from '@/lib/legal-constants';
+import { agentService } from '@/services/agent-service';
 import { updateUserProfile } from '@/services/user-service';
 
 export function CriarAgenteClient() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, updateUserProfileState } = useAuth();
+  const { currentWorkspace } = useWorkspace();
   const [agentName, setAgentName] = useState('');
   const [materia, setMateria] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = agentName.trim() !== '' && materia !== '';
+  const canSubmit = agentName.trim() !== '' && materia !== '' && currentWorkspace;
 
   const handleCreateAgent = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canSubmit || !user) {
+    if (!canSubmit || !user || !currentWorkspace) {
       setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -55,29 +58,47 @@ export function CriarAgenteClient() {
     setError(null);
     
     try {
-      // Simulate agent creation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Criar agente no workspace atual
+      const createResult = await agentService.createAgent({
+        name: agentName.trim(),
+        legalArea: materia,
+        workspaceId: currentWorkspace.id,
+        createdBy: user.uid,
+        trainingFiles: files.length > 0 ? files : undefined
+      });
 
-      // Update user profile to mark the end of the initial setup flow
-      const result = await updateUserProfile(user.uid, { initial_setup_complete: true });
-      if (result.success) {
-        updateUserProfileState({ initial_setup_complete: true });
-        
-        console.log("Agente criado com sucesso!", { agentName, materia, files: files.map(f => f.name) });
-        
-        // Show success toast
-        toast({
-          title: "Agente criado com sucesso!",
-          description: `O agente "${agentName}" foi criado e está pronto para uso.`,
-        });
-        
-        // Small delay before redirect to ensure toast is shown
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
+      if (createResult.success && createResult.agent) {
+        // Marcar setup como completo no perfil do usuário
+        const result = await updateUserProfile(user.uid, { initial_setup_complete: true });
+        if (result.success) {
+          updateUserProfileState({ initial_setup_complete: true });
+          
+          console.log("Agente criado com sucesso!", { 
+            agentId: createResult.agent.id,
+            agentName, 
+            materia, 
+            workspaceId: currentWorkspace.id,
+            files: files.map(f => f.name) 
+          });
+          
+          // Show success toast
+          toast({
+            title: "Agente criado com sucesso!",
+            description: `O agente "${agentName}" foi criado e está pronto para uso.`,
+          });
+          
+          // Small delay before redirect to ensure toast is shown
+          setTimeout(() => {
+            router.push('/generate'); // Redirecionar para página de geração
+          }, 1000);
+        } else {
+          console.error("Erro ao atualizar perfil:", result.error);
+          setError('Erro ao finalizar configuração. Tente novamente.');
+          setIsCreating(false);
+        }
       } else {
-        console.error("Erro ao atualizar perfil:", result.error);
-        setError('Erro ao finalizar configuração. Tente novamente.');
+        console.error("Erro ao criar agente:", createResult.error);
+        setError(createResult.error || 'Erro ao criar o agente. Tente novamente.');
         setIsCreating(false);
       }
       
@@ -94,6 +115,26 @@ export function CriarAgenteClient() {
       event.preventDefault();
     }
   };
+
+  // Verificar se tem workspace ativo
+  if (!currentWorkspace) {
+    return (
+      <div className="to-primary/3 flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-background via-background p-4 md:p-8">
+        <Card className="surface-elevated shadow-apple-lg border-2 border-border/50 max-w-md">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="mx-auto mb-4 size-12 text-yellow-500" />
+            <h2 className="text-headline mb-2">Workspace Necessário</h2>
+            <p className="text-body text-muted-foreground mb-4">
+              Você precisa estar em um workspace para criar agentes.
+            </p>
+            <Button asChild>
+              <Link href="/workspace">Selecionar Workspace</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="to-primary/3 flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-background via-background p-4 md:p-8">

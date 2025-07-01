@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateDocument } from '@/ai/orchestrator';
+import { adminAuth } from '@/lib/firebase-admin';
 import type { ProcessingInput, DocumentType, LegalArea } from '@/ai/orchestrator/types';
 
 // Tipos para a API
@@ -33,6 +34,33 @@ interface GenerateResponse {
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateResponse>> {
   try {
+    // Verificar autenticação
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTH_REQUIRED'
+        }
+      }, { status: 401 });
+    }
+
+    try {
+      if (adminAuth) {
+        const token = authHeader.split('Bearer ')[1];
+        await adminAuth.verifyIdToken(token);
+      }
+    } catch (error) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: 'Invalid token',
+          code: 'INVALID_TOKEN'
+        }
+      }, { status: 401 });
+    }
+
     // Parse do body da requisição
     const body: GenerateRequest = await request.json();
     

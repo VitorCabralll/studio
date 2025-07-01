@@ -2,8 +2,9 @@
  * API Route para status e informações do orquestrador
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { defaultOrchestrator } from '@/ai/orchestrator';
+import { adminAuth } from '@/lib/firebase-admin';
 
 interface OrchestratorStatus {
   status: 'ok' | 'error';
@@ -24,8 +25,37 @@ interface OrchestratorStatus {
   };
 }
 
-export async function GET(): Promise<NextResponse<OrchestratorStatus>> {
+export async function GET(request: NextRequest): Promise<NextResponse<OrchestratorStatus>> {
   try {
+    // Verificar autenticação para informações sensíveis
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({
+        status: 'error',
+        llms: [],
+        pipeline: {
+          stages: 0,
+          estimatedTime: 'unknown'
+        }
+      }, { status: 401 });
+    }
+
+    try {
+      if (adminAuth) {
+        const token = authHeader.split('Bearer ')[1];
+        await adminAuth.verifyIdToken(token);
+      }
+    } catch (error) {
+      return NextResponse.json({
+        status: 'error',
+        llms: [],
+        pipeline: {
+          stages: 0,
+          estimatedTime: 'unknown'
+        }
+      }, { status: 401 });
+    }
+
     // Obter configuração do orquestrador
     const config = defaultOrchestrator.getConfig();
     

@@ -9,6 +9,7 @@ import { WebVitals } from '@/components/optimization/web-vitals';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
+import { WorkspaceProvider } from '@/contexts/workspace-context';
 import './globals.css';
 
 // Lazy load do componente de debug apenas em desenvolvimento
@@ -69,11 +70,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
               <AuthProvider>
+                <WorkspaceProvider>
                   {children}
                   <Toaster />
                   <AuthDebug />
                   <ResourcePreloader />
                   <WebVitals />
+                </WorkspaceProvider>
               </AuthProvider>
           </ThemeProvider>
           <ErrorBoundary>

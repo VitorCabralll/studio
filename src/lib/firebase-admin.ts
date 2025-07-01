@@ -136,9 +136,8 @@ export async function createCustomUser(userData: {
 
 // Log de status da configuração
 if (typeof window === 'undefined') { // Server-side only
-  console.log(`🔧 Firebase Admin SDK: ${isAdminConfigured ? '✅ Configurado' : '❌ Não configurado'}`);
-  if (isAdminConfigured) {
-    console.log(`📧 Client Email: ${process.env.FIREBASE_CLIENT_EMAIL}`);
-    console.log(`🆔 Project ID: ${process.env.FIREBASE_PROJECT_ID}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔧 Firebase Admin SDK: ${isAdminConfigured ? '✅ Configurado' : '❌ Não configurado'}`);
+    // Log apenas status, não dados sensíveis
   }
 }

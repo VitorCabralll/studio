@@ -19,6 +19,125 @@ import {
 } from './types';
 
 /**
+ * Configuração do sistema de fallback transparente
+ * Para garantir resiliência em produção
+ */
+export const DEMO_FALLBACK_CONFIG = {
+  ENABLE_FALLBACK: process.env.NEXT_PUBLIC_DEMO_MODE === 'true',
+  FALLBACK_DOCUMENTS: {
+    'petition': `PETIÇÃO INICIAL
+
+Excelentíssimo Senhor Doutor Juiz de Direito da Vara Cível da Comarca de Cuiabá/MT
+
+[CABEÇALHO PROCESSUAL]
+
+Processo: [Processo em análise via IA]
+Requerente: [Parte identificada automaticamente]
+Requerido: [Parte identificada automaticamente]
+
+[FUNDAMENTAÇÃO LEGAL]
+
+O presente documento foi estruturado com base na análise automatizada dos documentos fornecidos, utilizando inteligência artificial especializada em direito brasileiro.
+
+DOS FATOS:
+
+Com base na documentação analisada, verifica-se que [fatos extraídos dos documentos anexados pelo usuário seriam inseridos aqui pela IA em operação normal].
+
+DO DIREITO:
+
+A fundamentação legal aplicável ao caso em questão encontra respaldo nos dispositivos legais pertinentes à matéria, conforme análise automatizada dos precedentes e doutrina aplicável.
+
+DOS PEDIDOS:
+
+Ante o exposto, requer-se:
+
+a) [Pedidos específicos baseados na análise do caso]
+b) A procedência total dos pedidos
+c) A condenação da parte requerida ao pagamento das custas processuais
+
+Protesta-se pela juntada de documentos e demais provas em direito admitidas.
+
+Requer deferimento.
+
+Cuiabá/MT, ${new Date().toLocaleDateString('pt-BR')}.
+
+[Assinatura Digital]
+Dr. [Nome do Advogado]
+OAB/MT [Número]
+
+---
+DOCUMENTO GERADO EM MODO FALLBACK
+Sistema: LexAI v.Beta | Data: ${new Date().toISOString()}
+Motivo: API temporariamente indisponível`,
+
+    'contract': `CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+
+Pelo presente instrumento particular de contrato de prestação de serviços, as partes:
+
+CONTRATANTE: [Identificado automaticamente nos documentos]
+CONTRATADO: [Identificado automaticamente nos documentos]
+
+CLÁUSULA PRIMEIRA - DO OBJETO
+O presente contrato tem por objeto [objeto extraído da análise dos documentos].
+
+CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES
+[Obrigações definidas com base na análise automatizada]
+
+CLÁUSULA TERCEIRA - DO VALOR E FORMA DE PAGAMENTO
+[Valores e condições identificados nos documentos]
+
+CLÁUSULA QUARTA - DO PRAZO
+[Prazos estabelecidos conforme documentação analisada]
+
+CLÁUSULA QUINTA - DA RESCISÃO
+[Condições de rescisão padrão]
+
+CLÁUSULA SEXTA - DO FORO
+Fica eleito o foro da Comarca de Cuiabá/MT para dirimir questões oriundas deste contrato.
+
+E por estarem assim justas e contratadas, as partes assinam o presente em duas vias de igual teor.
+
+Cuiabá/MT, ${new Date().toLocaleDateString('pt-BR')}.
+
+________________________    ________________________
+    CONTRATANTE              CONTRATADO
+
+---
+DOCUMENTO GERADO EM MODO FALLBACK
+Sistema: LexAI v.Beta | Data: ${new Date().toISOString()}
+Motivo: API temporariamente indisponível`,
+
+    'brief': `RESUMO EXECUTIVO - ANÁLISE JURÍDICA
+
+DOCUMENTO: Análise automática de documentos jurídicos
+DATA: ${new Date().toLocaleDateString('pt-BR')}
+SISTEMA: LexAI Beta
+
+SUMÁRIO EXECUTIVO:
+O presente resumo foi gerado automaticamente com base nos documentos fornecidos, utilizando inteligência artificial especializada em análise jurídica.
+
+PONTOS PRINCIPAIS IDENTIFICADOS:
+• [Pontos principais seriam extraídos dos documentos em operação normal]
+• [Questões legais relevantes identificadas pela IA]
+• [Recomendações baseadas na análise automatizada]
+
+ANÁLISE LEGAL:
+[Análise detalhada seria inserida aqui com base no processamento dos documentos]
+
+RECOMENDAÇÕES:
+[Recomendações específicas baseadas no caso]
+
+PRÓXIMOS PASSOS SUGERIDOS:
+[Passos recomendados pela análise da IA]
+
+---
+NOTA: Este documento foi gerado em modo fallback
+Motivo: Serviços de IA temporariamente indisponíveis
+Sistema: LexAI | Cuiabá/MT | ${new Date().toISOString()}`
+  }
+};
+
+/**
  * Configurações dos LLMs disponíveis - GOOGLE AI + OPENAI
  */
 export const DEFAULT_LLM_CONFIGS: LLMConfig[] = [

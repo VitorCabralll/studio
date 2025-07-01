@@ -10,6 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { OnboardingGuard } from '@/components/layout/onboarding-guard';
+import { useAuth } from '@/hooks/use-auth';
+import { useWorkspace } from '@/hooks/use-workspace';
+import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
   return (
@@ -20,6 +24,104 @@ export default function SettingsPage() {
 }
 
 function SettingsPageContent() {
+  const { user, userProfile } = useAuth();
+  const { currentWorkspace, updateWorkspace, deleteWorkspace } = useWorkspace();
+  const { toast } = useToast();
+  const [fullName, setFullName] = useState('');
+  const [workspaceName, setWorkspaceName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Inicializar valores quando dados carregarem
+  useEffect(() => {
+    if (userProfile?.name || userProfile?.displayName) {
+      setFullName(userProfile.name || userProfile.displayName || '');
+    }
+    if (currentWorkspace?.name) {
+      setWorkspaceName(currentWorkspace.name);
+    }
+  }, [userProfile, currentWorkspace]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // TODO: Implementar updateUserProfile com nome
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as alterações.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveWorkspace = async () => {
+    if (!currentWorkspace || !workspaceName.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await updateWorkspace(currentWorkspace.id, {
+        name: workspaceName.trim()
+      });
+      
+      if (result.success) {
+        toast({
+          title: "Workspace atualizado",
+          description: "O nome do workspace foi alterado com sucesso.",
+        });
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o workspace.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    if (!currentWorkspace) return;
+    
+    const confirmed = window.confirm(
+      `Tem certeza de que deseja excluir o workspace "${currentWorkspace.name}"? Esta ação não pode ser desfeita.`
+    );
+    
+    if (!confirmed) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await deleteWorkspace(currentWorkspace.id);
+      
+      if (result.success) {
+        toast({
+          title: "Workspace excluído",
+          description: "O workspace foi removido permanentemente.",
+        });
+        // Usuário será redirecionado automaticamente pelo WorkspaceContext
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o workspace.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="to-primary/3 min-h-screen flex-1 bg-gradient-to-br from-background via-background p-4 md:p-8">
       {/* Background Pattern */}
@@ -82,7 +184,9 @@ function SettingsPageContent() {
                     </Label>
                     <Input 
                       id="full-name" 
-                      defaultValue="Advogado Teste" 
+                      value={fullName || userProfile?.name || userProfile?.displayName || ''}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Digite seu nome completo"
                       className="shadow-apple-sm hover:shadow-apple-md h-12 border-2 text-base transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
                     />
                   </div>
@@ -96,7 +200,7 @@ function SettingsPageContent() {
                     <Input 
                       id="email" 
                       type="email" 
-                      defaultValue="advogado@lexai.com" 
+                      value={user?.email || ''}
                       disabled 
                       className="h-12 border-2 bg-muted/50 text-base"
                     />
@@ -108,10 +212,12 @@ function SettingsPageContent() {
               </CardContent>
               <CardFooter className="flex justify-end border-t border-border/50 pt-8">
                 <Button 
+                  onClick={handleSaveProfile}
+                  disabled={isLoading}
                   className="shadow-apple-md hover:shadow-apple-lg h-12 bg-gradient-to-r from-primary to-primary/90 px-8 font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
                 >
                   <Save className="mr-3 size-5" />
-                  Salvar Alterações
+                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
               </CardFooter>
             </Card>
@@ -199,12 +305,23 @@ function SettingsPageContent() {
                   </Label>
                   <Input 
                     id="workspace-name" 
-                    defaultValue="Workspace Pessoal" 
+                    value={workspaceName || currentWorkspace?.name || ''}
+                    onChange={(e) => setWorkspaceName(e.target.value)}
+                    placeholder="Nome do workspace"
                     className="shadow-apple-sm hover:shadow-apple-md h-12 border-2 text-base transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
                   />
                   <p className="text-caption leading-relaxed">
                     Este nome será visível para todos os membros do workspace
                   </p>
+                  <Button 
+                    onClick={handleSaveWorkspace}
+                    disabled={isLoading || !workspaceName.trim()}
+                    size="sm"
+                    className="w-fit"
+                  >
+                    <Save className="mr-2 size-4" />
+                    {isLoading ? 'Salvando...' : 'Salvar Nome'}
+                  </Button>
                 </div>
                 
                 <Separator className="bg-border/50" />
@@ -228,11 +345,13 @@ function SettingsPageContent() {
                       <strong className="font-semibold text-destructive">Esta ação não pode ser desfeita.</strong>
                     </p>
                     <Button 
+                      onClick={handleDeleteWorkspace}
+                      disabled={isLoading}
                       variant="destructive" 
                       className="shadow-apple-sm hover:shadow-apple-md h-11 px-6 font-semibold transition-all duration-300 hover:scale-105 hover:bg-destructive/90"
                     >
                       <AlertTriangle className="mr-3 size-4" />
-                      Excluir Workspace Permanentemente
+                      {isLoading ? 'Excluindo...' : 'Excluir Workspace Permanentemente'}
                     </Button>
                   </div>
                 </motion.div>

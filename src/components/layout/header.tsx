@@ -83,8 +83,8 @@ export function AppHeader() {
                   <Building2 className="size-4 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">Escritório & Associados</div>
-                  <div className="text-xs text-muted-foreground">3 membros</div>
+                  <div className="font-medium">Workspace de Desenvolvimento</div>
+                  <div className="text-xs text-muted-foreground">Apenas você</div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -108,7 +108,7 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <div className="group relative cursor-pointer">
                 <Avatar className="shadow-apple-sm group-hover:shadow-apple-md size-10 border-2 border-border/50 transition-all duration-300 group-hover:border-primary/50">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="@advogado" data-ai-hint="lawyer portrait"/>
+                  <AvatarImage src="/avatars/default-lawyer.jpg" alt="Foto do usuário" />
                   <AvatarFallback className="border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 font-semibold text-primary">
                     AV
                   </AvatarFallback>
@@ -119,14 +119,14 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="shadow-apple-lg w-64 border-border/50">
               <DropdownMenuLabel className="flex items-center gap-3 p-3">
                 <Avatar className="size-10 border border-border/50">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="@advogado" data-ai-hint="lawyer portrait"/>
+                  <AvatarImage src="/avatars/default-lawyer.jpg" alt="Foto do usuário" />
                   <AvatarFallback className="border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 font-semibold text-primary">
                     AV
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="font-semibold">Dr. Advogado</div>
-                  <div className="text-xs text-muted-foreground">advogado@exemplo.com</div>
+                  <div className="font-semibold">Desenvolvedor LexAI</div>
+                  <div className="text-xs text-muted-foreground">Cuiabá - MT</div>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

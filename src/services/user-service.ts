@@ -73,6 +73,8 @@ export interface Workspace {
 }
 
 export interface UserProfile {
+  name?: string;
+  displayName?: string;
   cargo: string;
   areas_atuacao: string[];
   primeiro_acesso: boolean;

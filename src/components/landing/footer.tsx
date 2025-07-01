@@ -6,27 +6,13 @@ export function Footer() {
   const footerLinks = {
     product: [
       { name: "Funcionalidades", href: "#features" },
+      { name: "Como Funciona", href: "#how-it-works" },
       { name: "Preços", href: "#pricing" },
-      { name: "Demo", href: "#demo" },
-      { name: "API", href: "/api-docs" },
-    ],
-    legal: [
-      { name: "Privacidade", href: "/privacy" },
-      { name: "Termos de Uso", href: "/terms" },
-      { name: "LGPD", href: "/lgpd" },
-      { name: "Compliance", href: "/compliance" },
     ],
     support: [
-      { name: "Central de Ajuda", href: "/help" },
-      { name: "Contato", href: "/contact" },
-      { name: "Status", href: "/status" },
-      { name: "Comunidade", href: "/community" },
-    ],
-    company: [
-      { name: "Sobre", href: "/about" },
-      { name: "Blog", href: "/blog" },
-      { name: "Carreiras", href: "/careers" },
-      { name: "Imprensa", href: "/press" },
+      { name: "Configurações", href: "/settings" },
+      { name: "Workspace", href: "/workspace" },
+      { name: "Criar Agente", href: "/agente/criar" },
     ],
   };
 
@@ -51,15 +37,11 @@ export function Footer() {
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center">
                 <Mail className="mr-2 size-4" />
-                contato@lexai.com.br
-              </div>
-              <div className="flex items-center">
-                <Phone className="mr-2 size-4" />
-                (11) 9999-9999
+                suporte@lexai.com.br
               </div>
               <div className="flex items-center">
                 <MapPin className="mr-2 size-4" />
-                São Paulo, SP
+                Cuiabá - MT
               </div>
             </div>
           </div>
@@ -81,21 +63,6 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="mb-4 font-semibold text-white">Legal</h3>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-gray-400 transition-colors duration-200 hover:text-white"
-                  >
-                    {link.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
 
           <div>
             <h3 className="mb-4 font-semibold text-white">Suporte</h3>
@@ -113,21 +80,6 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="mb-4 font-semibold text-white">Empresa</h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-gray-400 transition-colors duration-200 hover:text-white"
-                  >
-                    {link.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         {/* Bottom bar */}
@@ -137,15 +89,9 @@ export function Footer() {
               © 2024 LexAI. Todos os direitos reservados.
             </p>
             <div className="mt-4 flex space-x-6 md:mt-0">
-              <a href="/terms" className="text-sm text-gray-400 transition-colors hover:text-white">
-                Termos
-              </a>
-              <a href="/privacy" className="text-sm text-gray-400 transition-colors hover:text-white">
-                Privacidade
-              </a>
-              <a href="/cookies" className="text-sm text-gray-400 transition-colors hover:text-white">
-                Cookies
-              </a>
+              <span className="text-sm text-gray-400">
+                Desenvolvido com ❤️ para advogados brasileiros
+              </span>
             </div>
           </div>
         </div>

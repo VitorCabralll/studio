@@ -13,19 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import { useAuth } from '@/hooks/use-auth';
+import { useWorkspace } from '@/hooks/use-workspace';
 import { updateUserProfile } from '@/services/user-service';
 
-
-interface Workspace {
-  name: string;
-  members?: number;
-  isOwner?: boolean;
-}
-
-const staticWorkspaces: Workspace[] = [
-  { name: "Escritório & Associados", members: 5, isOwner: false },
-  { name: "Projetos Especiais", members: 3, isOwner: true },
-];
 
 // Animation variants removed for now
 
@@ -42,28 +32,30 @@ function WorkspacePageContent() {
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
   const { user, userProfile, updateUserProfileState } = useAuth();
+  const { workspaces, createWorkspace, setCurrentWorkspace, isLoading: workspaceLoading } = useWorkspace();
 
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim() || !user) return;
     setIsCreating(true);
     try {
-      const existingWorkspaces = userProfile?.workspaces || [];
-      const newWorkspace = { name: newWorkspaceName.trim() };
-      const updatedWorkspaces = [...existingWorkspaces, newWorkspace];
-
-      const result = await updateUserProfile(user.uid, { 
-        workspaces: updatedWorkspaces,
-        initial_setup_complete: true  // ✅ Marcar setup como completo
-      });
-      if (result.success) {
-        updateUserProfileState({ 
-          workspaces: updatedWorkspaces,
-          initial_setup_complete: true  // ✅ Atualizar estado local
+      // Criar workspace usando o novo sistema
+      const result = await createWorkspace(newWorkspaceName.trim());
+      
+      if (result.success && result.workspace) {
+        // Marcar setup como completo no perfil do usuário
+        await updateUserProfile(user.uid, { 
+          initial_setup_complete: true
         });
+        updateUserProfileState({ 
+          initial_setup_complete: true
+        });
+        
+        // Definir como workspace ativo
+        setCurrentWorkspace(result.workspace);
+        
         router.push('/workspace/success');
       } else {
         console.error("Erro ao criar workspace:", result.error);
-        // Aqui você poderia mostrar um toast de erro para o usuário
       }
     } catch (error) {
         console.error("Erro não tratado ao criar workspace:", error);
@@ -72,7 +64,10 @@ function WorkspacePageContent() {
     }
   };
   
-  const userWorkspaces: Workspace[] = userProfile?.workspaces || [];
+  const handleOpenWorkspace = (workspace: any) => {
+    setCurrentWorkspace(workspace);
+    router.push('/generate'); // ou '/dashboard' se preferir
+  };
   
   return (
     <div className="to-primary/3 min-h-screen flex-1 bg-gradient-to-br from-background via-background p-4 md:p-8">
@@ -196,9 +191,9 @@ function WorkspacePageContent() {
           className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
           <AnimatePresence>
-            {[...userWorkspaces, ...staticWorkspaces].map((ws, index) => (
+            {workspaces.map((ws, index) => (
               <motion.div
-                key={index}
+                key={ws.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -213,7 +208,7 @@ function WorkspacePageContent() {
                           <div className="shadow-apple-sm flex size-12 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10">
                             <Briefcase className="size-6 text-primary" />
                           </div>
-                          {ws.isOwner && (
+                          {ws.owners.includes(user?.uid || '') && (
                             <div className="shadow-apple-sm flex items-center gap-2 rounded-full border border-amber-200/50 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:border-amber-800/50 dark:from-amber-950/50 dark:to-yellow-950/50 dark:text-amber-300">
                               <Crown className="size-3" />
                               Proprietário
@@ -231,7 +226,7 @@ function WorkspacePageContent() {
                         <Users className="size-3 text-primary" />
                       </div>
                       <span className="font-medium">
-                        {ws.members || 1} {(ws.members && ws.members > 1) ? 'membros' : 'membro'}
+                        {ws.members.length} {ws.members.length > 1 ? 'membros' : 'membro'}
                       </span>
                     </CardDescription>
                   </CardHeader>
@@ -247,7 +242,7 @@ function WorkspacePageContent() {
                           <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 font-semibold text-primary">A</AvatarFallback>
                         </Avatar>
                       </motion.div>
-                      {(ws.members && ws.members > 1) && (
+                      {ws.members.length > 1 && (
                         <motion.div
                           whileHover={{ scale: 1.1, y: -2 }}
                           className="relative -ml-3"
@@ -257,14 +252,14 @@ function WorkspacePageContent() {
                           </Avatar>
                         </motion.div>
                       )}
-                      {(ws.members && ws.members > 2) && (
+                      {ws.members.length > 2 && (
                         <motion.div
                           whileHover={{ scale: 1.1, y: -2 }}
                           className="relative -ml-3"
                         >
                           <Avatar className="border-3 shadow-apple-sm size-10 border-background">
                             <AvatarFallback className="bg-gradient-to-br from-slate-100 to-gray-100 text-xs font-semibold text-slate-600 dark:from-slate-800 dark:to-gray-800 dark:text-slate-300">
-                              +{ws.members - 2}
+                              +{ws.members.length - 2}
                             </AvatarFallback>
                           </Avatar>
                         </motion.div>
@@ -289,7 +284,7 @@ function WorkspacePageContent() {
                   
                   <CardFooter className="flex justify-between gap-3 border-t border-border/50 pt-6">
                     <div className="flex gap-2">
-                      {ws.isOwner && (
+                      {ws.owners.includes(user?.uid || '') && (
                         <>
                           <Button 
                             variant="outline" 
@@ -309,6 +304,7 @@ function WorkspacePageContent() {
                       )}
                     </div>
                     <Button 
+                      onClick={() => handleOpenWorkspace(ws)}
                       className="shadow-apple-sm hover:shadow-apple-md h-11 bg-gradient-to-r from-primary to-primary/90 px-6 font-semibold transition-all duration-300 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
                     >
                       Abrir

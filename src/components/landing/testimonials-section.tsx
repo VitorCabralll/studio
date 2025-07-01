@@ -8,39 +8,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const testimonials = [
   {
-    name: "Dr. Ana Silva",
-    role: "Advogada Civilista",
-    company: "Silva & Associados",
-    content: "O LexAI revolucionou minha prática. O que antes levava horas, agora levo minutos. A qualidade dos documentos é impressionante e sempre fundamentada.",
-    rating: 5,
-    avatar: "/avatars/ana.jpg",
-    initials: "AS"
+    name: "Advogado Beta Tester",
+    role: "Advogado",
+    company: "Teste Interno",
+    content: "Durante os testes, a ferramenta mostrou potencial para automatizar documentos repetitivos e economizar tempo significativo na elaboração de petições.",
+    rating: 4,
+    avatar: "/avatars/default-lawyer.jpg",
+    initials: "BT"
   },
   {
-    name: "João Pereira",
-    role: "Sócio-fundador",
-    company: "Pereira Advocacia",
-    content: "Implementamos o LexAI em nosso escritório e a produtividade aumentou 300%. Nossa equipe agora foca no que realmente importa: a estratégia jurídica.",
-    rating: 5,
-    avatar: "/avatars/joao.jpg",
-    initials: "JP"
-  },
-  {
-    name: "Mariana Costa",
-    role: "Advogada Trabalhista",
-    company: "Costa Legal",
-    content: "A IA do LexAI entende perfeitamente as nuances do direito brasileiro. É como ter um estagiário genial que nunca erra.",
-    rating: 5,
-    avatar: "/avatars/mariana.jpg",
-    initials: "MC"
+    name: "Usuário de Testes",
+    role: "Desenvolvedor",
+    company: "Equipe LexAI",
+    content: "O sistema está em desenvolvimento ativo. Os primeiros resultados mostram capacidade de gerar documentos estruturados com base em templates.",
+    rating: 4,
+    avatar: "/avatars/default-lawyer.jpg", 
+    initials: "UT"
   }
 ];
 
 const stats = [
-  { label: "Documentos gerados", value: "50,000+" },
-  { label: "Horas economizadas", value: "25,000+" },
-  { label: "Escritórios ativos", value: "500+" },
-  { label: "Satisfação", value: "98%" },
+  { label: "Documentos de teste", value: "120+" },
+  { label: "Versão atual", value: "Beta" },
+  { label: "Em desenvolvimento", value: "2024" },
+  { label: "Localização", value: "MT" },
 ];
 
 export function TestimonialsSection() {
@@ -49,14 +40,14 @@ export function TestimonialsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-16 text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            Depoimentos
+            Em Desenvolvimento
           </span>
           <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-            Advogados que já
-            <span className="block text-blue-600 dark:text-blue-400">transformaram sua prática</span>
+            Feedback inicial dos
+            <span className="block text-blue-600 dark:text-blue-400">primeiros testes</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-            Veja como o LexAI está ajudando escritórios de todos os tamanhos
+            Resultados preliminares do desenvolvimento do LexAI
           </p>
         </FadeIn>
 

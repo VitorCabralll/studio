@@ -2,6 +2,9 @@
 import { getAnalytics } from "firebase/analytics";
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { getPerformance } from "firebase/performance";
 import './env-validation'; // Validate environment on import
 
@@ -28,11 +31,17 @@ const firebaseConfig = {
 // Initialize Firebase
 export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
+// Initialize Firebase services
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
+export const storage = getStorage(firebaseApp);
+
 // Initialize App Check with reCAPTCHA v3
 if (typeof window !== 'undefined') {
   try {
-    // Enable debug mode in development
-    if (process.env.NODE_ENV === 'development') {
+    // Enable debug mode only in specific development environment
+    if (process.env.NODE_ENV === 'development' && 
+        process.env.NEXT_PUBLIC_FIREBASE_DEBUG === 'true') {
       // @ts-expect-error - debug token for development
       window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
