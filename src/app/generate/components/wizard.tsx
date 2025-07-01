@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useFocusManagement } from '@/hooks/use-focus-management';
+import { copyToClipboard as copyTextToClipboard } from '@/lib/clipboard';
 
 // Temporarily commented out to fix import errors
 // import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
@@ -188,8 +189,7 @@ export function GenerationWizard() {
   
   const copyToClipboard = async () => {
     if (generatedDocument) {
-      await navigator.clipboard.writeText(generatedDocument);
-      announce('Documento copiado para a área de transferência!');
+      await copyTextToClipboard(generatedDocument, announce);
     }
   };
   

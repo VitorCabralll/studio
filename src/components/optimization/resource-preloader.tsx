@@ -8,18 +8,21 @@ import { useEffect } from 'react';
  */
 export function ResourcePreloader() {
   useEffect(() => {
+    // Verificar se estamos no cliente antes de qualquer operação DOM
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
     // Preload de scripts críticos apenas quando necessário
     const preloadResource = (href: string, as: string, type?: string) => {
-      if (typeof document !== 'undefined') {
-        const existingLink = document.querySelector(`link[href="${href}"]`);
-        if (!existingLink) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.href = href;
-          link.as = as;
-          if (type) link.type = type;
-          document.head.appendChild(link);
-        }
+      const existingLink = document.querySelector(`link[href="${href}"]`);
+      if (!existingLink) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.href = href;
+        link.as = as;
+        if (type) link.type = type;
+        document.head.appendChild(link);
       }
     };
 

@@ -74,7 +74,9 @@ export default function RootLayout({
                   <ResourcePreloader />
               </AuthProvider>
           </ThemeProvider>
-          <SpeedInsights/>
+          <ErrorBoundary>
+            <SpeedInsights />
+          </ErrorBoundary>
         </ErrorBoundary>
       </body>
     </html>

@@ -22,6 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useFocusManagement } from '@/hooks/use-focus-management';
+import { copyToClipboard as copyTextToClipboard } from '@/lib/clipboard';
 import { useOCR, OCRResult } from '@/hooks/use-ocr';
 
 
@@ -124,13 +125,7 @@ export function OCRProcessor({
 
   // Copiar texto para clipboard
   const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(extractedText);
-      announce('Texto copiado para a área de transferência.');
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-      announce('Erro ao copiar texto.');
-    }
+    await copyTextToClipboard(extractedText, announce);
   };
 
   // Download do texto como arquivo

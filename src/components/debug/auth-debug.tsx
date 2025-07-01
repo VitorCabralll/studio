@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,16 @@ export function AuthDebug() {
   const { user, userProfile, loading } = useAuth();
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Não renderizar até estar montado no cliente
+  if (!isMounted) {
+    return null;
+  }
 
   if (!isVisible) {
     return (
