@@ -3,6 +3,8 @@
  * Define interface comum para todos os provedores
  */
 
+import type { TokenUsage } from '../types';
+
 export interface LLMClientOptions {
   apiKey: string;
   baseUrl?: string;
@@ -23,8 +25,6 @@ export interface LLMRequest {
   topP?: number;
   stopSequences?: string[];
 }
-
-import type { TokenUsage } from '../types';
 
 export interface LLMResponse {
   content: string;

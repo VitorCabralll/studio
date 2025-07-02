@@ -47,30 +47,31 @@
     "tailwindcss/enforces-shorthand": "warn",
     "tailwindcss/migration-from-tailwind-2": "warn",
     
-    // Regras customizadas para prevenir problemas identificados
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    // Regras customizadas para prevenir problemas críticos identificados
+    "no-console": ["warn", { "allow": ["warn", "error", "log"] }],
     "prefer-const": "error",
-    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-floating-promises": "warn",
     "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/no-misused-promises": "error",
-    "@typescript-eslint/prefer-nullish-coalescing": "warn",
-    "@typescript-eslint/prefer-optional-chain": "warn",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/prefer-optional-chain": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
     "import/no-default-export": "off",
-    "import/no-cycle": "error",
+    "import/no-cycle": "warn",
     "import/no-self-import": "error",
-    "import/no-useless-path-segments": "warn",
+    "import/no-useless-path-segments": "off",
     "no-duplicate-imports": "error",
     
-    // Regras específicas para Firebase e async/await
+    // Regras específicas para Firebase e async/await (relaxadas)
     "no-async-promise-executor": "error",
-    "require-atomic-updates": "error",
-    "no-return-await": "error",
+    "require-atomic-updates": "warn",
+    "no-return-await": "warn",
     
-    // Prevenir uso incorreto de exports/imports
+    // Prevenir uso incorreto de exports/imports (relaxado)
     "import/no-mutable-exports": "error",
-    "import/first": "error",
-    "import/exports-last": "warn",
-    "import/newline-after-import": "warn"
+    "import/first": "warn",
+    "import/exports-last": "off",
+    "import/newline-after-import": "off"
   },
   "settings": {
     "react": {

@@ -2,12 +2,12 @@
  * Exporta todos os clientes LLM
  */
 
-export { BaseLLMClient } from './base';
-export type { LLMClientOptions, LLMRequest, LLMResponse, LLMMessage } from './base';
-
 import { OpenAIClient } from './openai';
 import { GoogleAIClient } from './google';
 import { AnthropicClient } from './anthropic';
+
+export { BaseLLMClient } from './base';
+export type { LLMClientOptions, LLMRequest, LLMResponse, LLMMessage } from './base';
 
 export { OpenAIClient } from './openai';
 export { GoogleAIClient } from './google';
