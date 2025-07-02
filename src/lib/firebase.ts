@@ -71,49 +71,52 @@ export const auth = getFirebaseAuth;
 export const db = getFirebaseDb;
 export const storage = getFirebaseStorage;
 
-// Initialize optional Firebase services in browser only
+// Initialize optional Firebase services in browser only - with safer initialization
 if (typeof window !== 'undefined') {
-  // Initialize App Check with reCAPTCHA v3
-  try {
-    // Enable debug mode only in specific development environment
-    if (process.env.NODE_ENV === 'development' && 
-        process.env.NEXT_PUBLIC_FIREBASE_DEBUG === 'true') {
-      // @ts-expect-error - debug token for development
-      window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    }
-    
-    const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-    
-    if (recaptchaSiteKey) {
-      // Only initialize if Firebase app is available
-      if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-        initializeAppCheck(getFirebaseApp(), {
-          provider: new ReCaptchaV3Provider(recaptchaSiteKey),
-          isTokenAutoRefreshEnabled: true
-        });
+  // Wait for app to be ready before initializing optional services
+  setTimeout(() => {
+    // Initialize App Check with reCAPTCHA v3
+    try {
+      // Enable debug mode only in specific development environment
+      if (process.env.NODE_ENV === 'development' && 
+          process.env.NEXT_PUBLIC_FIREBASE_DEBUG === 'true') {
+        // @ts-expect-error - debug token for development
+        window.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
       }
+      
+      const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+      
+      if (recaptchaSiteKey) {
+        // Only initialize if Firebase app is available
+        if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+          initializeAppCheck(getFirebaseApp(), {
+            provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+            isTokenAutoRefreshEnabled: true
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Firebase App Check não pôde ser inicializado:', error);
     }
-  } catch (error) {
-    console.warn('Firebase App Check não pôde ser inicializado:', error);
-  }
 
-  // Initialize Analytics if Firebase is configured
-  try {
-    if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-      getAnalytics(getFirebaseApp());
+    // Initialize Analytics if Firebase is configured
+    try {
+      if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        getAnalytics(getFirebaseApp());
+      }
+    } catch (error) {
+      console.warn('Firebase Analytics não pôde ser inicializado:', error);
+      // Analytics é opcional - não impede o funcionamento da aplicação
     }
-  } catch (error) {
-    console.warn('Firebase Analytics não pôde ser inicializado:', error);
-    // Analytics é opcional - não impede o funcionamento da aplicação
-  }
 
-  // Initialize Performance Monitoring if Firebase is configured
-  try {
-    if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-      getPerformance(getFirebaseApp());
+    // Initialize Performance Monitoring if Firebase is configured
+    try {
+      if (getApps().length || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        getPerformance(getFirebaseApp());
+      }
+    } catch (error) {
+      console.warn('Firebase Performance Monitoring não pôde ser inicializado:', error);
+      // Performance Monitoring é opcional - não impede o funcionamento da aplicação
     }
-  } catch (error) {
-    console.warn('Firebase Performance Monitoring não pôde ser inicializado:', error);
-    // Performance Monitoring é opcional - não impede o funcionamento da aplicação
-  }
+  }, 100); // Small delay to ensure proper initialization order
 }

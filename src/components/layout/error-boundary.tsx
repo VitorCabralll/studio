@@ -37,6 +37,16 @@ export class ErrorBoundary extends Component<Props, State> {
     // Log do erro (em produção, enviar para serviço de monitoramento)
     console.error('ErrorBoundary capturou um erro:', error, errorInfo);
     
+    // Log detalhado para debug em produção
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
+    });
+    
     // Em produção, você enviaria isso para um serviço como Sentry
     if (process.env.NODE_ENV === 'production') {
       // Exemplo: Sentry.captureException(error, { contexts: { react: errorInfo } });

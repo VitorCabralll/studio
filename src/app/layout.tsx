@@ -13,12 +13,14 @@ import { WorkspaceProvider } from '@/contexts/workspace-context';
 import './globals.css';
 
 // Lazy load do componente de debug apenas em desenvolvimento
-const AuthDebug = dynamic(
-  () => import('@/components/debug/auth-debug').then(mod => ({ default: mod.AuthDebug })),
-  {
-    loading: () => null, // Sem loading para debug
-  }
-);
+const AuthDebug = process.env.NODE_ENV === 'development' 
+  ? dynamic(
+      () => import('@/components/debug/auth-debug').then(mod => ({ default: mod.AuthDebug })),
+      {
+        loading: () => null, // Sem loading para debug
+      }
+    )
+  : () => null;
 
 export const metadata: Metadata = {
   title: 'LexAI - IA Jurídica para Advogados e Escritórios',
@@ -73,7 +75,7 @@ export default function RootLayout({
                 <WorkspaceProvider>
                   {children}
                   <Toaster />
-                  <AuthDebug />
+                  {process.env.NODE_ENV === 'development' && <AuthDebug />}
                   <ResourcePreloader />
                   <WebVitals />
                 </WorkspaceProvider>
