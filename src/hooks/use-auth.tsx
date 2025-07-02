@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged, User, signOut, signInWithEmailAndPassword,
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-import { firebaseApp } from '@/lib/firebase';
+import { getFirebaseAuth } from '@/lib/firebase';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 
 /**
@@ -90,16 +90,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize Firebase auth state listener
   useEffect(() => {
+    let isComponentMounted = true;
     setMounted(true);
     
-    const auth = getAuth(firebaseApp);
+    const auth = getFirebaseAuth();
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // Prevenir race conditions com lock
-      if (authProcessing) {
-        console.log('Auth processing em andamento, ignorando nova mudança');
+      // Prevenir race conditions com abort controller
+      if (!isComponentMounted) {
+        console.log('Componente desmontado, ignorando mudança de auth');
         return;
       }
+      
+      // Timeout para evitar locks permanentes
+      const processingTimeout = setTimeout(() => {
+        if (isComponentMounted) {
+          setAuthProcessing(false);
+          setLoading(false);
+        }
+      }, 10000); // 10 segundos timeout
       
       setAuthProcessing(true);
       setLoading(true);
@@ -127,8 +136,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         setUserProfile(null);
       } finally {
+        clearTimeout(processingTimeout);
         // Só atualizar estados se componente ainda estiver montado
-        if (mounted) {
+        if (isComponentMounted) {
           setLoading(false);
           setAuthProcessing(false);
         }
@@ -136,10 +146,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
+      isComponentMounted = false;
       setMounted(false);
       unsubscribe();
     };
-  }, [mounted, authProcessing]);
+  }, []); // Remover dependências que podem causar loops
 
   const login = async (email: string, password: string) => {
     if (authProcessing) {
@@ -150,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      const auth = getAuth(firebaseApp);
+      const auth = getFirebaseAuth();
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
     } catch (error: any) {
@@ -170,7 +181,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      const auth = getAuth(firebaseApp);
+      const auth = getFirebaseAuth();
       await createUserWithEmailAndPassword(auth, email, password);
       router.push('/onboarding');
     } catch (error: any) {
@@ -190,7 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setError(null);
       
-      const auth = getAuth(firebaseApp);
+      const auth = getFirebaseAuth();
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       
@@ -205,7 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    const auth = getAuth(firebaseApp);
+    const auth = getFirebaseAuth();
     signOut(auth);
   };
 

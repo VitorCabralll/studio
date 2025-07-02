@@ -1,10 +1,8 @@
-import { getFirestore, doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
-import { firebaseApp } from '@/lib/firebase';
+import { getFirebaseDb } from '@/lib/firebase';
 import { cleanupDocumentData } from './data-cleanup';
 import { enforceMaximumPrivacy } from './privacy-enforcer';
-
-const db = getFirestore(firebaseApp);
 
 // Tipos para processamento de documentos
 export interface ExtractedText {
@@ -112,7 +110,7 @@ export async function saveExtractedTexts(
     };
 
     // Salvar no Firestore
-    const docRef = doc(db, 'document_processing', documentId);
+    const docRef = doc(getFirebaseDb(), 'document_processing', documentId);
     await setDoc(docRef, documentData, { merge: true });
 
     const result: DocumentProcessingResult = {
@@ -169,7 +167,7 @@ export async function addUserInstruction(
     };
 
     // Adicionar à lista de textos extraídos
-    const docRef = doc(db, 'document_processing', documentId);
+    const docRef = doc(getFirebaseDb(), 'document_processing', documentId);
     await setDoc(docRef, {
       extractedTexts: arrayUnion({
         ...instructionText,
@@ -309,7 +307,7 @@ export async function getExtractedTexts(documentId: string): Promise<ServiceResu
       };
     }
 
-    const docRef = doc(db, 'document_processing', documentId);
+    const docRef = doc(getFirebaseDb(), 'document_processing', documentId);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -367,7 +365,7 @@ export async function finalizeDocumentSecurely(
       }
     };
 
-    const documentRef = doc(db, 'documents', documentId);
+    const documentRef = doc(getFirebaseDb(), 'documents', documentId);
     await setDoc(documentRef, finalDocumentData);
 
     // 2. APLICAR ENFORCEMENT AUTOMÁTICO DE PRIVACIDADE MÁXIMA

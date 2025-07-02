@@ -4,7 +4,7 @@ import { verifyIdToken, isAdminConfigured } from '@/lib/firebase-admin';
 export async function POST(request: NextRequest) {
   try {
     // Verificar se Admin SDK está configurado
-    if (!isAdminConfigured) {
+    if (!isAdminConfigured()) {
       return NextResponse.json(
         { 
           error: 'Firebase Admin SDK não configurado',
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     status: 'Firebase Admin API',
-    configured: isAdminConfigured,
+    configured: isAdminConfigured(),
     timestamp: new Date().toISOString()
   });
 }

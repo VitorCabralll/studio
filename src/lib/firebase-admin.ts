@@ -3,24 +3,47 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getStorage } from 'firebase-admin/storage';
 
-// Configuração do Firebase Admin SDK
-const serviceAccount: ServiceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID!,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
+// Lazy configuration to prevent build-time access to env vars
+function createServiceAccount(): ServiceAccount | null {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  
+  if (!projectId || !clientEmail || !privateKey) {
+    return null;
+  }
+  
+  return {
+    projectId,
+    clientEmail,
+    privateKey: privateKey.replace(/\\n/g, '\n'),
+  };
+}
 
 // Verificar se as credenciais estão configuradas
-export const isAdminConfigured = !!(
-  process.env.FIREBASE_PROJECT_ID &&
-  process.env.FIREBASE_CLIENT_EMAIL &&
-  process.env.FIREBASE_PRIVATE_KEY
-);
+export function isAdminConfigured(): boolean {
+  return !!(
+    process.env.FIREBASE_PROJECT_ID &&
+    process.env.FIREBASE_CLIENT_EMAIL &&
+    process.env.FIREBASE_PRIVATE_KEY
+  );
+}
 
-// Inicializar Firebase Admin apenas uma vez
-let adminApp: any;
+// Lazy Firebase Admin initialization
+let adminApp: any = null;
+let adminInitialized = false;
 
-if (isAdminConfigured) {
+function getAdminApp() {
+  if (adminInitialized) {
+    return adminApp;
+  }
+  
+  const serviceAccount = createServiceAccount();
+  if (!serviceAccount) {
+    adminInitialized = true;
+    return null;
+  }
+  
   try {
     // Verificar se já existe uma instância
     adminApp = getApps().find(app => app.name === '[DEFAULT]') || 
@@ -29,15 +52,35 @@ if (isAdminConfigured) {
                  projectId: serviceAccount.projectId,
                  storageBucket: `${serviceAccount.projectId}.appspot.com`,
                });
+    adminInitialized = true;
+    return adminApp;
   } catch (error) {
     console.error('Erro ao inicializar Firebase Admin:', error);
+    adminInitialized = true;
+    return null;
   }
 }
 
-// Exportar serviços
-export const adminFirestore = isAdminConfigured && adminApp ? getFirestore(adminApp) : null;
-export const adminAuth = isAdminConfigured && adminApp ? getAuth(adminApp) : null;
-export const adminStorage = isAdminConfigured && adminApp ? getStorage(adminApp) : null;
+// Lazy Firebase services
+export function getAdminFirestore() {
+  const app = getAdminApp();
+  return app ? getFirestore(app) : null;
+}
+
+export function getAdminAuth() {
+  const app = getAdminApp();
+  return app ? getAuth(app) : null;
+}
+
+export function getAdminStorage() {
+  const app = getAdminApp();
+  return app ? getStorage(app) : null;
+}
+
+// Legacy exports (deprecated - use getters instead)
+export const adminFirestore = null; // Deprecated: use getAdminFirestore()
+export const adminAuth = null; // Deprecated: use getAdminAuth()
+export const adminStorage = null; // Deprecated: use getAdminStorage()
 
 // Interface para resultado de operações admin
 export interface AdminResult<T> {
@@ -72,7 +115,8 @@ export function createAdminError(error: unknown, operation: string): AdminError 
 // Exemplo de função para verificar token de usuário
 export async function verifyIdToken(idToken: string): Promise<AdminResult<any>> {
   try {
-    if (!isAdminConfigured || !adminAuth) {
+    const auth = getAdminAuth();
+    if (!isAdminConfigured() || !auth) {
       return {
         data: null,
         error: {
@@ -83,7 +127,7 @@ export async function verifyIdToken(idToken: string): Promise<AdminResult<any>> 
       };
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const decodedToken = await auth.verifyIdToken(idToken);
     return { data: decodedToken, error: null, success: true };
   } catch (error) {
     return {
@@ -102,7 +146,8 @@ export async function createCustomUser(userData: {
   claims?: object;
 }): Promise<AdminResult<any>> {
   try {
-    if (!isAdminConfigured || !adminAuth) {
+    const auth = getAdminAuth();
+    if (!isAdminConfigured() || !auth) {
       return {
         data: null,
         error: {
@@ -113,7 +158,7 @@ export async function createCustomUser(userData: {
       };
     }
 
-    const userRecord = await adminAuth.createUser({
+    const userRecord = await auth.createUser({
       email: userData.email,
       password: userData.password,
       displayName: userData.displayName,
@@ -121,7 +166,7 @@ export async function createCustomUser(userData: {
 
     // Definir claims customizadas se fornecidas
     if (userData.claims) {
-      await adminAuth.setCustomUserClaims(userRecord.uid, userData.claims);
+      await auth.setCustomUserClaims(userRecord.uid, userData.claims);
     }
 
     return { data: userRecord, error: null, success: true };
@@ -134,10 +179,16 @@ export async function createCustomUser(userData: {
   }
 }
 
-// Log de status da configuração
-if (typeof window === 'undefined') { // Server-side only
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🔧 Firebase Admin SDK: ${isAdminConfigured ? '✅ Configurado' : '❌ Não configurado'}`);
-    // Log apenas status, não dados sensíveis
+// Log de status da configuração (apenas em desenvolvimento e sem dados sensíveis)
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
+  // Log apenas status booleano, nunca valores reais das variáveis
+  const hasProjectId = !!process.env.FIREBASE_PROJECT_ID;
+  const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL;
+  const hasPrivateKey = !!process.env.FIREBASE_PRIVATE_KEY;
+  
+  if (hasProjectId && hasClientEmail && hasPrivateKey) {
+    console.log('🔧 Firebase Admin SDK: ✅ Configurado');
+  } else {
+    console.log('🔧 Firebase Admin SDK: ❌ Não configurado - Verificar env vars');
   }
 }

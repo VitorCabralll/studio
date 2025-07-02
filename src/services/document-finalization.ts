@@ -1,9 +1,7 @@
-import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
-import { firebaseApp } from '@/lib/firebase';
+import { getFirebaseDb } from '@/lib/firebase';
 import { cleanupDocumentData, DATA_RETENTION_CONFIG } from './data-cleanup';
-
-const db = getFirestore(firebaseApp);
 
 // Tipos para finalização de documentos
 export interface DocumentFinalization {
@@ -81,7 +79,7 @@ export async function finalizeDocumentGeneration(
       }
     };
 
-    const documentRef = doc(db, 'documents', documentId);
+    const documentRef = doc(getFirebaseDb(), 'documents', documentId);
     await setDoc(documentRef, finalDocumentData);
 
     // 2. Aplicar política de limpeza dos textos extraídos

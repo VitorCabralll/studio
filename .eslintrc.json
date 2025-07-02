@@ -15,7 +15,9 @@
     "sourceType": "module",
     "ecmaFeatures": {
       "jsx": true
-    }
+    },
+    "project": ["./tsconfig.json"],
+    "tsconfigRootDir": "."
   },
   "plugins": [
     "@typescript-eslint",
@@ -43,7 +45,32 @@
     "tailwindcss/no-custom-classname": "warn",
     "tailwindcss/classnames-order": "warn",
     "tailwindcss/enforces-shorthand": "warn",
-    "tailwindcss/migration-from-tailwind-2": "warn"
+    "tailwindcss/migration-from-tailwind-2": "warn",
+    
+    // Regras customizadas para prevenir problemas identificados
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "prefer-const": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-misused-promises": "error",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    "import/no-default-export": "off",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "import/no-useless-path-segments": "warn",
+    "no-duplicate-imports": "error",
+    
+    // Regras específicas para Firebase e async/await
+    "no-async-promise-executor": "error",
+    "require-atomic-updates": "error",
+    "no-return-await": "error",
+    
+    // Prevenir uso incorreto de exports/imports
+    "import/no-mutable-exports": "error",
+    "import/first": "error",
+    "import/exports-last": "warn",
+    "import/newline-after-import": "warn"
   },
   "settings": {
     "react": {

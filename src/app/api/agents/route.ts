@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { agentService } from '@/services/agent-service';
-import { adminAuth } from '@/lib/firebase-admin';
+import { getAdminAuth, isAdminConfigured } from '@/lib/firebase-admin';
 
 interface Agent {
   id: string;
@@ -36,7 +36,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<AgentsResp
 
     const token = authHeader.split('Bearer ')[1];
     
-    if (!adminAuth) {
+    const adminAuth = getAdminAuth();
+    if (!isAdminConfigured() || !adminAuth) {
       return NextResponse.json({
         agents: [],
         default: '',

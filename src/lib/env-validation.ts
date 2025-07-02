@@ -48,7 +48,5 @@ export function validateEnvironment() {
   console.log('✅ Environment validation passed - Firebase configuration complete');
 }
 
-// Auto-validate on import in production
-if (process.env.NODE_ENV === 'production') {
-  validateEnvironment();
-}
+// Note: Auto-validation removed to prevent build-time failures
+// Call validateEnvironment() explicitly when needed

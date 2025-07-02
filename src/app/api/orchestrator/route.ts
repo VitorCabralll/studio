@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { orchestratorClient } from '@/services/orchestrator-client';
-import { adminAuth } from '@/lib/firebase-admin';
+import { getAdminAuth, isAdminConfigured } from '@/lib/firebase-admin';
 
 interface OrchestratorStatus {
   status: 'ok' | 'error';
@@ -41,7 +41,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<Orchestrat
     }
 
     try {
-      if (adminAuth) {
+      const adminAuth = getAdminAuth();
+      if (isAdminConfigured() && adminAuth) {
         const token = authHeader.split('Bearer ')[1];
         await adminAuth.verifyIdToken(token);
       }

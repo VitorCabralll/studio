@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateDocument } from '@/services/orchestrator-client';
-import { adminAuth } from '@/lib/firebase-admin';
+import { getAdminAuth, isAdminConfigured } from '@/lib/firebase-admin';
 import type { ProcessingInput, DocumentType, LegalArea } from '@/ai/orchestrator/types';
 
 // Tipos para a API
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     }
 
     try {
-      if (adminAuth) {
+      const adminAuth = getAdminAuth();
+      if (isAdminConfigured() && adminAuth) {
         const token = authHeader.split('Bearer ')[1];
         await adminAuth.verifyIdToken(token);
       }

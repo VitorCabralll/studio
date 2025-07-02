@@ -10,10 +10,7 @@ import {
 } from 'firebase/storage';
 
 import type { ServiceResult, ServiceError } from './user-service';
-import { firebaseApp } from '@/lib/firebase';
-
-// Inicializar Storage
-const storage: FirebaseStorage = getStorage(firebaseApp);
+import { getFirebaseStorage } from '@/lib/firebase';
 
 // Tipos para operações de Storage
 export interface UploadResult {
@@ -106,7 +103,7 @@ export async function uploadTemplate(
     // Criar referência com path organizado por usuário
     const fileName = `${Date.now()}_${file.name}`;
     const fullPath = `users/${uid}/${path}/${fileName}`;
-    const storageRef = ref(storage, fullPath);
+    const storageRef = ref(getFirebaseStorage(), fullPath);
 
     // Upload do arquivo
     const uploadResult = await uploadBytes(storageRef, file);
@@ -208,7 +205,7 @@ export async function deleteFile(fullPath: string): Promise<ServiceResult<boolea
       };
     }
 
-    const storageRef = ref(storage, fullPath);
+    const storageRef = ref(getFirebaseStorage(), fullPath);
     await deleteObject(storageRef);
 
     return { data: true, error: null, success: true };
@@ -246,7 +243,7 @@ export async function listUserFiles(
     }
 
     const userPath = `users/${uid}${path ? `/${path}` : ''}`;
-    const storageRef = ref(storage, userPath);
+    const storageRef = ref(getFirebaseStorage(), userPath);
     const listResult = await listAll(storageRef);
 
     // Obter metadados e URLs de download para cada arquivo
@@ -296,7 +293,7 @@ export async function getFileDownloadURL(fullPath: string): Promise<ServiceResul
       };
     }
 
-    const storageRef = ref(storage, fullPath);
+    const storageRef = ref(getFirebaseStorage(), fullPath);
     const downloadURL = await getDownloadURL(storageRef);
 
     return { data: downloadURL, error: null, success: true };

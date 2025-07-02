@@ -5,3 +5,33 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+env:
+  # Firebase Client Configuration (AUTO-INJECTED)
+  # These are automatically provided by Firebase App Hosting
+  # - variable: FIREBASE_CONFIG (auto)
+  # - variable: FIREBASE_WEBAPP_CONFIG (auto)
+  
+  # Firebase Admin SDK Configuration  
+  # IMPORTANT: Set these as secrets in Firebase Console
+  # Go to: Firebase Console > App Hosting > Environment Variables
+  - variable: FIREBASE_PROJECT_ID
+    value: lexai-ef0ab
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: firebase-client-email
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: firebase-private-key
+    
+  # AI API Keys (set as secrets for security)
+  - variable: OPENAI_API_KEY
+    secret: openai-api-key
+  - variable: GOOGLE_AI_API_KEY
+    secret: google-ai-api-key
+  - variable: ANTHROPIC_API_KEY
+    secret: anthropic-api-key
+    
+  # App Configuration
+  - variable: NODE_ENV
+    value: production
+  - variable: NEXT_PUBLIC_APP_ENV
+    value: production

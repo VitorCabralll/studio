@@ -1,5 +1,4 @@
 import { 
-  getFirestore, 
   doc, 
   getDoc,
   setDoc,
@@ -13,9 +12,7 @@ import {
 } from 'firebase/firestore';
 
 import type { ServiceResult, ServiceError } from './user-service';
-import { firebaseApp } from '@/lib/firebase';
-
-const db = getFirestore(firebaseApp);
+import { getFirebaseDb } from '@/lib/firebase';
 
 // Configurações de retenção - PRIVACIDADE MÁXIMA
 const DATA_RETENTION_CONFIG = {
@@ -99,7 +96,7 @@ export async function cleanupDocumentData(
 
     if (immediate || userRequested) {
       // Limpeza imediata: deletar dados de processamento
-      const processingDocRef = doc(db, 'document_processing', documentId);
+      const processingDocRef = doc(getFirebaseDb(), 'document_processing', documentId);
       await deleteDoc(processingDocRef);
       
       console.log(`Dados de processamento removidos para documento ${documentId}`);
@@ -115,7 +112,7 @@ export async function cleanupDocumentData(
         expiresAt: new Date(Date.now() + (DATA_RETENTION_CONFIG.DEFAULT_RETENTION_DAYS * 24 * 60 * 60 * 1000))
       };
 
-      const retentionDocRef = doc(db, 'data_retention', documentId);
+      const retentionDocRef = doc(getFirebaseDb(), 'data_retention', documentId);
       await setDoc(retentionDocRef, {
         ...retentionPolicy,
         createdAt: serverTimestamp(),
@@ -153,7 +150,7 @@ export async function runAutomaticCleanup(): Promise<ServiceResult<CleanupResult
 
     // Buscar documentos com data de expiração vencida
     const retentionQuery = query(
-      collection(db, 'data_retention'),
+      collection(getFirebaseDb(), 'data_retention'),
       where('expiresAt', '<=', Timestamp.fromDate(now)),
       where('autoCleanup', '==', true)
     );
@@ -168,7 +165,7 @@ export async function runAutomaticCleanup(): Promise<ServiceResult<CleanupResult
         const documentId = retentionData.documentId;
 
         // Deletar dados de processamento
-        const processingDocRef = doc(db, 'document_processing', documentId);
+        const processingDocRef = doc(getFirebaseDb(), 'document_processing', documentId);
         await deleteDoc(processingDocRef);
 
         // Deletar política de retenção
@@ -251,7 +248,7 @@ export async function requestUserDataCleanup(
     } else {
       // Limpar todos os dados do usuário
       const processingQuery = query(
-        collection(db, 'document_processing'),
+        collection(getFirebaseDb(), 'document_processing'),
         where('userId', '==', userId)
       );
 
@@ -300,7 +297,7 @@ export async function getDataRetentionStatus(documentId: string): Promise<Servic
       };
     }
 
-    const retentionDocRef = doc(db, 'data_retention', documentId);
+    const retentionDocRef = doc(getFirebaseDb(), 'data_retention', documentId);
     const retentionSnapshot = await getDoc(retentionDocRef);
 
     if (!retentionSnapshot.exists()) {

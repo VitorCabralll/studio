@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getFirebaseDb } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 
 export interface Workspace {
@@ -53,56 +53,86 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   // Carregar workspaces do usuário quando fazer login
   useEffect(() => {
+    let isComponentMounted = true;
+    
+    const loadWorkspaces = async () => {
+      if (!user || !isComponentMounted) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const db = getFirebaseDb();
+        const workspacesRef = collection(db, 'workspaces');
+        const q = query(
+          workspacesRef, 
+          where('members', 'array-contains', user.uid)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const userWorkspaces: Workspace[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          userWorkspaces.push({
+            id: doc.id,
+            name: data.name,
+            description: data.description,
+            members: data.members || [],
+            owners: data.owners || [],
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            settings: data.settings || {}
+          });
+        });
+        
+        if (isComponentMounted) {
+          setWorkspaces(userWorkspaces);
+          
+          // Se não há workspace atual e tem workspaces, selecionar o primeiro
+          if (!currentWorkspace && userWorkspaces.length > 0) {
+            setCurrentWorkspace(userWorkspaces[0]);
+          }
+        }
+      } catch (err) {
+        if (isComponentMounted) {
+          console.error('Erro ao carregar workspaces:', err);
+          setError('Erro ao carregar workspaces');
+        }
+      } finally {
+        if (isComponentMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
     if (user) {
-      getUserWorkspaces();
+      loadWorkspaces();
     } else {
       setWorkspaces([]);
       setCurrentWorkspace(null);
     }
-  }, [user]);
+    
+    return () => {
+      isComponentMounted = false;
+    };
+  }, [user, currentWorkspace]);
 
   const getUserWorkspaces = async () => {
+    // Esta função agora é apenas um trigger para recarregar
+    // A lógica real está no useEffect para evitar memory leaks
     if (!user) return;
     
-    setIsLoading(true);
+    // Força um reload atualizando um estado
     setError(null);
+    setIsLoading(true);
     
-    try {
-      const workspacesRef = collection(db, 'workspaces');
-      const q = query(
-        workspacesRef, 
-        where('members', 'array-contains', user.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const userWorkspaces: Workspace[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        userWorkspaces.push({
-          id: doc.id,
-          name: data.name,
-          description: data.description,
-          members: data.members || [],
-          owners: data.owners || [],
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          settings: data.settings || {}
-        });
-      });
-      
-      setWorkspaces(userWorkspaces);
-      
-      // Se não há workspace atual e tem workspaces, selecionar o primeiro
-      if (!currentWorkspace && userWorkspaces.length > 0) {
-        setCurrentWorkspace(userWorkspaces[0]);
+    // Pequeno delay para garantir que o useEffect processe
+    setTimeout(() => {
+      if (!user) {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error('Erro ao carregar workspaces:', err);
-      setError('Erro ao carregar workspaces');
-    } finally {
-      setIsLoading(false);
-    }
+    }, 100);
   };
 
   const createWorkspace = async (name: string, description?: string): Promise<{ success: boolean; workspace?: Workspace; error?: string }> => {
@@ -127,6 +157,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }
       };
 
+      const db = getFirebaseDb();
       const docRef = await addDoc(collection(db, 'workspaces'), workspaceData);
       
       const newWorkspace: Workspace = {
@@ -154,6 +185,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      const db = getFirebaseDb();
       const workspaceRef = doc(db, 'workspaces', workspaceId);
       await updateDoc(workspaceRef, {
         ...updates,
@@ -185,6 +217,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      const db = getFirebaseDb();
       await deleteDoc(doc(db, 'workspaces', workspaceId));
 
       // Remover do estado local
@@ -205,6 +238,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const addMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      const db = getFirebaseDb();
       const workspaceRef = doc(db, 'workspaces', workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       
@@ -232,6 +266,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const removeMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      const db = getFirebaseDb();
       const workspaceRef = doc(db, 'workspaces', workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       

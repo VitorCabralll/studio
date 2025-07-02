@@ -1,8 +1,6 @@
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
 
-import { firebaseApp } from '@/lib/firebase';
-
-const db = getFirestore(firebaseApp);
+import { getFirebaseDb } from '@/lib/firebase';
 
 // Tipos para resultado de operações com tratamento de erro
 export interface ServiceResult<T> {
@@ -97,7 +95,7 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
       };
     }
 
-    const docRef = doc(db, 'usuarios', uid);
+    const docRef = doc(getFirebaseDb(), 'usuarios', uid);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -176,7 +174,7 @@ export async function createUserProfile(
     }
 
 
-    const userDocRef = doc(db, 'usuarios', uid);
+    const userDocRef = doc(getFirebaseDb(), 'usuarios', uid);
     const profileData = {
       ...data,
       initial_setup_complete: data.initial_setup_complete || false,
@@ -232,7 +230,7 @@ export async function updateUserProfile(
     }
 
 
-    const userDocRef = doc(db, 'usuarios', uid);
+    const userDocRef = doc(getFirebaseDb(), 'usuarios', uid);
     
     // Preparar dados para atualização (remover campos que não devem ser sobrescritos)
     const updateData = { ...data };
