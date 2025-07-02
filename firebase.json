@@ -17,7 +17,7 @@
     "indexes": "firestore.indexes.json"
   },
   "apphosting": {
-    "backendId": "lexai-app",
+    "backendId": "lexai",
     "rootDir": ".",
     "ignore": [
       "node_modules",

@@ -1,20 +1,19 @@
-# Settings to manage and configure a Firebase App Hosting backend.
+# Firebase App Hosting Configuration - LexAI
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
+  # Configuração de recursos para produção
+  maxInstances: 3
+  minInstances: 1
+  concurrency: 1000
+  cpu: 1
+  memoryMiB: 512
 
 env:
-  # Firebase Client Configuration (AUTO-INJECTED)
-  # These are automatically provided by Firebase App Hosting
-  # - variable: FIREBASE_CONFIG (auto)
-  # - variable: FIREBASE_WEBAPP_CONFIG (auto)
+  # Firebase Configuration (auto-injected by App Hosting)
+  # FIREBASE_CONFIG and FIREBASE_WEBAPP_CONFIG are provided automatically
   
-  # Firebase Admin SDK Configuration  
-  # IMPORTANT: Set these as secrets in Firebase Console
-  # Go to: Firebase Console > App Hosting > Environment Variables
+  # Firebase Admin SDK (using secrets for security)
   - variable: FIREBASE_PROJECT_ID
     value: lexai-ef0ab
   - variable: FIREBASE_CLIENT_EMAIL
@@ -22,7 +21,7 @@ env:
   - variable: FIREBASE_PRIVATE_KEY
     secret: firebase-private-key
     
-  # AI API Keys (set as secrets for security)
+  # AI API Keys (all secured as secrets)
   - variable: OPENAI_API_KEY
     secret: openai-api-key
   - variable: GOOGLE_AI_API_KEY
@@ -30,8 +29,12 @@ env:
   - variable: ANTHROPIC_API_KEY
     secret: anthropic-api-key
     
-  # App Configuration
+  # Application Environment
   - variable: NODE_ENV
     value: production
   - variable: NEXT_PUBLIC_APP_ENV
     value: production
+    
+  # Performance and Security
+  - variable: NEXT_PUBLIC_DEMO_MODE
+    value: false

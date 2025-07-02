@@ -3,7 +3,7 @@
  * Ponto de entrada para geração de documentos jurídicos
  */
 
-import { DEFAULT_ORCHESTRATOR_CONFIG } from './config';
+import { createDefaultOrchestratorConfig } from './config';
 import { DocumentPipeline } from './pipeline';
 import { LLMRouter } from './router';
 import { 
@@ -22,10 +22,19 @@ export class AIOrchestrator {
   private router: LLMRouter;
   private config: OrchestratorConfig;
 
-  constructor(config?: Partial<OrchestratorConfig>) {
-    this.config = { ...DEFAULT_ORCHESTRATOR_CONFIG, ...config };
+  constructor(config: OrchestratorConfig) {
+    this.config = config;
     this.pipeline = new DocumentPipeline(this.config);
     this.router = new LLMRouter(this.config.llmConfigs);
+  }
+
+  /**
+   * Factory method to create orchestrator with default config
+   */
+  static async create(config?: Partial<OrchestratorConfig>): Promise<AIOrchestrator> {
+    const defaultConfig = await createDefaultOrchestratorConfig();
+    const mergedConfig = { ...defaultConfig, ...config };
+    return new AIOrchestrator(mergedConfig);
   }
 
   /**
@@ -215,19 +224,31 @@ export * from './config';
 export { LLMRouter } from './router';
 export { DocumentPipeline } from './pipeline';
 
-// Instância padrão para uso direto
-export const defaultOrchestrator = new AIOrchestrator();
+// Lazy singleton for default orchestrator
+let defaultOrchestratorInstance: AIOrchestrator | null = null;
+
+/**
+ * Obtém instância padrão do orquestrador (singleton lazy)
+ */
+export async function getDefaultOrchestrator(): Promise<AIOrchestrator> {
+  if (!defaultOrchestratorInstance) {
+    defaultOrchestratorInstance = await AIOrchestrator.create();
+  }
+  return defaultOrchestratorInstance;
+}
 
 /**
  * Função utilitária para processamento direto
  */
 export async function generateDocument(input: ProcessingInput): Promise<ProcessingOutput> {
-  return defaultOrchestrator.processDocument(input);
+  const orchestrator = await getDefaultOrchestrator();
+  return orchestrator.processDocument(input);
 }
 
 /**
  * Função utilitária para teste de roteamento
  */
 export async function testLLMRouting(input: ProcessingInput): Promise<RoutingDecision> {
-  return defaultOrchestrator.testRouting(input);
+  const orchestrator = await getDefaultOrchestrator();
+  return orchestrator.testRouting(input);
 }

@@ -177,7 +177,7 @@ export class DocumentPipeline {
 
       // Tenta retry se configurado
       if (stage.retryConfig && stage.retryConfig.maxAttempts > 1) {
-        await this.retryStage(stage, context, processingError);
+        await this.retryStage(stage, context);
       } else {
         throw error;
       }
@@ -204,8 +204,7 @@ export class DocumentPipeline {
    */
   private async retryStage(
     stage: PipelineStage, 
-    context: PipelineContext, 
-    _lastError: ProcessingError
+    context: PipelineContext
   ): Promise<void> {
     const retryConfig = stage.retryConfig!;
     let attempt = 1;
@@ -255,7 +254,7 @@ export class DocumentPipeline {
     const finalContent = intermediateResults['assembly'] || '';
 
     return {
-      content: finalContent || this.fallbackAssembly(sections, structure),
+      content: finalContent || this.fallbackAssembly(sections),
       documentType: input.documentType,
       confidence: this.calculateDocumentConfidence(intermediateResults),
       suggestions: this.generateSuggestions(intermediateResults),
@@ -276,7 +275,7 @@ export class DocumentPipeline {
   /**
    * Montagem de fallback se o estágio de assembly falhar
    */
-  private fallbackAssembly(sections: any, _structure: any): string {
+  private fallbackAssembly(sections: any): string {
     if (typeof sections === 'string') return sections;
     
     if (typeof sections === 'object') {

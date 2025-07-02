@@ -151,7 +151,7 @@ export async function exemploConfiguracaoCustomizada(): Promise<void> {
   console.log('\n=== EXEMPLO: Configuração Customizada ===\n');
 
   // Cria orquestrador com configuração personalizada
-  const orchestrator = new AIOrchestrator({
+  const orchestrator = await AIOrchestrator.create({
     defaultRouting: {
       taskComplexity: 'high',
       qualityRequirement: 'premium',

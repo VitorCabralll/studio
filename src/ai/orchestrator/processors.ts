@@ -38,7 +38,7 @@ abstract class BaseLLMProcessor implements PipelineProcessor {
       timeout: 30000
     });
 
-    return await client.generateText({
+    return client.generateText({
       model,
       messages: [
         { role: 'system', content: 'Você é um assistente jurídico especializado em análise de documentos brasileiros.' },

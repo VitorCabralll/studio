@@ -46,7 +46,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<Orchestrat
         const token = authHeader.split('Bearer ')[1];
         await adminAuth.verifyIdToken(token);
       }
-    } catch (error) {
+    } catch {
       return NextResponse.json({
         status: 'error',
         llms: [],

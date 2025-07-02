@@ -52,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
         const token = authHeader.split('Bearer ')[1];
         await adminAuth.verifyIdToken(token);
       }
-    } catch (error) {
+    } catch {
       return NextResponse.json({
         success: false,
         error: {

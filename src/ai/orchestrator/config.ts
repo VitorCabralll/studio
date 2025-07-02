@@ -3,13 +3,7 @@
  * Define LLMs disponíveis, pipeline e configurações
  */
 
-import {
-  SummarizationProcessor,
-  ContextAnalysisProcessor,
-  StructureDefinitionProcessor,
-  ContentGenerationProcessor,
-  AssemblyProcessor
-} from './processors';
+// Dynamic imports to avoid circular dependency
 import {
   OrchestratorConfig,
   LLMConfig,
@@ -247,79 +241,89 @@ export const DEFAULT_LLM_CONFIGS: LLMConfig[] = [
 ];
 
 /**
- * Pipeline padrão de processamento
+ * Pipeline padrão de processamento - usa lazy loading para evitar ciclos
  */
-export const DEFAULT_PIPELINE: PipelineStage[] = [
-  {
-    name: 'summarization',
-    description: 'Sumarização dos documentos anexados',
-    processor: new SummarizationProcessor(),
-    timeout: 30000,
-    retryConfig: {
-      maxAttempts: 3,
-      baseDelay: 1000,
-      maxDelay: 5000,
-      exponentialBackoff: true,
-      retryableErrors: ['TIMEOUT', 'RATE_LIMIT', 'SERVER_ERROR']
+export const createDefaultPipeline = async (): Promise<PipelineStage[]> => {
+  const {
+    SummarizationProcessor,
+    ContextAnalysisProcessor,
+    StructureDefinitionProcessor,
+    ContentGenerationProcessor,
+    AssemblyProcessor
+  } = await import('./processors');
+
+  return [
+    {
+      name: 'summarization',
+      description: 'Sumarização dos documentos anexados',
+      processor: new SummarizationProcessor(),
+      timeout: 30000,
+      retryConfig: {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 5000,
+        exponentialBackoff: true,
+        retryableErrors: ['TIMEOUT', 'RATE_LIMIT', 'SERVER_ERROR']
+      }
+    },
+    {
+      name: 'context_analysis',
+      description: 'Análise de instruções e contexto',
+      processor: new ContextAnalysisProcessor(),
+      dependencies: ['summarization'],
+      timeout: 45000,
+      retryConfig: {
+        maxAttempts: 2,
+        baseDelay: 2000,
+        maxDelay: 10000,
+        exponentialBackoff: true,
+        retryableErrors: ['TIMEOUT', 'RATE_LIMIT']
+      }
+    },
+    {
+      name: 'structure_definition',
+      description: 'Definição da estrutura do documento',
+      processor: new StructureDefinitionProcessor(),
+      dependencies: ['context_analysis'],
+      timeout: 30000,
+      retryConfig: {
+        maxAttempts: 2,
+        baseDelay: 1000,
+        maxDelay: 5000,
+        exponentialBackoff: false,
+        retryableErrors: ['TIMEOUT']
+      }
+    },
+    {
+      name: 'content_generation',
+      description: 'Geração de conteúdo por seção',
+      processor: new ContentGenerationProcessor(),
+      dependencies: ['structure_definition'],
+      timeout: 120000, // Mais tempo para geração de conteúdo
+      retryConfig: {
+        maxAttempts: 2,
+        baseDelay: 3000,
+        maxDelay: 15000,
+        exponentialBackoff: true,
+        retryableErrors: ['TIMEOUT', 'RATE_LIMIT']
+      }
+    },
+    {
+      name: 'assembly',
+      description: 'Montagem final do documento',
+      processor: new AssemblyProcessor(),
+      dependencies: ['content_generation'],
+      timeout: 15000,
+      retryConfig: {
+        maxAttempts: 3,
+        baseDelay: 500,
+        maxDelay: 2000,
+        exponentialBackoff: false,
+        retryableErrors: ['TIMEOUT']
+      }
     }
-  },
-  {
-    name: 'context_analysis',
-    description: 'Análise de instruções e contexto',
-    processor: new ContextAnalysisProcessor(),
-    dependencies: ['summarization'],
-    timeout: 45000,
-    retryConfig: {
-      maxAttempts: 2,
-      baseDelay: 2000,
-      maxDelay: 10000,
-      exponentialBackoff: true,
-      retryableErrors: ['TIMEOUT', 'RATE_LIMIT']
-    }
-  },
-  {
-    name: 'structure_definition',
-    description: 'Definição da estrutura do documento',
-    processor: new StructureDefinitionProcessor(),
-    dependencies: ['context_analysis'],
-    timeout: 30000,
-    retryConfig: {
-      maxAttempts: 2,
-      baseDelay: 1000,
-      maxDelay: 5000,
-      exponentialBackoff: false,
-      retryableErrors: ['TIMEOUT']
-    }
-  },
-  {
-    name: 'content_generation',
-    description: 'Geração de conteúdo por seção',
-    processor: new ContentGenerationProcessor(),
-    dependencies: ['structure_definition'],
-    timeout: 120000, // Mais tempo para geração de conteúdo
-    retryConfig: {
-      maxAttempts: 2,
-      baseDelay: 3000,
-      maxDelay: 15000,
-      exponentialBackoff: true,
-      retryableErrors: ['TIMEOUT', 'RATE_LIMIT']
-    }
-  },
-  {
-    name: 'assembly',
-    description: 'Montagem final do documento',
-    processor: new AssemblyProcessor(),
-    dependencies: ['content_generation'],
-    timeout: 15000,
-    retryConfig: {
-      maxAttempts: 3,
-      baseDelay: 500,
-      maxDelay: 2000,
-      exponentialBackoff: false,
-      retryableErrors: ['TIMEOUT']
-    }
-  }
-];
+  ];
+};
 
 /**
  * Configuração de monitoramento
@@ -342,19 +346,23 @@ export const DEFAULT_SECURITY: SecurityConfig = {
 };
 
 /**
- * Configuração completa do orquestrador
+ * Configuração completa do orquestrador - função para evitar ciclos
  */
-export const DEFAULT_ORCHESTRATOR_CONFIG: OrchestratorConfig = {
-  llmConfigs: DEFAULT_LLM_CONFIGS,
-  defaultRouting: {
-    taskComplexity: 'medium',
-    qualityRequirement: 'standard',
-    latencyRequirement: 'balanced',
-    costBudget: 'medium'
-  },
-  pipeline: DEFAULT_PIPELINE,
-  monitoring: DEFAULT_MONITORING,
-  security: DEFAULT_SECURITY
+export const createDefaultOrchestratorConfig = async (): Promise<OrchestratorConfig> => {
+  const pipeline = await createDefaultPipeline();
+  
+  return {
+    llmConfigs: DEFAULT_LLM_CONFIGS,
+    defaultRouting: {
+      taskComplexity: 'medium',
+      qualityRequirement: 'standard',
+      latencyRequirement: 'balanced',
+      costBudget: 'medium'
+    },
+    pipeline,
+    monitoring: DEFAULT_MONITORING,
+    security: DEFAULT_SECURITY
+  };
 };
 
 /**

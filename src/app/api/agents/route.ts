@@ -45,8 +45,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<AgentsResp
       }, { status: 503 });
     }
     
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    await adminAuth.verifyIdToken(token);
 
     // Obter workspaceId dos query parameters
     const { searchParams } = new URL(request.url);

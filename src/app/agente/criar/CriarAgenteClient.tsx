@@ -12,6 +12,13 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from '@/hooks/use-auth';
+import { useWorkspace } from '@/hooks/use-workspace';
+import { useToast } from "@/hooks/use-toast";
+import { legalAreas } from '@/lib/legal-constants';
+import { agentService } from '@/services/agent-service';
+import { updateUserProfile } from '@/services/user-service';
+
 // Lazy load do componente de upload de arquivos
 const FileUpload = dynamic(
   () => import('@/components/file-upload-enhanced').then(mod => ({ default: mod.FileUploadEnhanced })),
@@ -26,13 +33,6 @@ const FileUpload = dynamic(
     ),
   }
 );
-
-import { useAuth } from '@/hooks/use-auth';
-import { useWorkspace } from '@/hooks/use-workspace';
-import { useToast } from "@/hooks/use-toast";
-import { legalAreas } from '@/lib/legal-constants';
-import { agentService } from '@/services/agent-service';
-import { updateUserProfile } from '@/services/user-service';
 
 export function CriarAgenteClient() {
   const router = useRouter();

@@ -6,8 +6,7 @@
 import { ProcessingInput, ProcessingOutput, RoutingDecision } from './types';
 
 // Lazy imports for heavy components
-const loadOrchestrator = () => import('./index').then(mod => mod.AIOrchestrator);
-const loadUtils = () => import('./index');
+const loadOrchestrator = () => import('./index').then(mod => mod.AIOrchestrator.create());
 
 /**
  * Lazy wrapper for AI Orchestrator functionality
@@ -22,14 +21,12 @@ class LazyAIOrchestrator {
     }
 
     if (this.loadingPromise) {
-      const OrchestratorClass = await this.loadingPromise;
-      this.orchestratorInstance = new OrchestratorClass();
+      this.orchestratorInstance = await this.loadingPromise;
       return this.orchestratorInstance;
     }
 
     this.loadingPromise = loadOrchestrator();
-    const OrchestratorClass = await this.loadingPromise;
-    this.orchestratorInstance = new OrchestratorClass();
+    this.orchestratorInstance = await this.loadingPromise;
     return this.orchestratorInstance;
   }
 
