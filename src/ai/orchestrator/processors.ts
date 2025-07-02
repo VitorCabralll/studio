@@ -8,19 +8,32 @@ import {
   PipelineProcessor,
   PipelineContext,
   ProcessingInput,
-  LLMResponse
+  LLMResponse,
+  RoutingCriteria
 } from './types';
+
+interface ContextAnalysisResult {
+  keyPoints: string;
+  priorityAreas: string[];
+  legalStrategy: string;
+}
+
+interface StructureDefinition {
+  sections: string[];
+  outline: string;
+  sectionOrder: string[];
+}
 
 /**
  * Classe base para processadores com funcionalidade comum de LLM
  */
 abstract class BaseLLMProcessor implements PipelineProcessor {
-  abstract process(input: any, context: PipelineContext): Promise<any>;
+  abstract process(input: unknown, context: PipelineContext): Promise<unknown>;
 
   protected async callLLM(
     prompt: string, 
     context: PipelineContext, 
-    criteria?: any
+    criteria?: RoutingCriteria & { preferredModel?: string; maxTokens?: number }
   ): Promise<LLMResponse> {
     // FORÇA O USO APENAS DO GOOGLE AI
     const { DOCUMENT_TYPE_CONFIGS } = await import('./config');
@@ -55,7 +68,7 @@ abstract class BaseLLMProcessor implements PipelineProcessor {
  * Extrai fatos principais dos documentos anexados
  */
 export class SummarizationProcessor extends BaseLLMProcessor {
-  async process(input: any, context: PipelineContext): Promise<string> {
+  async process(input: unknown, context: PipelineContext): Promise<string> {
     const processingInput = context.input;
     
     // Extrai conteúdo OCR dos anexos
@@ -77,6 +90,10 @@ export class SummarizationProcessor extends BaseLLMProcessor {
     const response = await this.callLLM(prompt, context, {
       preferredModel: 'gemini-1.5-flash', // Rápido para sumarização
       maxTokens: 1500,
+      taskComplexity: 'low',
+      qualityRequirement: 'standard',
+      latencyRequirement: 'fast',
+      costBudget: 'low',
       temperature: 0.2
     });
     
@@ -108,7 +125,7 @@ Resposta deve ser objetiva, factual e estruturada para uso em ${input.documentTy
  * Analisa instruções específicas e arquivos auxiliares
  */
 export class ContextAnalysisProcessor extends BaseLLMProcessor {
-  async process(input: any, context: PipelineContext): Promise<any> {
+  async process(input: unknown, context: PipelineContext): Promise<ContextAnalysisResult> {
     const processingInput = context.input;
     const summary = input; // Recebe resultado da sumarização
     
@@ -119,10 +136,14 @@ export class ContextAnalysisProcessor extends BaseLLMProcessor {
       .map(item => item.content)
       .join('\n\n');
 
-    const prompt = this.buildContextPrompt(summary, instructions, auxiliaryContent, processingInput);
+    const prompt = this.buildContextPrompt(summary as string, instructions, auxiliaryContent, processingInput);
     const response = await this.callLLM(prompt, context, {
       preferredModel: 'gemini-1.5-pro', // Qualidade para análise jurídica
       maxTokens: 2000,
+      taskComplexity: 'medium',
+      qualityRequirement: 'standard',
+      latencyRequirement: 'balanced',
+      costBudget: 'medium',
       temperature: 0.3
     });
     
@@ -130,7 +151,7 @@ export class ContextAnalysisProcessor extends BaseLLMProcessor {
       keyPoints: response.content,
       priorityAreas: this.extractPriorityAreas(response.content),
       legalStrategy: this.extractLegalStrategy(response.content)
-    };
+    } as ContextAnalysisResult;
   }
 
   private buildContextPrompt(summary: string, instructions: string, auxiliary: string, input: ProcessingInput): string {
@@ -177,7 +198,7 @@ Forneça análise estratégica para orientar a geração do documento.
  * Define a estrutura do documento baseada no template
  */
 export class StructureDefinitionProcessor extends BaseLLMProcessor {
-  async process(input: any, context: PipelineContext): Promise<any> {
+  async process(input: unknown, context: PipelineContext): Promise<StructureDefinition> {
     const processingInput = context.input;
     const contextAnalysis = input;
     
@@ -185,10 +206,14 @@ export class StructureDefinitionProcessor extends BaseLLMProcessor {
     const template = processingInput.context
       .find(item => item.type === 'template')?.content || '';
 
-    const prompt = this.buildStructurePrompt(contextAnalysis, template, processingInput);
+    const prompt = this.buildStructurePrompt(contextAnalysis as ContextAnalysisResult, template, processingInput);
     const response = await this.callLLM(prompt, context, {
       preferredModel: 'gemini-1.5-flash', // Eficiente para estrutura
       maxTokens: 1500,
+      taskComplexity: 'low',
+      qualityRequirement: 'standard',
+      latencyRequirement: 'fast',
+      costBudget: 'low',
       temperature: 0.1
     });
     
@@ -196,10 +221,10 @@ export class StructureDefinitionProcessor extends BaseLLMProcessor {
       sections: this.extractSections(response.content),
       outline: response.content,
       sectionOrder: this.defineSectionOrder(processingInput.documentType)
-    };
+    } as StructureDefinition;
   }
 
-  private buildStructurePrompt(analysis: any, template: string, input: ProcessingInput): string {
+  private buildStructurePrompt(analysis: ContextAnalysisResult, template: string, input: ProcessingInput): string {
     return `
 Defina a estrutura detalhada para ${input.documentType} baseada na análise:
 
@@ -247,22 +272,26 @@ Forneça estrutura clara e hierárquica.
  * Gera conteúdo para cada seção usando LLM premium
  */
 export class ContentGenerationProcessor extends BaseLLMProcessor {
-  async process(input: any, context: PipelineContext): Promise<any> {
+  async process(input: unknown, context: PipelineContext): Promise<Record<string, string>> {
     // Corrigido: obter structure dos resultados intermediários
     const structure = context.intermediateResults['structure_definition'];
     const sections: Record<string, string> = {};
     
     // Validação: garantir que structure.sections existe e é iterável
-    if (!structure || !Array.isArray(structure.sections)) {
+    if (!structure || typeof structure !== 'object' || !('sections' in structure) || !Array.isArray((structure as any).sections)) {
       throw new Error('Invalid structure: sections not found or not iterable');
     }
     
     // Gera conteúdo para cada seção
-    for (const section of structure.sections) {
+    for (const section of (structure as any).sections) {
       const prompt = this.buildSectionPrompt(section, context);
       const response = await this.callLLM(prompt, context, {
         preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
         maxTokens: 3000,
+        taskComplexity: 'high',
+        qualityRequirement: 'premium',
+        latencyRequirement: 'thorough',
+        costBudget: 'high',
         temperature: 0.4
       });
       sections[section] = response.content;
@@ -309,19 +338,19 @@ Redija apenas o conteúdo desta seção, sem cabeçalhos ou numeração.
  * Une todas as seções no documento final
  */
 export class AssemblyProcessor implements PipelineProcessor {
-  async process(input: any, context: PipelineContext): Promise<string> {
+  async process(input: unknown, context: PipelineContext): Promise<string> {
     const sections = input;
     const structure = context.intermediateResults['structure_definition'];
     
     // Monta documento seguindo a ordem definida
-    const sectionOrder = structure?.sectionOrder || Object.keys(sections);
+    const sectionOrder = (structure as any)?.sectionOrder || Object.keys(sections as object);
     
     let document = '';
     
     for (const sectionName of sectionOrder) {
-      if (sections[sectionName]) {
+      if ((sections as any)[sectionName]) {
         document += `\n\n## ${this.formatSectionTitle(sectionName)}\n\n`;
-        document += sections[sectionName];
+        document += (sections as any)[sectionName];
       }
     }
     
@@ -364,11 +393,11 @@ Este documento foi gerado automaticamente pelo LexAI.
 Recomenda-se revisão jurídica antes da utilização.`;
   }
 
-  validate(input: any): boolean {
-    return typeof input === 'object' && Object.keys(input).length > 0;
+  validate(input: unknown): boolean {
+    return typeof input === 'object' && input !== null && Object.keys(input).length > 0;
   }
 
-  transform(output: any): string {
+  transform(output: unknown): string {
     return typeof output === 'string' ? output : JSON.stringify(output);
   }
 }

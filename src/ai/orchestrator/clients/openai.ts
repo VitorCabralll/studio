@@ -4,6 +4,26 @@
 
 import { BaseLLMClient, LLMRequest, LLMResponse, LLMClientOptions } from './base';
 
+interface OpenAIUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+interface OpenAIChoice {
+  message: {
+    content: string;
+  };
+  finish_reason: string;
+}
+
+interface OpenAIResponse {
+  choices: OpenAIChoice[];
+  usage: OpenAIUsage;
+  model: string;
+  id: string;
+}
+
 export class OpenAIClient extends BaseLLMClient {
   private readonly baseUrl = 'https://api.openai.com/v1';
 
@@ -30,7 +50,7 @@ export class OpenAIClient extends BaseLLMClient {
         `${this.baseUrl}/chat/completions`,
         body,
         headers
-      );
+      ) as OpenAIResponse;
 
       const choice = response.choices[0];
       const usage = response.usage;
@@ -56,7 +76,7 @@ export class OpenAIClient extends BaseLLMClient {
     }
   }
 
-  private calculateModelCost(model: string, usage: any): number {
+  private calculateModelCost(model: string, usage: OpenAIUsage): number {
     // Preços por 1M tokens (atualizado conforme pricing OpenAI)
     const pricing: Record<string, { input: number; output: number }> = {
       'gpt-4-turbo': { input: 10, output: 30 },

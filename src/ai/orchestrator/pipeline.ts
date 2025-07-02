@@ -4,7 +4,6 @@
  */
 
 import { LLMRouter } from './router';
-import { DEMO_FALLBACK_CONFIG } from './config';
 import {
   ProcessingInput,
   ProcessingOutput,
@@ -13,8 +12,12 @@ import {
   PipelineTrace,
   StageTrace,
   ProcessingError,
+  LLMProvider,
+  LLMClientInterface,
   OrchestratorConfig,
-  GeneratedDocument
+  GeneratedDocument,
+  LLMConfig,
+  Citation
 } from './types';
 
 export class DocumentPipeline {
@@ -42,13 +45,7 @@ export class DocumentPipeline {
       stage: '',
       input,
       intermediateResults: {},
-      llmClients: {
-        google: null,
-        openai: null,
-        anthropic: null,
-        local: null,
-        custom: null
-      }, // Seria populado com clientes reais
+      llmClients: {} as Record<LLMProvider, LLMClientInterface>, // Seria populado com clientes reais
       config: this.config,
       trace
     };
@@ -71,7 +68,7 @@ export class DocumentPipeline {
         result: document,
         metadata: {
           processingTime: trace.totalDuration,
-          llmUsed: trace.stages.map(s => s.llmUsed).filter(Boolean) as any[],
+          llmUsed: trace.stages.map(s => s.llmUsed).filter(Boolean) as LLMConfig[],
           totalCost: trace.totalCost,
           tokensUsed: {
             promptTokens: trace.stages.reduce((acc, s) => acc + (s.tokensUsed?.promptTokens || 0), 0),
@@ -87,20 +84,28 @@ export class DocumentPipeline {
     } catch (error) {
       trace.totalDuration = Date.now() - startTime;
       
-      // Verifica se deve usar fallback transparente
-      if (DEMO_FALLBACK_CONFIG.ENABLE_FALLBACK) {
-        console.warn('Pipeline falhou, usando fallback transparente:', error);
-        return this.generateFallbackResponse(input, error, trace.totalDuration);
+      // Log estruturado para debugging (apenas em desenvolvimento)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Pipeline Error]', {
+          stage: context.stage,
+          duration: trace.totalDuration,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
       
       return {
         success: false,
         error: {
           code: 'PIPELINE_ERROR',
-          message: error instanceof Error ? error.message : 'Erro desconhecido no pipeline',
+          message: this.getUserFriendlyErrorMessage(error, context.stage),
           stage: context.stage,
-          retryable: true,
-          timestamp: new Date()
+          retryable: this.isRetryableError(error),
+          timestamp: new Date(),
+          details: process.env.NODE_ENV === 'development' ? {
+            originalError: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          } : undefined
         },
         metadata: {
           processingTime: trace.totalDuration,
@@ -251,7 +256,7 @@ export class DocumentPipeline {
     const summary = intermediateResults['summarization'] || '';
     const structure = intermediateResults['structure_definition'] || {};
     const sections = intermediateResults['content_generation'] || {};
-    const finalContent = intermediateResults['assembly'] || '';
+    const finalContent = intermediateResults['assembly'] as string || '';
 
     return {
       content: finalContent || this.fallbackAssembly(sections),
@@ -260,9 +265,9 @@ export class DocumentPipeline {
       suggestions: this.generateSuggestions(intermediateResults),
       citations: this.extractCitations(intermediateResults),
       structuredData: {
-        summary,
-        structure,
-        sections,
+        summary: summary || '',
+        structure: structure || '',
+        sections: sections || '',
         metadata: {
           generatedAt: new Date().toISOString(),
           taskType: input.taskType,
@@ -275,10 +280,10 @@ export class DocumentPipeline {
   /**
    * Montagem de fallback se o estágio de assembly falhar
    */
-  private fallbackAssembly(sections: any): string {
+  private fallbackAssembly(sections: unknown): string {
     if (typeof sections === 'string') return sections;
     
-    if (typeof sections === 'object') {
+    if (typeof sections === 'object' && sections !== null) {
       return Object.values(sections).join('\n\n');
     }
 
@@ -288,7 +293,7 @@ export class DocumentPipeline {
   /**
    * Calcula confiança geral do documento
    */
-  private calculateDocumentConfidence(results: Record<string, any>): number {
+  private calculateDocumentConfidence(results: Record<string, unknown>): number {
     // Lógica simplificada - poderia ser mais sofisticada
     const stages = Object.keys(results);
     const successRate = stages.length / this.config.pipeline.length;
@@ -309,7 +314,7 @@ export class DocumentPipeline {
   /**
    * Gera sugestões baseadas nos resultados
    */
-  private generateSuggestions(results: Record<string, any>): string[] {
+  private generateSuggestions(results: Record<string, unknown>): string[] {
     const suggestions: string[] = [];
 
     // Sugestões baseadas na qualidade do conteúdo
@@ -329,94 +334,61 @@ export class DocumentPipeline {
   /**
    * Extrai citações dos resultados
    */
-  private extractCitations(results: Record<string, any>): any[] {
+  private extractCitations(results: Record<string, unknown>): Citation[] {
     const citations = results['citations'] || [];
     
     return Array.isArray(citations) ? citations : [];
   }
 
+
   /**
-   * Gera resposta de fallback transparente
-   * TRANSPARENTE: Informa claramente que é um fallback
+   * Gera mensagem de erro amigável para o usuário
    */
-  private generateFallbackResponse(input: ProcessingInput, originalError: any, processingTime: number): ProcessingOutput {
-    // Mapear tipo de documento
-    const docType = this.mapDocumentType(input.documentType);
-    const fallbackDoc = DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS[docType as keyof typeof DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS] || 
-                       DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS['petition'];
-
-    // Simular tempo de processamento realista (2-5 segundos)
-    const simulatedTime = Math.max(processingTime, 2000 + Math.random() * 3000);
-
-    return {
-      success: true,
-      result: {
-        content: fallbackDoc,
-        documentType: input.documentType,
-        confidence: 0.85, // Boa qualidade, mas não perfeita
-        suggestions: [
-          'Este documento foi gerado em modo fallback',
-          'Para geração personalizada, verifique conectividade das APIs',
-          'Documento baseado em template padrão para demonstração'
-        ],
-        citations: [],
-        structuredData: {
-          summary: 'Documento gerado em modo fallback para demonstração',
-          structure: { type: 'fallback_template' },
-          sections: { content: fallbackDoc },
-          metadata: {
-            generatedAt: new Date().toISOString(),
-            taskType: input.taskType,
-            legalArea: input.legalArea,
-            fallbackMode: true, // TRANSPARÊNCIA TOTAL
-            originalError: originalError?.message || 'API temporariamente indisponível'
-          }
-        }
-      },
-      metadata: {
-        processingTime: simulatedTime,
-        llmUsed: [{ provider: 'fallback_system', model: 'template' } as any],
-        totalCost: 0, // Fallback não custa nada
-        tokensUsed: {
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
-          cost: 0
-        },
-        confidence: 0.85
-        // fallbackUsed e fallbackReason adicionados via structuredData.metadata
-      },
-      pipeline: {
-        stages: [{
-          stageName: 'fallback_generation',
-          startTime: new Date(),
-          endTime: new Date(),
-          duration: simulatedTime,
-          input: { fallback: true },
-          llmUsed: { provider: 'fallback_system', model: 'template' } as any,
-          output: 'Documento gerado via sistema de fallback'
-        }],
-        totalDuration: simulatedTime,
-        totalCost: 0,
-        totalTokens: 0,
-        errors: []
+  private getUserFriendlyErrorMessage(error: unknown, stage?: string): string {
+    if (error instanceof Error) {
+      // Erros de API específicos
+      if (error.message.includes('API key')) {
+        return 'Erro de configuração da API de IA. Verifique as configurações do sistema.';
       }
+      if (error.message.includes('rate limit') || error.message.includes('quota')) {
+        return 'Limite de uso da API atingido. Tente novamente em alguns minutos.';
+      }
+      if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+        return 'Tempo limite excedido. O processamento está demorando mais que o esperado.';
+      }
+      if (error.message.includes('network') || error.message.includes('fetch')) {
+        return 'Erro de conexão com os serviços de IA. Verifique sua conexão com a internet.';
+      }
+    }
+
+    // Mensagens por estágio
+    const stageMessages: Record<string, string> = {
+      'summarization': 'Falha na análise dos documentos anexados.',
+      'context_analysis': 'Falha na análise do contexto e instruções.',
+      'structure_definition': 'Falha na definição da estrutura do documento.',
+      'content_generation': 'Falha na geração do conteúdo do documento.',
+      'assembly': 'Falha na montagem final do documento.'
     };
+
+    const stageMessage = stage ? stageMessages[stage] : null;
+    return stageMessage || 'Erro no processamento do documento. Tente novamente ou entre em contato com o suporte.';
   }
 
   /**
-   * Mapeia tipos de documento para templates de fallback
+   * Determina se um erro permite nova tentativa
    */
-  private mapDocumentType(documentType: string): string {
-    const mapping: Record<string, string> = {
-      'petition': 'petition',
-      'contract': 'contract', 
-      'brief': 'brief',
-      'motion': 'petition',
-      'appeal': 'petition',
-      'agreement': 'contract'
-    };
+  private isRetryableError(error: unknown): boolean {
+    if (error instanceof Error) {
+      const retryablePatterns = [
+        'timeout', 'rate limit', 'quota', 'network', 'fetch', 
+        'temporarily unavailable', '429', '503', '502'
+      ];
+      
+      return retryablePatterns.some(pattern => 
+        error.message.toLowerCase().includes(pattern)
+      );
+    }
     
-    return mapping[documentType] || 'petition';
+    return false;
   }
 }

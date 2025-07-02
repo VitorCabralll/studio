@@ -1,52 +1,109 @@
-# Projeto LexAI - Plataforma SaaS Jurídica
+# ⚡ Referência Rápida LexAI
 
-## Visão Geral
-LexAI é uma plataforma SaaS para automação de documentos jurídicos usando Next.js, TypeScript, Firebase e orquestração de IA multi-LLM.
+> **Guia de referência para desenvolvimento - comandos, padrões e configurações essenciais**
 
-## Comandos Principais
-- `npm run dev` - Inicia o servidor de desenvolvimento (Next.js com Turbopack)
-- `npm run build` - Build de produção
-- `npm run lint` - Executa o linter
-- `npm run typecheck` - Verifica tipos TypeScript
-- `firebase emulators:start` - Inicia emulators Firebase (desenvolvimento local)
-- `firebase deploy` - Deploy para produção
+---
 
-## Stack Tecnológica
-- **Frontend**: Next.js 15 (App Router), React 18, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui
-- **Backend**: Firebase (Auth, Firestore, Storage)
-- **IA**: Genkit, OpenAI, Google AI, multi-LLM
-- **OCR**: Tesseract.js (processamento local)
+## 🚀 **Comandos Essenciais**
 
-## Estrutura Principal
-- `src/ai/orchestrator/` - Orquestrador de IA (pipeline multi-LLM)
-- `src/app/` - Páginas Next.js (App Router)
-- `src/components/` - Componentes React + shadcn/ui
-- `src/hooks/` - Hooks customizados
-- `src/services/` - Serviços Firebase
+### **Desenvolvimento**
+```bash
+npm run dev          # Servidor desenvolvimento (Turbopack)
+npm run build        # Build produção  
+npm run typecheck    # Verificar tipos TypeScript
+npm run lint         # Executar linter
+```
 
-## Padrões de Código
-- Use TypeScript rigoroso
+### **Firebase**
+```bash
+firebase emulators:start    # Emulators locais
+firebase deploy            # Deploy produção
+firebase deploy --only hosting  # Deploy apenas frontend
+```
+
+### **Estrutura de Pastas**
+```
+src/
+├── ai/orchestrator/     # 🧠 Pipeline IA multi-LLM
+├── app/                # 📄 App Router Next.js
+├── components/         # ⚛️ Componentes React + shadcn/ui
+├── hooks/              # 🎣 Hooks customizados
+├── services/           # 🔧 Firebase services
+└── lib/                # 🛠️ Utilitários
+```
+
+---
+
+## 📝 **Padrões de Código**
+
+### **TypeScript**
+- Use tipagem rigorosa (avoid `any`)
 - Componentes funcionais com hooks
-- shadcn/ui para componentes base
-- Tailwind para styling
-- Firebase para backend
 - Validação com Zod
+- Interfaces para props
 
-## Configuração de Produção
-- **OBRIGATÓRIO**: Todas as variáveis Firebase devem estar configuradas
-- **OBRIGATÓRIO**: APIs de IA (OpenAI, Google AI, Anthropic) configuradas
-- **OBRIGATÓRIO**: Validação automática de ambiente na inicialização
-- **Modo Mock Removido**: Aplicação roda apenas com Firebase
+### **React/Next.js**
+- shadcn/ui para componentes base
+- Tailwind CSS para styling
+- App Router (não Pages Router)
+- Server Components quando possível
 
-## Segurança
-- Nunca expor chaves de API no frontend
-- Processar OCR localmente (cliente)
-- Validar todos os uploads
-- Isolamento por workspace
-- Configuração Firebase obrigatória em produção
+### **Firebase**
+- Firestore para dados
+- Storage para arquivos
+- Auth para autenticação
+- Functions para backend
 
-## Arquivos de Referência
-Ver @README.md para visão completa do projeto
-Ver @package.json para comandos disponíveis
-Ver @SETUP.md para configuração detalhada
+---
+
+## 🔧 **Configuração de Produção**
+
+### **Variáveis Obrigatórias**
+```env
+# Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+FIREBASE_PRIVATE_KEY=
+FIREBASE_CLIENT_EMAIL=
+
+# APIs IA  
+OPENAI_API_KEY=
+GOOGLE_AI_API_KEY=
+ANTHROPIC_API_KEY=
+```
+
+### **Segurança**
+- ✅ OCR processamento local
+- ✅ Chaves API apenas server-side
+- ✅ Validação de uploads
+- ✅ Isolamento por workspace
+
+---
+
+## 🧠 **Orquestrador de IA**
+
+### **Pipeline Padrão**
+1. **Sumarização** → Gemini Flash (barato)
+2. **Análise Contexto** → Gemini Pro (qualidade)  
+3. **Estrutura** → Gemini Flash (rápido)
+4. **Geração Conteúdo** → Gemini Pro (premium)
+5. **Montagem** → Local (sem custo)
+
+### **Configuração Multi-LLM**
+```typescript
+// Prioridade: Google AI → OpenAI → Fallback
+providers: ['google', 'openai', 'local']
+```
+
+---
+
+## 📚 **Documentação Completa**
+
+- **[README.md](./README.md)** - Visão geral completa
+- **[SETUP.md](./SETUP.md)** - Configuração detalhada  
+- **[docs/](./docs/)** - Documentação técnica
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Como contribuir
+
+---
+
+**🔄 Última atualização**: 02/07/2025

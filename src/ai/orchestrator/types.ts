@@ -13,6 +13,17 @@ export type DocumentType = 'petition' | 'contract' | 'legal_opinion' | 'notifica
 export type LegalArea = 'civil' | 'criminal' | 'labor' | 'corporate' | 'tax' | 'constitutional' | 'administrative';
 export type ContextType = 'user_input' | 'ocr_text' | 'file_content' | 'structured_data' | 'legal_precedent' | 'template';
 
+// Additional types for better type safety
+export type JSONSchemaType = string | number | boolean | null | JSONSchemaObject | JSONSchemaArray;
+export interface JSONSchemaObject { [key: string]: JSONSchemaType; }
+export interface JSONSchemaArray extends Array<JSONSchemaType> {}
+
+export interface LLMClientInterface {
+  generateCompletion(request: LLMRequest): Promise<LLMResponse>;
+  isAvailable(): boolean;
+  getConfig(): LLMConfig;
+}
+
 // ====================================
 // INPUT/OUTPUT INTERFACES
 // ====================================
@@ -33,7 +44,7 @@ export interface ContextItem {
   content: string;
   confidence?: number;
   source?: string;
-  structured?: Record<string, any>;
+  structured?: Record<string, unknown>;
 }
 
 export interface ProcessingOutput {
@@ -50,7 +61,7 @@ export interface GeneratedDocument {
   confidence: number;
   suggestions?: string[];
   citations?: Citation[];
-  structuredData?: Record<string, any>;
+  structuredData?: Record<string, unknown>;
 }
 
 // ====================================
@@ -96,7 +107,7 @@ export interface LLMRequest {
   temperature?: number;
   systemPrompt?: string;
   functions?: LLMFunction[];
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }
 
 export interface LLMResponse {
@@ -104,18 +115,18 @@ export interface LLMResponse {
   finishReason: 'stop' | 'length' | 'function_call' | 'content_filter' | 'error';
   usage?: TokenUsage;
   functionCall?: FunctionCall;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LLMFunction {
   name: string;
   description: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, JSONSchemaType>;
 }
 
 export interface FunctionCall {
   name: string;
-  arguments: Record<string, any>;
+  arguments: Record<string, unknown>;
 }
 
 export interface TokenUsage {
@@ -145,6 +156,7 @@ export interface RoutingCriteria {
   costBudget: 'low' | 'medium' | 'high';
   specialization?: TaskType;
   legalArea?: LegalArea;
+  temperature?: number;
 }
 
 // ====================================
@@ -161,16 +173,16 @@ export interface PipelineStage {
 }
 
 export interface PipelineProcessor {
-  process(input: any, context: PipelineContext): Promise<any>;
-  validate?(input: any): boolean;
-  transform?(output: any): any;
+  process(input: unknown, context: PipelineContext): Promise<unknown>;
+  validate?(input: unknown): boolean;
+  transform?(output: unknown): unknown;
 }
 
 export interface PipelineContext {
   stage: string;
   input: ProcessingInput;
-  intermediateResults: Record<string, any>;
-  llmClients: Record<LLMProvider, any>;
+  intermediateResults: Record<string, unknown>;
+  llmClients: Record<LLMProvider, LLMClientInterface>;
   config: OrchestratorConfig;
   trace: PipelineTrace;
 }
@@ -188,8 +200,8 @@ export interface StageTrace {
   startTime: Date;
   endTime?: Date;
   duration?: number;
-  input: any;
-  output?: any;
+  input: unknown;
+  output?: unknown;
   error?: ProcessingError;
   llmUsed?: LLMConfig;
   tokensUsed?: TokenUsage;
@@ -245,7 +257,7 @@ export interface TemplateVariable {
   type: 'string' | 'number' | 'date' | 'boolean' | 'array';
   required: boolean;
   description: string;
-  defaultValue?: any;
+  defaultValue?: unknown;
 }
 
 export interface ValidationRule {
@@ -269,7 +281,7 @@ export interface DocumentVector {
   id: string;
   content: string;
   embedding: number[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface LegalPrecedent {
@@ -307,7 +319,7 @@ export interface ProcessingError {
   provider?: LLMProvider;
   retryable: boolean;
   timestamp: Date;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface RetryConfig {

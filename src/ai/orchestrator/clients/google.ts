@@ -2,7 +2,30 @@
  * Cliente Google AI (Gemini) para integração com API
  */
 
-import { BaseLLMClient, LLMRequest, LLMResponse, LLMClientOptions } from './base';
+import { BaseLLMClient, LLMRequest, LLMResponse, LLMClientOptions, LLMMessage } from './base';
+
+interface GoogleContent {
+  role: string;
+  parts: Array<{ text: string }>;
+}
+
+interface GoogleUsageMetadata {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+}
+
+interface GoogleCandidate {
+  content: {
+    parts: Array<{ text: string }>;
+  };
+  finishReason: string;
+}
+
+interface GoogleResponse {
+  candidates?: GoogleCandidate[];
+  usageMetadata?: GoogleUsageMetadata;
+}
 
 export class GoogleAIClient extends BaseLLMClient {
   private readonly baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -46,7 +69,7 @@ export class GoogleAIClient extends BaseLLMClient {
     const url = `${this.baseUrl}/models/${request.model}:generateContent?key=${this.options.apiKey}`;
 
     try {
-      const response = await this.makeRequest(url, body);
+      const response = await this.makeRequest(url, body) as GoogleResponse;
 
       if (!response.candidates || response.candidates.length === 0) {
         throw new Error('No response candidates from Gemini');
@@ -57,7 +80,7 @@ export class GoogleAIClient extends BaseLLMClient {
       const usage = response.usageMetadata;
 
       // Calcula custo baseado no modelo
-      const cost = this.calculateModelCost(request.model, usage);
+      const cost = this.calculateModelCost(request.model, usage || {});
 
       return {
         content,
@@ -76,8 +99,8 @@ export class GoogleAIClient extends BaseLLMClient {
     }
   }
 
-  private convertMessages(messages: any[]): any[] {
-    const contents: any[] = [];
+  private convertMessages(messages: LLMMessage[]): GoogleContent[] {
+    const contents: GoogleContent[] = [];
     
     for (const message of messages) {
       if (message.role === 'system') {
@@ -97,7 +120,7 @@ export class GoogleAIClient extends BaseLLMClient {
     return contents;
   }
 
-  private calculateModelCost(model: string, usage: any): number {
+  private calculateModelCost(model: string, usage: GoogleUsageMetadata): number {
     // Preços por 1M tokens (conforme pricing Google AI)
     const pricing: Record<string, { input: number; output: number }> = {
       'gemini-1.5-pro': { input: 1.25, output: 5.0 },

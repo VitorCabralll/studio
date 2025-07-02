@@ -3,19 +3,22 @@
  * Reduces initial bundle size by loading orchestrator components only when needed
  */
 
-import { ProcessingInput, ProcessingOutput, RoutingDecision } from './types';
+import { ProcessingInput, ProcessingOutput, RoutingDecision, OrchestratorConfig } from './types';
 
 // Lazy imports for heavy components
 const loadOrchestrator = () => import('./index').then(mod => mod.AIOrchestrator.create());
+
+// Import AIOrchestrator type for typing
+type AIOrchestratorType = import('./index').AIOrchestrator;
 
 /**
  * Lazy wrapper for AI Orchestrator functionality
  */
 class LazyAIOrchestrator {
-  private orchestratorInstance: any = null;
-  private loadingPromise: Promise<any> | null = null;
+  private orchestratorInstance: AIOrchestratorType | null = null;
+  private loadingPromise: Promise<AIOrchestratorType> | null = null;
 
-  private async getOrchestrator() {
+  private async getOrchestrator(): Promise<AIOrchestratorType> {
     if (this.orchestratorInstance) {
       return this.orchestratorInstance;
     }
@@ -25,7 +28,7 @@ class LazyAIOrchestrator {
       return this.orchestratorInstance;
     }
 
-    this.loadingPromise = loadOrchestrator();
+    this.loadingPromise = loadOrchestrator() as Promise<AIOrchestratorType>;
     this.orchestratorInstance = await this.loadingPromise;
     return this.orchestratorInstance;
   }
@@ -45,7 +48,7 @@ class LazyAIOrchestrator {
     return orchestrator.getConfig();
   }
 
-  async updateConfig(newConfig: any) {
+  async updateConfig(newConfig: Partial<OrchestratorConfig>) {
     const orchestrator = await this.getOrchestrator();
     return orchestrator.updateConfig(newConfig);
   }
@@ -74,7 +77,7 @@ export async function getOrchestratorConfig() {
   return lazyOrchestrator.getConfig();
 }
 
-export async function updateOrchestratorConfig(config: any) {
+export async function updateOrchestratorConfig(config: Partial<OrchestratorConfig>) {
   return lazyOrchestrator.updateConfig(config);
 }
 

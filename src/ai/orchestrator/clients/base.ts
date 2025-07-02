@@ -45,9 +45,9 @@ export abstract class BaseLLMClient {
 
   protected async makeRequest(
     url: string,
-    body: any,
+    body: unknown,
     headers: Record<string, string> = {}
-  ): Promise<any> {
+  ): Promise<unknown> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.options.timeout || 30000);
 

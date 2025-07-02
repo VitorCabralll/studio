@@ -4,6 +4,23 @@
 
 import { BaseLLMClient, LLMRequest, LLMResponse, LLMClientOptions } from './base';
 
+interface AnthropicUsage {
+  input_tokens: number;
+  output_tokens: number;
+}
+
+interface AnthropicContent {
+  text: string;
+}
+
+interface AnthropicResponse {
+  content: AnthropicContent[];
+  usage: AnthropicUsage;
+  model: string;
+  id: string;
+  stop_reason: string;
+}
+
 export class AnthropicClient extends BaseLLMClient {
   private readonly baseUrl = 'https://api.anthropic.com/v1';
 
@@ -36,7 +53,7 @@ export class AnthropicClient extends BaseLLMClient {
         `${this.baseUrl}/messages`,
         body,
         headers
-      );
+      ) as AnthropicResponse;
 
       const content = response.content[0].text;
       const usage = response.usage;
@@ -62,7 +79,7 @@ export class AnthropicClient extends BaseLLMClient {
     }
   }
 
-  private calculateModelCost(model: string, usage: any): number {
+  private calculateModelCost(model: string, usage: AnthropicUsage): number {
     // Preços por 1M tokens (conforme pricing Anthropic)
     const pricing: Record<string, { input: number; output: number }> = {
       'claude-3-opus-20240229': { input: 15, output: 75 },

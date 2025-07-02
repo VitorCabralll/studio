@@ -5,6 +5,7 @@
 import { OpenAIClient } from './openai';
 import { GoogleAIClient } from './google';
 import { AnthropicClient } from './anthropic';
+import { BaseLLMClient, type LLMClientOptions } from './base';
 
 export { BaseLLMClient } from './base';
 export type { LLMClientOptions, LLMRequest, LLMResponse, LLMMessage } from './base';
@@ -14,7 +15,7 @@ export { GoogleAIClient } from './google';
 export { AnthropicClient } from './anthropic';
 
 // Factory para criar clientes
-export function createLLMClient(provider: string, options: any) {
+export function createLLMClient(provider: string, options: LLMClientOptions): BaseLLMClient {
   if (!options.apiKey) {
     throw new Error(`API key is required for ${provider} provider`);
   }
