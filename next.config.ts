@@ -25,6 +25,17 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     'https://3000-firebase-studio-2-1751226604447.cluster-uf6urqn4lned4spwk4xorq6bpo.cloudworkstations.dev'
   ],
+  
+  // Webpack configuration to handle path aliases
+  webpack: (config, { isServer }) => {
+    // Ensure path aliases work in Firebase App Hosting
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, 'src'),
+    };
+    
+    return config;
+  },
 };
 
 export default nextConfig;
