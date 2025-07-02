@@ -1,5 +1,10 @@
 import type { NextConfig } from 'next';
 
+// Bundle analyzer configuration
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   // Firebase App Hosting compatibility
   serverExternalPackages: ['firebase-admin'],
@@ -18,8 +23,22 @@ const nextConfig: NextConfig = {
   
   // Performance optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
+    optimizePackageImports: [
+      'lucide-react', 
+      '@radix-ui/react-icons',
+      'framer-motion',
+      'react-hook-form',
+      '@hookform/resolvers',
+      'zod',
+      'clsx'
+    ],
+    webpackBuildWorker: true
   },
+  
+  // Build optimizations
+  compress: true,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
   
   // Cloud Workstation compatibility
   allowedDevOrigins: [
@@ -38,4 +57,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

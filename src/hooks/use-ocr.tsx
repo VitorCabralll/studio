@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { createWorker, Worker, recognize } from 'tesseract.js';
+// Dynamic import do tesseract.js para reduzir bundle size
+const loadTesseract = () => import('tesseract.js');
 
 /**
  * Result object returned from OCR processing
@@ -117,14 +118,16 @@ export function useOCR(options: UseOCROptions = {}) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<OCRProgress>({ status: '', progress: 0, message: '' });
   const [error, setError] = useState<string | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  const workerRef = useRef<any | null>(null);
 
-  // Inicializar worker do Tesseract
+  // Inicializar worker do Tesseract com lazy loading
   const initializeWorker = useCallback(async () => {
     if (workerRef.current) return workerRef.current;
 
     try {
-      const worker = await createWorker(language, 1, {
+      // Carregamento dinâmico do Tesseract.js
+      const tesseract = await loadTesseract();
+      const worker = await tesseract.createWorker(language, 1, {
         logger: (m) => {
           setProgress({
             status: m.status,

@@ -71,10 +71,10 @@ export const auth = getFirebaseAuth;
 export const db = getFirebaseDb;
 export const storage = getFirebaseStorage;
 
-// Initialize optional Firebase services in browser only - with safer initialization
+// Initialize optional Firebase services in browser only - immediate initialization
 if (typeof window !== 'undefined') {
-  // Wait for app to be ready before initializing optional services
-  setTimeout(() => {
+  // Initialize optional services immediately - removed setTimeout for App Hosting compatibility
+  try {
     // Initialize App Check with reCAPTCHA v3
     try {
       // Enable debug mode only in specific development environment
@@ -118,5 +118,7 @@ if (typeof window !== 'undefined') {
       console.warn('Firebase Performance Monitoring não pôde ser inicializado:', error);
       // Performance Monitoring é opcional - não impede o funcionamento da aplicação
     }
-  }, 100); // Small delay to ensure proper initialization order
+  } catch (error) {
+    console.warn('Erro na inicialização dos serviços opcionais do Firebase:', error);
+  }
 }

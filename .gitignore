@@ -53,3 +53,18 @@ firestore-debug.log
 # They should be deployed separately, not with App Hosting
 functions/node_modules/
 functions/lib/
+
+# Editor and IDE configs
+.vscode/
+.idea/
+.claude/
+.idx/
+*.swp
+*.swo
+
+# Debug and temp files
+*-debug.log
+*.log
+*.tmp
+errobiuld.md
+pglite-debug.log
