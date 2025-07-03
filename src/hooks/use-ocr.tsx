@@ -111,14 +111,12 @@ export function useOCR(options: UseOCROptions = {}) {
     language = 'por+eng', // Português + Inglês para documentos jurídicos
     enableWhitelist = false,
     whitelist = '',
-    enableDeskew = true,
-    enableRotation = true,
   } = options;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<OCRProgress>({ status: '', progress: 0, message: '' });
   const [error, setError] = useState<string | null>(null);
-  const workerRef = useRef<any | null>(null);
+  const workerRef = useRef<{ recognize: (input: File | string) => Promise<{ data: { text: string; confidence: number } }>; terminate: () => Promise<unknown> } | null>(null);
 
   // Inicializar worker do Tesseract com lazy loading
   const initializeWorker = useCallback(async () => {
@@ -128,7 +126,7 @@ export function useOCR(options: UseOCROptions = {}) {
       // Carregamento dinâmico do Tesseract.js
       const tesseract = await loadTesseract();
       const worker = await tesseract.createWorker(language, 1, {
-        logger: (m) => {
+        logger: (m: { status: string; progress: number }) => {
           setProgress({
             status: m.status,
             progress: m.progress,

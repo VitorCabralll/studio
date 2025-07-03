@@ -1,6 +1,6 @@
 'use client';
 
-import { getAuth, onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authProcessing, setAuthProcessing] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(false);
   const router = useRouter();
 
   // Initialize Firebase auth state listener
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     let isComponentMounted = true;
-    setMounted(true);
+    // setMounted(true); // Variável não utilizada
     
     const auth = getFirebaseAuth();
     
@@ -157,7 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       isComponentMounted = false;
-      setMounted(false);
+      // setMounted(false); // Variável não utilizada
       unsubscribe();
     };
   }, []); // Remover dependências que podem causar loops
@@ -174,9 +174,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const auth = getFirebaseAuth();
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro no login:', error);
-      setError(error.message || 'Erro ao fazer login');
+      setError(error instanceof Error ? error.message : 'Erro ao fazer login');
     } finally {
       setLoading(false);
     }
@@ -194,9 +194,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const auth = getFirebaseAuth();
       await createUserWithEmailAndPassword(auth, email, password);
       router.push('/onboarding');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro no cadastro:', error);
-      setError(error.message || 'Erro ao criar conta');
+      setError(error instanceof Error ? error.message : 'Erro ao criar conta');
     } finally {
       setLoading(false);
     }
@@ -224,18 +224,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const result = await signInWithPopup(auth, provider);
       console.log('Login com Google realizado com sucesso:', result.user.email);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro no login com Google:', error);
       
       // Mensagens de erro mais específicas
+      const authError = error as { code?: string; message?: string };
       let errorMessage = 'Erro ao fazer login com Google';
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (authError.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Login cancelado pelo usuário';
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (authError.code === 'auth/popup-blocked') {
         errorMessage = 'Pop-up bloqueado. Permita pop-ups para este site.';
-      } else if (error.code === 'auth/network-request-failed') {
+      } else if (authError.code === 'auth/network-request-failed') {
         errorMessage = 'Erro de conexão. Verifique sua internet.';
-      } else if (error.message) {
+      } else if (authError.code === 'auth/unauthorized-domain') {
+        errorMessage = 'Domínio não autorizado. Entre em contato com o suporte.';
+        console.error('🚨 ERRO AUTH/UNAUTHORIZED-DOMAIN:', {
+          currentUrl: window.location.href,
+          authDomain: getFirebaseAuth().app.options.authDomain,
+          error: error
+        });
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
       

@@ -278,12 +278,12 @@ export class ContentGenerationProcessor extends BaseLLMProcessor {
     const sections: Record<string, string> = {};
     
     // Validação: garantir que structure.sections existe e é iterável
-    if (!structure || typeof structure !== 'object' || !('sections' in structure) || !Array.isArray((structure as any).sections)) {
+    if (!structure || typeof structure !== 'object' || !('sections' in structure) || !Array.isArray((structure as StructureDefinition).sections)) {
       throw new Error('Invalid structure: sections not found or not iterable');
     }
     
     // Gera conteúdo para cada seção
-    for (const section of (structure as any).sections) {
+    for (const section of (structure as StructureDefinition).sections) {
       const prompt = this.buildSectionPrompt(section, context);
       const response = await this.callLLM(prompt, context, {
         preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
@@ -343,14 +343,14 @@ export class AssemblyProcessor implements PipelineProcessor {
     const structure = context.intermediateResults['structure_definition'];
     
     // Monta documento seguindo a ordem definida
-    const sectionOrder = (structure as any)?.sectionOrder || Object.keys(sections as object);
+    const sectionOrder = (structure as StructureDefinition)?.sectionOrder || Object.keys(sections as Record<string, string>);
     
     let document = '';
     
     for (const sectionName of sectionOrder) {
-      if ((sections as any)[sectionName]) {
+      if ((sections as Record<string, string>)[sectionName]) {
         document += `\n\n## ${this.formatSectionTitle(sectionName)}\n\n`;
-        document += (sections as any)[sectionName];
+        document += (sections as Record<string, string>)[sectionName];
       }
     }
     
@@ -394,7 +394,7 @@ Recomenda-se revisão jurídica antes da utilização.`;
   }
 
   validate(input: unknown): boolean {
-    return typeof input === 'object' && input !== null && Object.keys(input).length > 0;
+    return typeof input === 'object' && input !== null && Object.keys(input as Record<string, unknown>).length > 0;
   }
 
   transform(output: unknown): string {

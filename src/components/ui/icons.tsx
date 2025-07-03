@@ -166,7 +166,7 @@ export type { LucideIcon };
 
 // Utility function to create lazy-loaded icons for rare cases
 export function createLazyIcon(iconName: string): React.ComponentType {
-  return dynamic(() => import('lucide-react').then(mod => ({ default: (mod as any)[iconName] })), {
+  return dynamic(() => import('lucide-react').then(mod => ({ default: (mod as unknown as Record<string, React.ComponentType>)[iconName] })), {
     ssr: false
   });
 }

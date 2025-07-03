@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { 
   FadeIn, 
   SlideUp, 
@@ -13,6 +14,20 @@ import {
 } from "@/components/magic-ui";
 
 export function HeroSection() {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    router.push('/signup');
+  };
+
+  const handleDemo = () => {
+    // Scroll para a seção de features ou demos
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-100/60 dark:from-slate-900 dark:via-blue-950/30 dark:to-indigo-950/40">
       {/* Elegant Background Orbs */}
@@ -41,7 +56,11 @@ export function HeroSection() {
           </SlideUp>
 
           <SlideUp delay={0.5} className="flex flex-col items-center justify-center gap-6 sm:flex-row pt-4">
-            <AnimatedButton className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 focus-ring text-lg px-8 py-4 h-auto" size="lg">
+            <AnimatedButton 
+              onClick={handleGetStarted}
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 focus-ring text-lg px-8 py-4 h-auto" 
+              size="lg"
+            >
               <span className="relative z-10 flex items-center">
                 Começar Gratuitamente
                 <motion.div
@@ -55,7 +74,12 @@ export function HeroSection() {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </AnimatedButton>
             
-            <AnimatedButton variant="outline" size="lg" className="group border-2 border-slate-200 bg-white/80 backdrop-blur-sm hover:bg-white/90 hover:border-slate-300 shadow-lg hover:shadow-xl transition-all duration-300 focus-ring dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800/90 text-lg px-8 py-4 h-auto">
+            <AnimatedButton 
+              onClick={handleDemo}
+              variant="outline" 
+              size="lg" 
+              className="group border-2 border-slate-200 bg-white/80 backdrop-blur-sm hover:bg-white/90 hover:border-slate-300 shadow-lg hover:shadow-xl transition-all duration-300 focus-ring dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800/90 text-lg px-8 py-4 h-auto"
+            >
               <motion.div
                 className="mr-2"
                 whileHover={{ scale: 1.1 }}

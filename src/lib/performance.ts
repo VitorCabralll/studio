@@ -6,16 +6,6 @@
 export function preloadCriticalResources() {
   if (typeof window === 'undefined') return;
   
-  // Preload critical CSS classes used across the app
-  const criticalClasses = [
-    'bg-primary',
-    'text-primary-foreground', 
-    'border-primary',
-    'hover:bg-primary/90',
-    'bg-muted',
-    'text-muted-foreground'
-  ];
-
   // Add critical font display optimization
   const fontStyle = document.createElement('style');
   fontStyle.textContent = `
@@ -32,7 +22,7 @@ export const loadTesseract = () => import('tesseract.js');
 export const loadOrchestrator = () => import('@/ai/orchestrator/orchestrator-lazy');
 
 // Debounce utility for performance
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -44,7 +34,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle utility for scroll events
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -70,7 +60,7 @@ export function createWorker(workerFunction: () => void): Worker {
 export function cleanupMemory() {
   if (typeof window !== 'undefined' && 'gc' in window) {
     // Force garbage collection in development
-    (window as any).gc();
+    (window as { gc: () => void }).gc();
   }
 }
 
@@ -88,7 +78,7 @@ export function createIntersectionObserver(
 
 // Performance measurement
 export class PerformanceTimer {
-  private startTime: number = 0;
+  private startTime = 0;
   private marks: Map<string, number> = new Map();
 
   start(label?: string): void {

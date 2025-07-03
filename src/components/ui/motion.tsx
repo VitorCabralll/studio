@@ -5,7 +5,7 @@
 
 "use client";
 
-import { motion, HTMLMotionProps } from "framer-motion";
+import { motion, HTMLMotionProps, Variants, Transition } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
@@ -43,10 +43,10 @@ function AnimatedComponent({
   transition,
   ...props
 }: MotionComponentProps & {
-  variants: Record<string, any>;
+  variants: Variants;
   initial: string;
   animate: string;
-  transition: Record<string, any>;
+  transition: Transition;
 }) {
   const [ref, inView] = useInView({
     triggerOnce,

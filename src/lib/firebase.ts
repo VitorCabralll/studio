@@ -3,7 +3,7 @@ import { getAnalytics } from "firebase/analytics";
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork, initializeFirestore } from 'firebase/firestore';
+import { getFirestore, enableNetwork, initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getPerformance } from "firebase/performance";
 /**
@@ -19,14 +19,6 @@ import { getPerformance } from "firebase/performance";
  */
 import { getFirebaseConfig, validateFirebaseConfig, isFirebaseAppHosting } from './firebase-config-simple.js';
 
-// Lazy import validation - Funcional
-let envValidationImported = false;
-async function importEnvValidation() {
-  if (!envValidationImported && typeof window !== 'undefined') {
-    await import('./env-validation');
-    envValidationImported = true;
-  }
-}
 
 // Create Firebase config with validation
 function createFirebaseConfig() {
