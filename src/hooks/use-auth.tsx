@@ -81,10 +81,9 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // INICIANDO FALSE PARA DESTRAVAR UI
   const [error, setError] = useState<string | null>(null);
   const [authProcessing, setAuthProcessing] = useState(false);
-  const [mounted] = useState(false);
   const router = useRouter();
 
   // Initialize Firebase auth state listener
@@ -96,7 +95,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     let isComponentMounted = true;
-    // setMounted(true); // Variável não utilizada
+    
+    // Definir loading false imediatamente para desbloquear UI
+    setLoading(false);
     
     const auth = getFirebaseAuth();
     
@@ -157,7 +158,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       isComponentMounted = false;
-      // setMounted(false); // Variável não utilizada
       unsubscribe();
     };
   }, []); // Remover dependências que podem causar loops
