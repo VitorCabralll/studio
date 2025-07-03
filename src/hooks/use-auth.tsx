@@ -59,29 +59,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const auth = getFirebaseAuth();
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-      
       try {
         if (user) {
-          // User is signed in
-          setState(prev => ({ ...prev, user }));
+          // User is signed in - set user first
+          setState(prev => ({ ...prev, user, loading: true, error: null }));
           
-          // Load user profile
-          const profileResult = await getUserProfile(user.uid);
+          // Load user profile with timeout
+          const profilePromise = getUserProfile(user.uid);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Profile load timeout')), 10000)
+          );
           
-          if (profileResult.success && profileResult.data) {
-            setState(prev => ({ 
-              ...prev, 
-              userProfile: profileResult.data,
-              loading: false 
-            }));
-          } else {
-            // Profile loading failed, but keep user authenticated
+          try {
+            const profileResult = await Promise.race([profilePromise, timeoutPromise]) as any;
+            
+            if (profileResult.success && profileResult.data) {
+              setState(prev => ({ 
+                ...prev, 
+                userProfile: profileResult.data,
+                loading: false 
+              }));
+            } else {
+              // Profile loading failed, but keep user authenticated
+              setState(prev => ({ 
+                ...prev, 
+                userProfile: null,
+                loading: false,
+                error: profileResult.error ? parseAuthError(profileResult.error) : null
+              }));
+            }
+          } catch (profileError) {
+            console.warn('Profile load failed:', profileError);
+            // Keep user authenticated even if profile fails
             setState(prev => ({ 
               ...prev, 
               userProfile: null,
               loading: false,
-              error: profileResult.error ? parseAuthError(profileResult.error) : null
+              error: parseAuthError(profileError)
             }));
           }
         } else {

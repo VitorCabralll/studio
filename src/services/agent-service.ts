@@ -11,6 +11,7 @@ import {
   orderBy 
 } from 'firebase/firestore';
 import { getFirebaseDb } from '@/lib/firebase';
+import { addNamespace } from '@/lib/staging-config';
 
 export interface Agent {
   id: string;
@@ -68,7 +69,7 @@ export const agentService = {
         }
       };
 
-      const docRef = await addDoc(collection(getFirebaseDb(), 'workspaces', data.workspaceId, 'agentes'), agentData);
+      const docRef = await addDoc(collection(getFirebaseDb(), addNamespace('workspaces'), data.workspaceId, 'agentes'), agentData);
       
       const newAgent: Agent = {
         id: docRef.id,
@@ -87,7 +88,7 @@ export const agentService = {
    */
   async getWorkspaceAgents(workspaceId: string): Promise<{ success: boolean; agents?: Agent[]; error?: string }> {
     try {
-      const agentsRef = collection(getFirebaseDb(), 'workspaces', workspaceId, 'agentes');
+      const agentsRef = collection(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes');
       const q = query(
         agentsRef, 
         where('isActive', '==', true),
@@ -126,7 +127,7 @@ export const agentService = {
    */
   async getAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; agent?: Agent; error?: string }> {
     try {
-      const agentRef = doc(getFirebaseDb(), 'workspaces', workspaceId, 'agentes', agentId);
+      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       const agentDoc = await getDoc(agentRef);
       
       if (!agentDoc.exists()) {
@@ -164,7 +165,7 @@ export const agentService = {
     updates: Partial<Omit<Agent, 'id' | 'workspaceId' | 'createdBy' | 'createdAt'>>
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const agentRef = doc(getFirebaseDb(), 'workspaces', workspaceId, 'agentes', agentId);
+      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
         ...updates,
         updatedAt: new Date()
@@ -182,7 +183,7 @@ export const agentService = {
    */
   async deactivateAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const agentRef = doc(getFirebaseDb(), 'workspaces', workspaceId, 'agentes', agentId);
+      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
         isActive: false,
         updatedAt: new Date()
@@ -200,7 +201,7 @@ export const agentService = {
    */
   async deleteAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const agentRef = doc(getFirebaseDb(), 'workspaces', workspaceId, 'agentes', agentId);
+      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await deleteDoc(agentRef);
 
       return { success: true };

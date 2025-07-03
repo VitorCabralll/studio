@@ -114,3 +114,8 @@ $RECYCLE.BIN/
 pnpm-lock.yaml.bak
 yarn.lock.bak
 package-lock.json.bak
+
+# Build artifacts cleanup
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+next-env.d.ts

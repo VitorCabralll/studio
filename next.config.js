@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Firebase App Hosting compatibility (Next.js 15+ feature, removed for 14.x)
-  // serverExternalPackages: ['firebase-admin'],
+  // Firebase App Hosting compatibility (Next.js 15+ feature)
+  serverExternalPackages: ['firebase-admin'],
   
   // Images configuration
   images: {

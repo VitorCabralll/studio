@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError, DocumentSnapshot } from 'firebase/firestore';
 
 import { getFirebaseDb } from '@/lib/firebase';
+import { addNamespace } from '@/lib/staging-config';
 
 // Tipos para resultado de operações com tratamento de erro
 export interface ServiceResult<T> {
@@ -96,7 +97,7 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
     }
 
     const db = getFirebaseDb();
-    const docRef = doc(db, 'usuarios', uid);
+    const docRef = doc(db, addNamespace('usuarios'), uid);
     
     // Tentar múltiplas vezes com timeouts progressivos
     let docSnap;
@@ -232,7 +233,7 @@ export async function createUserProfile(
     }
 
 
-    const userDocRef = doc(getFirebaseDb(), 'usuarios', uid);
+    const userDocRef = doc(getFirebaseDb(), addNamespace('usuarios'), uid);
     const profileData = {
       ...data,
       initial_setup_complete: data.initial_setup_complete || false,
@@ -288,7 +289,7 @@ export async function updateUserProfile(
     }
 
 
-    const userDocRef = doc(getFirebaseDb(), 'usuarios', uid);
+    const userDocRef = doc(getFirebaseDb(), addNamespace('usuarios'), uid);
     
     // Preparar dados para atualização (remover campos que não devem ser sobrescritos)
     const updateData = { ...data };
