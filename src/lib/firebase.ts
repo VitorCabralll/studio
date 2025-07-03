@@ -4,8 +4,8 @@
  */
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, enableNetwork } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, Auth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, Firestore, enableNetwork, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getFirebaseConfig } from './firebase-config';
@@ -41,6 +41,19 @@ export function getFirebaseAuth(): Auth {
   if (!auth) {
     const app = initializeFirebaseApp();
     auth = getAuth(app);
+    
+    // Connect to emulator in development
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
+      const authEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST;
+      if (authEmulatorHost && !auth.emulatorConfig) {
+        try {
+          connectAuthEmulator(auth, `http://${authEmulatorHost}`, { disableWarnings: true });
+          console.log('🧪 Firebase Auth conectado ao emulador:', authEmulatorHost);
+        } catch (error) {
+          console.warn('Falha ao conectar Auth emulator:', error);
+        }
+      }
+    }
   }
   return auth;
 }
@@ -53,8 +66,20 @@ export function getFirebaseDb(): Firestore {
     const app = initializeFirebaseApp();
     db = getFirestore(app);
     
-    // Enable network for better connectivity
-    if (typeof window !== 'undefined') {
+    // Connect to emulator in development
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
+      const firestoreEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST;
+      if (firestoreEmulatorHost) {
+        try {
+          const [host, port] = firestoreEmulatorHost.split(':');
+          connectFirestoreEmulator(db, host, parseInt(port));
+          console.log('🧪 Firestore conectado ao emulador:', firestoreEmulatorHost);
+        } catch (error) {
+          console.warn('Falha ao conectar Firestore emulator (pode já estar conectado):', error);
+        }
+      }
+    } else if (typeof window !== 'undefined') {
+      // Enable network for production
       enableNetwork(db).catch(error => {
         console.warn('Failed to enable Firestore network:', error);
       });
