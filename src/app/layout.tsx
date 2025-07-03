@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-// import { SpeedInsights } from "@vercel/speed-insights/next"; // Removed: Incompatible with Firebase App Hosting
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from './fonts';
 import { ErrorBoundary } from '@/components/layout/error-boundary';
 import { SkipLinks } from '@/components/layout/skip-links';
@@ -13,14 +13,12 @@ import { WorkspaceProvider } from '@/contexts/workspace-context';
 import './globals.css';
 
 // Lazy load do componente de debug apenas em desenvolvimento
-const AuthDebug = process.env.NODE_ENV === 'development' 
-  ? dynamic(
-      () => import('@/components/debug/auth-debug').then(mod => ({ default: mod.AuthDebug })),
-      {
-        loading: () => null, // Sem loading para debug
-      }
-    )
-  : () => null;
+const AuthDebug = dynamic(
+  () => import('@/components/debug/auth-debug').then(mod => ({ default: mod.AuthDebug })),
+  {
+    loading: () => null, // Sem loading para debug
+  }
+);
 
 export const metadata: Metadata = {
   title: 'LexAI - IA Jurídica para Advogados e Escritórios',
@@ -75,13 +73,15 @@ export default function RootLayout({
                 <WorkspaceProvider>
                   {children}
                   <Toaster />
-                  {process.env.NODE_ENV === 'development' && <AuthDebug />}
+                  <AuthDebug />
                   <ResourcePreloader />
                   <WebVitals />
                 </WorkspaceProvider>
               </AuthProvider>
           </ThemeProvider>
-          {/* SpeedInsights removed: Incompatible with Firebase App Hosting */}
+          <ErrorBoundary>
+            <SpeedInsights />
+          </ErrorBoundary>
         </ErrorBoundary>
       </body>
     </html>
