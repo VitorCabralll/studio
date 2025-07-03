@@ -4,9 +4,28 @@
  */
 
 /**
- * Get Firebase configuration from environment variables
+ * Get Firebase configuration from Firebase App Hosting injected config or environment variables
  */
 function getFirebaseConfig() {
+  // Try to get from Firebase App Hosting injected config first
+  if (process.env.FIREBASE_WEBAPP_CONFIG) {
+    try {
+      const webappConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
+      
+      return {
+        apiKey: webappConfig.apiKey,
+        authDomain: webappConfig.authDomain,
+        projectId: webappConfig.projectId,
+        storageBucket: webappConfig.storageBucket,
+        messagingSenderId: webappConfig.messagingSenderId,
+        appId: webappConfig.appId,
+        measurementId: webappConfig.measurementId,
+      };
+    } catch (error) {
+      console.warn('Failed to parse FIREBASE_WEBAPP_CONFIG:', error);
+    }
+  }
+  
   // Fallback to standard environment variables
   return {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
