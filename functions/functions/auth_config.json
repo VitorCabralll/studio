@@ -1,0 +1,39 @@
+{"users": [
+{
+  "localId": "MKUFJZ7ML7cnKGnvsmeWJ5PHBmx2",
+  "email": "vitorcabral703@gmail.com",
+  "emailVerified": true,
+  "displayName": "Vitor Hugo Cabral Araujo",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c",
+  "lastSignedInAt": "1751304158179",
+  "createdAt": "1751304158179",
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "107577672097350071580",
+      "email": "vitorcabral703@gmail.com",
+      "displayName": "Vitor Hugo Cabral Araujo",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c"
+    }
+  ]
+},
+{
+  "localId": "m6jn8dWUQ2b3eZL1YAJMuPpjpNV2",
+  "email": "vitorfreitas2022@hotmail.com",
+  "emailVerified": false,
+  "passwordHash": "Z6UEokf2SCU90p4vBiS+1emaQ3bJVRJXYDsYKcnH/jEl5WCC6DVEvOxGJE8Z/JsJxQn5MxUEuUusG9GEOHOz5A==",
+  "salt": "UNdRrPT7XyuQCw==",
+  "lastSignedInAt": "1751496460893",
+  "createdAt": "1751496460893",
+  "providerUserInfo": []
+},
+{
+  "localId": "n0dWpQU30TYipLV5dmuTt8Zf3Wm2",
+  "email": "toniazzoana15@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "xGutvGeLH37ciPFjuJeOaJ7ipBh7gmHU6WZCnc1ugAk/nMDKR1XVDINH82RZ79niYC40ZyD332rHIxsMO890KA==",
+  "salt": "AO9634oV5743HA==",
+  "lastSignedInAt": "1751509453910",
+  "createdAt": "1751509453910",
+  "providerUserInfo": []
+}]}

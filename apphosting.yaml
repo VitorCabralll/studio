@@ -14,7 +14,7 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyBlznzwe_cuk3X2QCXHYpqCx6UGh1HOxSI
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: lexai-ef0ab.web.app
+    value: lexai-ef0ab.firebaseapp.com
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: lexai-ef0ab
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
