@@ -43,16 +43,26 @@ next-env.d.ts
 .genkit/*
 .env*
 
-# firebase
+# Firebase
 firebase-debug.log
 firestore-debug.log
+firestore.rules.debug
 .firebase/
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Firebase Functions have their own package.json
-# They should be deployed separately, not with App Hosting
+# Firebase Functions
 functions/node_modules/
 functions/lib/
+functions/.env*
+
+# Firebase Emulator Data
+firebase-export-*
+.emulator_data/
+firestore_export/
 
 # Editor and IDE configs
 .vscode/
@@ -77,3 +87,30 @@ pglite-debug.log
 # Backups locais
 /backups/local-*
 /backups/temp-*
+
+# AI/LLM Keys and Configs
+openai.key
+anthropic.key
+google-ai.key
+*.api-key
+
+# Upload temporários
+/public/uploads/temp/
+/tmp/
+/temp/
+
+# Cache e builds
+.turbo/
+.swc/
+.cache/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Package managers
+pnpm-lock.yaml.bak
+yarn.lock.bak
+package-lock.json.bak
