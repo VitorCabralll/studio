@@ -30,8 +30,18 @@ const nextConfig = {
   
   // Enhanced webpack configuration with clean bundle analysis
   webpack: (config, { dev, isServer, webpack }) => {
-    // Path alias
-    config.resolve.alias['@'] = require('path').resolve(__dirname, 'src');
+    // Path alias - explicit resolution for Firebase App Hosting
+    const path = require('path');
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+      '@/components': path.resolve(__dirname, 'src/components'),
+      '@/lib': path.resolve(__dirname, 'src/lib'),
+      '@/hooks': path.resolve(__dirname, 'src/hooks'),
+      '@/services': path.resolve(__dirname, 'src/services'),
+      '@/contexts': path.resolve(__dirname, 'src/contexts'),
+      '@/ai': path.resolve(__dirname, 'src/ai'),
+    };
     
     // Bundle analysis - clean implementation without hangs
     if (process.env.ANALYZE === 'true' && !isServer) {
