@@ -66,7 +66,7 @@ export function LoginForm() {
             <CardContent className="space-y-4">
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                  {error}
+                  {error.message}
                   <button 
                     onClick={clearError}
                     className="ml-2 text-red-800 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
