@@ -1,151 +1,163 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { TextAnimate, FadeIn } from "@/components/magic-ui";
+import { ArrowRight, Zap } from "lucide-react";
+import { 
+  FadeIn, 
+  SlideUp, 
+  BlobAnimation, 
+  TextAnimate, 
+  AnimatedButton, 
+  StaggerContainer,
+  StaggerItem,
+  motion 
+} from "@/components/magic-ui";
 
 export function HeroSection() {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Background decorations */}
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-100/60 dark:from-slate-900 dark:via-blue-950/30 dark:to-indigo-950/40">
+      {/* Elegant Background Orbs */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="animate-blob absolute -right-32 -top-40 size-80 rounded-full bg-purple-300 opacity-20 mix-blend-multiply blur-xl"></div>
-        <div className="animate-blob animation-delay-2000 absolute -bottom-40 -left-32 size-80 rounded-full bg-blue-300 opacity-20 mix-blend-multiply blur-xl"></div>
-        <div className="animate-blob animation-delay-4000 absolute left-40 top-40 size-80 rounded-full bg-pink-300 opacity-20 mix-blend-multiply blur-xl"></div>
+        <BlobAnimation className="absolute -right-32 -top-40 size-96 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-500/20 blur-3xl" />
+        <BlobAnimation className="absolute -bottom-40 -left-32 size-96 rounded-full bg-gradient-to-br from-indigo-400/15 to-purple-500/15 blur-3xl" delay={2} />
+        <BlobAnimation className="absolute left-40 top-40 size-80 rounded-full bg-gradient-to-br from-cyan-300/10 to-blue-400/15 blur-3xl" delay={4} />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <FadeIn delay={0.2}>
-          <div className="mb-6 flex items-center justify-center">
-            <div className="flex items-center space-x-2 rounded-full border border-gray-200 bg-white/80 px-4 py-2 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/80">
-              <Sparkles className="size-4 text-purple-600" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Powered by AI
-              </span>
-            </div>
-          </div>
-        </FadeIn>
 
         <div className="space-y-6">
-          <TextAnimate
-            animation="slideUp"
+          <TextAnimate 
+            className="bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-display font-bold text-transparent dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200"
             delay={0.3}
-            className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-4xl font-bold leading-tight text-transparent dark:from-white dark:via-blue-100 dark:to-purple-100 sm:text-6xl lg:text-7xl"
           >
             Automatize Documentos Jurídicos com IA
           </TextAnimate>
 
-          <FadeIn delay={0.6} className="mx-auto max-w-3xl">
-            <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300 sm:text-xl">
-              Gere petições, contratos e pareceres profissionais em minutos. 
-              Nossa IA especializada em direito brasileiro transforma suas ideias 
-              em documentos juridicamente precisos.
+          <SlideUp delay={0.4} className="mx-auto max-w-3xl">
+            <p className="text-body-large">
+              Para advogados, promotores, defensores e todos os operadores do direito. 
+              Nossa IA especializada transforma suas ideias em documentos precisos 
+              e profissionais em minutos.
             </p>
-          </FadeIn>
+          </SlideUp>
 
-          <FadeIn delay={0.9} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="group relative overflow-hidden bg-blue-600 text-white hover:bg-blue-700">
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: "0%" }}
-                transition={{ duration: 0.3 }}
-              />
-              <span className="relative flex items-center">
+          <SlideUp delay={0.6} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <AnimatedButton className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 focus-ring" size="lg">
+              <span className="relative z-10 flex items-center">
                 Começar Gratuitamente
-                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+                <motion.div
+                  className="ml-2"
+                  whileHover={{ x: 3 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <ArrowRight className="size-4" />
+                </motion.div>
               </span>
-            </Button>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            </AnimatedButton>
             
-            <Button variant="outline" size="lg" className="group">
-              <Zap className="mr-2 size-4 transition-colors group-hover:text-yellow-500" />
-              Ver Demo
-            </Button>
-          </FadeIn>
+            <AnimatedButton variant="outline" size="lg" className="group border-2 border-slate-200 bg-white/80 backdrop-blur-sm hover:bg-white/90 hover:border-slate-300 shadow-lg hover:shadow-xl transition-all duration-300 focus-ring dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800/90">
+              <motion.div
+                className="mr-2"
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <Zap className="size-4 text-amber-500 group-hover:text-amber-600" />
+              </motion.div>
+              <span className="text-slate-700 dark:text-slate-200">Ver Demo</span>
+            </AnimatedButton>
+          </SlideUp>
 
-          <FadeIn delay={1.2}>
-            <div className="flex items-center justify-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
-              <div className="flex items-center">
-                <div className="mr-2 size-2 rounded-full bg-green-500"></div>
-                Sem cartão de crédito
-              </div>
-              <div className="flex items-center">
-                <div className="mr-2 size-2 rounded-full bg-blue-500"></div>
+          <FadeIn delay={0.8}>
+            <StaggerContainer className="flex items-center justify-center space-x-8 text-caption">
+              <StaggerItem className="flex items-center">
+                <div className="mr-2 size-2 rounded-full bg-accent"></div>
+                Teste gratuito
+              </StaggerItem>
+              <StaggerItem className="flex items-center">
+                <div className="mr-2 size-2 rounded-full bg-primary"></div>
                 Setup em 2 minutos
-              </div>
-              <div className="flex items-center">
-                <div className="mr-2 size-2 rounded-full bg-purple-500"></div>
-                Suporte 24/7
-              </div>
-            </div>
+              </StaggerItem>
+              <StaggerItem className="flex items-center">
+                <div className="mr-2 size-2 rounded-full bg-muted-foreground"></div>
+                Suporte especializado
+              </StaggerItem>
+            </StaggerContainer>
           </FadeIn>
         </div>
 
-        {/* Floating cards preview */}
-        <FadeIn delay={1.5} className="mt-16">
-          <div className="relative">
+        <SlideUp delay={1.0} className="mt-20">
+          <div className="relative max-w-5xl mx-auto">
+            {/* Card Esquerda - Petição */}
             <motion.div
-              className="absolute left-10 top-10 h-40 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800"
-              initial={{ opacity: 0, y: 20, rotate: -5 }}
-              animate={{ opacity: 1, y: 0, rotate: -5 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
+              className="absolute left-8 top-8 h-36 w-52 rounded-xl border border-white/20 bg-white/80 backdrop-blur-md p-5 shadow-2xl dark:border-slate-700/50 dark:bg-slate-800/80"
+              initial={{ opacity: 0, y: 20, rotate: -3 }}
+              animate={{ opacity: 1, y: 0, rotate: -3 }}
+              transition={{ duration: 0.8, delay: 1.5, ease: "easeOut" }}
+              whileHover={{ y: -8, rotate: -1, scale: 1.02 }}
             >
-              <div className="mb-2 size-3 rounded-full bg-red-500"></div>
-              <div className="space-y-2">
-                <div className="h-2 w-3/4 rounded bg-gray-200 dark:bg-gray-600"></div>
-                <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
-                <div className="h-2 w-5/6 rounded bg-gray-200 dark:bg-gray-600"></div>
+              <div className="mb-3 size-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 shadow-sm"></div>
+              <div className="space-y-2.5">
+                <div className="h-2 w-3/4 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
+                <div className="h-2 w-1/2 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
+                <div className="h-2 w-5/6 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
               </div>
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">Petição</div>
+              <div className="absolute bottom-3 right-3 text-xs font-medium text-slate-500 dark:text-slate-400">Petição</div>
             </motion.div>
 
+            {/* Card Direita - Contrato */}
             <motion.div
-              className="absolute right-10 top-10 h-40 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800"
-              initial={{ opacity: 0, y: 20, rotate: 5 }}
-              animate={{ opacity: 1, y: 0, rotate: 5 }}
-              transition={{ delay: 1.7, duration: 0.8 }}
+              className="absolute right-8 top-8 h-36 w-52 rounded-xl border border-white/20 bg-white/80 backdrop-blur-md p-5 shadow-2xl dark:border-slate-700/50 dark:bg-slate-800/80"
+              initial={{ opacity: 0, y: 20, rotate: 3 }}
+              animate={{ opacity: 1, y: 0, rotate: 3 }}
+              transition={{ duration: 0.8, delay: 1.7, ease: "easeOut" }}
+              whileHover={{ y: -8, rotate: 1, scale: 1.02 }}
             >
-              <div className="mb-2 size-3 rounded-full bg-green-500"></div>
-              <div className="space-y-2">
-                <div className="h-2 w-2/3 rounded bg-gray-200 dark:bg-gray-600"></div>
-                <div className="h-2 w-4/5 rounded bg-gray-200 dark:bg-gray-600"></div>
-                <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
+              <div className="mb-3 size-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 shadow-sm"></div>
+              <div className="space-y-2.5">
+                <div className="h-2 w-2/3 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
+                <div className="h-2 w-4/5 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
+                <div className="h-2 w-1/2 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700"></div>
               </div>
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">Contrato</div>
+              <div className="absolute bottom-3 right-3 text-xs font-medium text-slate-500 dark:text-slate-400">Contrato</div>
             </motion.div>
 
+            {/* Card Central - Dashboard */}
             <motion.div
-              className="mx-auto h-48 w-80 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white shadow-2xl"
+              className="mx-auto h-44 w-80 rounded-xl border border-white/20 bg-gradient-to-br from-white/90 to-white/80 backdrop-blur-lg p-6 shadow-2xl dark:border-slate-700/50 dark:from-slate-800/90 dark:to-slate-900/80"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.9, duration: 0.8 }}
+              transition={{ duration: 0.8, delay: 1.9, ease: "easeOut" }}
+              whileHover={{ y: -12, scale: 1.05 }}
             >
               <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm font-medium">LexAI Dashboard</span>
-                <div className="size-2 animate-pulse rounded-full bg-green-400"></div>
+                <span className="text-sm font-semibold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent dark:from-slate-200 dark:to-slate-100">LexAI Dashboard</span>
+                <motion.div 
+                  className="size-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 shadow-sm"
+                  animate={{ opacity: [1, 0.6, 1], scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm opacity-80">Documentos gerados hoje</span>
-                  <span className="font-bold">47</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400">Documentos gerados hoje</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">47</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm opacity-80">Tempo médio</span>
-                  <span className="font-bold">2.3 min</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400">Tempo médio</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">2.3 min</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-white/20">
-                  <motion.div
-                    className="h-2 rounded-full bg-white"
+                <div className="h-2 w-full rounded-full bg-slate-200/50 dark:bg-slate-700/50 overflow-hidden">
+                  <motion.div 
+                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 shadow-sm"
                     initial={{ width: "0%" }}
-                    animate={{ width: "78%" }}
-                    transition={{ delay: 2.2, duration: 1 }}
-                  ></motion.div>
+                    animate={{ width: "75%" }}
+                    transition={{ duration: 2.5, delay: 2.5, ease: "easeOut" }}
+                  />
                 </div>
               </div>
             </motion.div>
           </div>
-        </FadeIn>
+        </SlideUp>
       </div>
     </section>
   );

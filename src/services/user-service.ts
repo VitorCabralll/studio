@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError, DocumentSnapshot } from 'firebase/firestore';
 
 import { getFirebaseDb } from '@/lib/firebase';
 
@@ -95,8 +95,66 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
       };
     }
 
-    const docRef = doc(getFirebaseDb(), 'usuarios', uid);
-    const docSnap = await getDoc(docRef);
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'usuarios', uid);
+    
+    // Tentar múltiplas vezes com timeouts progressivos
+    let docSnap;
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const timeout = attempt * 3000; // 3s, 6s, 9s
+        console.log(`Tentativa ${attempt}/3 - Timeout: ${timeout}ms`);
+        
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Timeout tentativa ${attempt}: Servidor não responde`)), timeout);
+        });
+        
+        docSnap = await Promise.race([
+          getDoc(docRef),
+          timeoutPromise
+        ]) as DocumentSnapshot;
+        
+        // Se chegou aqui, deu certo
+        break;
+        
+      } catch (error) {
+        lastError = error;
+        console.warn(`Tentativa ${attempt} falhou:`, error);
+        
+        if (attempt < 3) {
+          // Aguardar antes da próxima tentativa
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+    
+    // Se todas as tentativas falharam, criar perfil local temporário
+    if (!docSnap) {
+      console.error('Todas as tentativas de conexão falharam, criando perfil local temporário');
+      
+      // Retornar perfil padrão temporário para não quebrar a aplicação
+      const temporaryProfile: UserProfile = {
+        cargo: '',
+        areas_atuacao: [],
+        primeiro_acesso: true,
+        initial_setup_complete: false,
+        data_criacao: new Date(),
+        workspaces: [],
+        displayName: 'Usuário (Offline)'
+      };
+      
+      return {
+        data: temporaryProfile,
+        error: {
+          code: 'offline-mode',
+          message: 'Funcionando offline. Dados não serão salvos.',
+          details: 'Conectividade com servidor perdida'
+        },
+        success: true // true para não quebrar o fluxo
+      };
+    }
 
     if (docSnap.exists()) {
       const data = docSnap.data() as UserProfile;

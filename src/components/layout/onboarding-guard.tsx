@@ -19,6 +19,12 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Skip during build/SSR to prevent redirect loops
+    if (typeof window === 'undefined') {
+      setIsVerified(true);
+      return;
+    }
+    
     if (!mounted || loading || !router) {
       return;
     }

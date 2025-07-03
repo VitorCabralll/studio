@@ -68,3 +68,12 @@ functions/lib/
 *.tmp
 errobiuld.md
 pglite-debug.log
+
+# Logs organized
+/logs/*.log
+/logs/*.tsbuildinfo
+/logs/debug-*
+
+# Backups locais
+/backups/local-*
+/backups/temp-*

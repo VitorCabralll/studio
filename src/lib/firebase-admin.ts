@@ -179,16 +179,17 @@ export async function createCustomUser(userData: {
   }
 }
 
-// Log de status da configuração (apenas em desenvolvimento e sem dados sensíveis)
-if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
-  // Log apenas status booleano, nunca valores reais das variáveis
-  const hasProjectId = !!process.env.FIREBASE_PROJECT_ID;
-  const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL;
-  const hasPrivateKey = !!process.env.FIREBASE_PRIVATE_KEY;
-  
-  if (hasProjectId && hasClientEmail && hasPrivateKey) {
-    console.log('🔧 Firebase Admin SDK: ✅ Configurado');
-  } else {
-    console.log('🔧 Firebase Admin SDK: ❌ Não configurado - Verificar env vars');
+// Firebase Admin configuration status check (moved to runtime only)
+export function logFirebaseAdminStatus() {
+  if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
+    const hasProjectId = !!process.env.FIREBASE_PROJECT_ID;
+    const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL;
+    const hasPrivateKey = !!process.env.FIREBASE_PRIVATE_KEY;
+    
+    if (hasProjectId && hasClientEmail && hasPrivateKey) {
+      console.log('🔧 Firebase Admin SDK: ✅ Configurado');
+    } else {
+      console.log('🔧 Firebase Admin SDK: ❌ Não configurado - Verificar env vars');
+    }
   }
 }

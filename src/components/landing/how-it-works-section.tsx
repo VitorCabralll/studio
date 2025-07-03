@@ -114,10 +114,10 @@ export function HowItWorksSection() {
                         <Sparkles className="size-8 text-white" />
                       </div>
                       <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
-                        Pipeline LexAI
+                        Processamento Inteligente
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Processamento inteligente em tempo real
+                        Seu documento sendo criado em tempo real
                       </p>
                     </div>
 

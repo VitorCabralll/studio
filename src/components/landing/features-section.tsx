@@ -67,7 +67,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="bg-white py-24 dark:bg-gray-900">
+    <section id="features" className="bg-white py-24 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-16 text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
@@ -78,7 +78,7 @@ export function FeaturesSection() {
             <span className="block text-blue-600 dark:text-blue-400">automatizar sua prática jurídica</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-            Funcionalidades desenvolvidas especificamente para advogados brasileiros
+            Funcionalidades desenvolvidas especificamente para operadores do direito brasileiro
           </p>
         </FadeIn>
 

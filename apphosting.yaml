@@ -10,8 +10,21 @@ runConfig:
   memoryMiB: 512
 
 env:
-  # Firebase Configuration (auto-injected by App Hosting)
-  # FIREBASE_CONFIG and FIREBASE_WEBAPP_CONFIG are provided automatically
+  # Firebase Client Configuration (NEXT_PUBLIC para browser)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBlznzwe_cuk3X2QCXHYpqCx6UGh1HOxSI
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: lexai-ef0ab.web.app
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: lexai-ef0ab
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: lexai-ef0ab.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "506027619372"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:506027619372:web:00420c7e8002d88c970d89
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-0C40FVSRXM
   
   # Firebase Admin SDK (using secrets for security)
   - variable: FIREBASE_PROJECT_ID
@@ -37,4 +50,14 @@ env:
     
   # Performance and Security
   - variable: NEXT_PUBLIC_DEMO_MODE
-    value: false
+    value: "false"
+  - variable: NEXT_PUBLIC_FIREBASE_DEBUG
+    value: "false"
+    
+  # Production Limits
+  - variable: NEXT_PUBLIC_MAX_FILE_SIZE
+    value: "10485760"
+  - variable: NEXT_PUBLIC_MAX_DOCUMENTS_PER_USER
+    value: "100"
+  - variable: NEXT_PUBLIC_MAX_REQUESTS_PER_HOUR
+    value: "1000"

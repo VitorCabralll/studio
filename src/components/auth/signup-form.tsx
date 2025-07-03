@@ -50,12 +50,7 @@ export function SignupForm() {
       return;
     }
 
-    await signup(formData.email, formData.password, {
-      name: formData.name,
-      company: formData.company,
-      phone: formData.phone,
-      oab: formData.oab
-    });
+    await signup(formData.email, formData.password);
   };
 
   const handleGoogleSignup = async () => {

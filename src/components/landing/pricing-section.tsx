@@ -81,7 +81,7 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section className="bg-white py-24 dark:bg-gray-900">
+    <section id="pricing" className="bg-white py-24 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-16 text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">

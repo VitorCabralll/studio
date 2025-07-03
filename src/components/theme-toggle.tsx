@@ -1,13 +1,10 @@
 
 "use client"
 
-import { Sun, Moon, Laptop } from "lucide-react"
+import { Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import * as React from "react"
-
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme()
@@ -19,50 +16,29 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="grid grid-cols-3 gap-4">
-        <Skeleton className="h-[98px] w-full" />
-        <Skeleton className="h-[98px] w-full" />
-        <Skeleton className="h-[98px] w-full" />
-      </div>
+      <Button variant="ghost" size="icon" className="size-9">
+        <div className="size-4" />
+      </Button>
     )
   }
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
+
   return (
-    <RadioGroup
-      value={theme}
-      onValueChange={setTheme}
-      className="grid grid-cols-3 gap-4"
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      onClick={toggleTheme}
+      className="size-9 hover:bg-accent focus-ring"
     >
-      <div>
-        <RadioGroupItem value="light" id="light" className="peer sr-only" />
-        <Label
-          htmlFor="light"
-          className="flex cursor-pointer flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-        >
-          <Sun className="mb-2 size-6" />
-          Claro
-        </Label>
-      </div>
-      <div>
-        <RadioGroupItem value="dark" id="dark" className="peer sr-only" />
-        <Label
-          htmlFor="dark"
-          className="flex cursor-pointer flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-        >
-          <Moon className="mb-2 size-6" />
-          Escuro
-        </Label>
-      </div>
-      <div>
-        <RadioGroupItem value="system" id="system" className="peer sr-only" />
-        <Label
-          htmlFor="system"
-          className="flex cursor-pointer flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-        >
-          <Laptop className="mb-2 size-6" />
-          Sistema
-        </Label>
-      </div>
-    </RadioGroup>
+      {theme === "dark" ? (
+        <Sun className="size-4" />
+      ) : (
+        <Moon className="size-4" />
+      )}
+      <span className="sr-only">Alternar tema</span>
+    </Button>
   )
 }

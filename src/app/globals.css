@@ -2,98 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Animações customizadas para Magic UI */
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
+/* Animações migradas para Framer Motion - ver /lib/animations.ts */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Eye-Comfort Base Colors */
+    --background: 0 0% 99%;
+    --foreground: 215 25% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243 75% 62%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 210 40% 9.8%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 173 80% 40%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 243 75% 62%;
-    --radius: 0.75rem;
+    --popover-foreground: 215 25% 20%;
     
-    /* Apple-inspired refinements */
-    --surface-elevated: 0 0% 99%;
-    --surface-overlay: 0 0% 98%;
-    --text-headline: 222.2 84% 4.9%;
-    --text-body: 215.4 16.3% 36.9%;
-    --text-caption: 215.4 16.3% 56.9%;
-    --shadow-subtle: 0px 1px 3px 0px rgba(0, 0, 0, 0.03), 0px 1px 2px 0px rgba(0, 0, 0, 0.02);
-    --shadow-medium: 0px 4px 6px -1px rgba(0, 0, 0, 0.07), 0px 2px 4px -1px rgba(0, 0, 0, 0.03);
-    --shadow-large: 0px 20px 25px -5px rgba(0, 0, 0, 0.08), 0px 10px 10px -5px rgba(0, 0, 0, 0.02);
+    /* Soft Professional Blue - Less Aggressive */
+    --primary: 215 60% 55%;
+    --primary-foreground: 0 0% 98%;
+    
+    /* Warm Grays - More Comfortable */
+    --secondary: 215 20% 97%;
+    --secondary-foreground: 215 25% 15%;
+    --muted: 215 20% 96%;
+    --muted-foreground: 215 15% 50%;
+    
+    /* Soft Teal Accent - Calming */
+    --accent: 185 40% 45%;
+    --accent-foreground: 0 0% 98%;
+    
+    /* Gentle Error States */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Soft Borders */
+    --border: 215 20% 92%;
+    --input: 215 20% 94%;
+    --ring: 215 60% 55%;
+    --radius: 0.5rem;
+    
+    /* Comfortable Surfaces */
+    --surface-elevated: 0 0% 99.5%;
+    --surface-overlay: 215 30% 98%;
+    
+    /* Optimized Text Hierarchy */
+    --text-headline: 215 30% 18%;
+    --text-body: 215 20% 35%;
+    --text-caption: 215 15% 55%;
+    
+    /* Gentle Shadows */
+    --shadow-subtle: 0px 1px 2px 0px rgba(0, 0, 0, 0.02), 0px 1px 1px 0px rgba(0, 0, 0, 0.01);
+    --shadow-medium: 0px 2px 4px 0px rgba(0, 0, 0, 0.04), 0px 1px 2px 0px rgba(0, 0, 0, 0.02);
+    --shadow-large: 0px 8px 16px 0px rgba(0, 0, 0, 0.06), 0px 4px 8px 0px rgba(0, 0, 0, 0.02);
   }
 
   .dark {
-    --background: 220 26% 14%;
-    --foreground: 0 0% 98%;
-    --card: 220 26% 16%;
-    --card-foreground: 0 0% 98%;
-    --popover: 220 26% 16%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 243 75% 62%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 173 80% 40%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 217.2 32.6% 22.5%;
-    --input: 217.2 32.6% 22.5%;
-    --ring: 243 75% 62%;
+    /* Dark Mode - Eye Comfort for Late Hours */
+    --background: 220 15% 8%;
+    --foreground: 215 20% 88%;
+    --card: 220 15% 10%;
+    --card-foreground: 215 20% 88%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 215 20% 88%;
     
-    /* Dark mode refinements */
-    --surface-elevated: 220 26% 18%;
-    --surface-overlay: 220 26% 20%;
-    --text-headline: 0 0% 98%;
-    --text-body: 215 20.2% 75.1%;
-    --text-caption: 215 20.2% 65.1%;
-    --shadow-subtle: 0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 2px 0px rgba(0, 0, 0, 0.08);
-    --shadow-medium: 0px 4px 6px -1px rgba(0, 0, 0, 0.18), 0px 2px 4px -1px rgba(0, 0, 0, 0.12);
-    --shadow-large: 0px 20px 25px -5px rgba(0, 0, 0, 0.25), 0px 10px 10px -5px rgba(0, 0, 0, 0.15);
+    /* Softer Primary in Dark */
+    --primary: 215 50% 65%;
+    --primary-foreground: 220 15% 8%;
+    
+    /* Warm Dark Grays */
+    --secondary: 220 15% 12%;
+    --secondary-foreground: 215 20% 85%;
+    --muted: 220 15% 14%;
+    --muted-foreground: 215 15% 60%;
+    
+    /* Gentle Teal in Dark */
+    --accent: 185 35% 55%;
+    --accent-foreground: 220 15% 8%;
+    
+    /* Soft Error in Dark */
+    --destructive: 0 55% 60%;
+    --destructive-foreground: 220 15% 8%;
+    
+    /* Subtle Borders */
+    --border: 220 15% 18%;
+    --input: 220 15% 16%;
+    --ring: 215 50% 65%;
+    
+    /* Dark Surfaces */
+    --surface-elevated: 220 15% 11%;
+    --surface-overlay: 220 15% 13%;
+    
+    /* Reduced Eye Strain Text */
+    --text-headline: 215 20% 90%;
+    --text-body: 215 15% 75%;
+    --text-caption: 215 15% 65%;
+    
+    /* Minimal Shadows in Dark */
+    --shadow-subtle: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 1px 0px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0px 2px 4px 0px rgba(0, 0, 0, 0.4), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --shadow-large: 0px 8px 16px 0px rgba(0, 0, 0, 0.5), 0px 4px 8px 0px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -101,44 +105,65 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
-  /* Apple-inspired Typography Scale */
+  /* Cognitive Load Optimized Typography */
   .text-display {
-    font-size: clamp(3rem, 8vw, 6rem);
-    line-height: 0.9;
-    letter-spacing: -0.02em;
-    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+    color: hsl(var(--text-headline));
   }
   
   .text-headline-large {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    line-height: 1.1;
-    letter-spacing: -0.015em;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.008em;
     font-weight: 600;
+    color: hsl(var(--text-headline));
   }
   
   .text-headline {
-    font-size: clamp(1.5rem, 4vw, 2.25rem);
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    font-weight: 600;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    font-weight: 500;
+    color: hsl(var(--text-headline));
   }
   
+  /* Optimized for Reading Comfort */
   .text-body-large {
-    font-size: 1.125rem;
-    line-height: 1.6;
+    font-size: 1.0625rem;
+    line-height: 1.7;
     font-weight: 400;
+    color: hsl(var(--text-body));
+  }
+  
+  .text-body {
+    font-size: 1rem;
+    line-height: 1.65;
+    font-weight: 400;
+    color: hsl(var(--text-body));
   }
   
   .text-caption {
     font-size: 0.875rem;
-    line-height: 1.4;
+    line-height: 1.5;
+    font-weight: 400;
     color: hsl(var(--text-caption));
+  }
+  
+  /* Focus States for Legal Professionals */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
 
   /* Apple-inspired Shadows */
@@ -163,14 +188,7 @@
     background-color: hsl(var(--surface-overlay));
   }
 
-  /* Smooth animations */
-  .animate-scale-in {
-    animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  .animate-fade-in-up {
-    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  /* Smooth animations - migradas para Framer Motion */
 
   /* Glass effect */
   .glass {
@@ -185,24 +203,4 @@
   }
 }
 
-@keyframes scale-in {
-  0% {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-in-up {
-  0% {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+/* Keyframes removidas - disponíveis em Framer Motion */

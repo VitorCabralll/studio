@@ -1,0 +1,19 @@
+{"users": [
+{
+  "localId": "MKUFJZ7ML7cnKGnvsmeWJ5PHBmx2",
+  "email": "vitorcabral703@gmail.com",
+  "emailVerified": true,
+  "displayName": "Vitor Hugo Cabral Araujo",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c",
+  "lastSignedInAt": "1751304158179",
+  "createdAt": "1751304158179",
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "107577672097350071580",
+      "email": "vitorcabral703@gmail.com",
+      "displayName": "Vitor Hugo Cabral Araujo",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c"
+    }
+  ]
+}]}

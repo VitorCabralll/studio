@@ -21,12 +21,12 @@ const AuthDebug = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: 'LexAI - IA Jurídica para Advogados e Escritórios',
-  description: 'Automatize documentos jurídicos, petições, contratos e pareceres com inteligência artificial treinada em direito brasileiro. Segurança, compliance LGPD e produtividade máxima para advogados.',
-  keywords: 'IA jurídica, automação de documentos, petições, contratos, advocacia, LGPD, inteligência artificial, LexAI',
+  title: 'LexAI - IA Jurídica para Operadores do Direito',
+  description: 'Automatize documentos jurídicos com inteligência artificial especializada. Para advogados, promotores, defensores, procuradores e todos os operadores do direito brasileiro. Segurança, compliance LGPD e produtividade em 2025.',
+  keywords: 'IA jurídica, automação de documentos, petições, contratos, operadores do direito, advocacia, ministério público, defensoria, procuradoria, LGPD, inteligência artificial, LexAI 2025',
   openGraph: {
-    title: 'LexAI - IA Jurídica para Advogados',
-    description: 'Automatize documentos jurídicos com IA treinada em direito brasileiro. Segurança, compliance LGPD e produtividade máxima.',
+    title: 'LexAI - IA Jurídica para Operadores do Direito',
+    description: 'Automatize documentos jurídicos com IA especializada. Para todos os operadores do direito brasileiro - 2025.',
     url: 'https://lexai.com.br',
     siteName: 'LexAI',
     images: [
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@lexai_br',
-    title: 'LexAI - IA Jurídica para Advogados',
-    description: 'Automatize documentos jurídicos com IA treinada em direito brasileiro.',
+    title: 'LexAI - IA Jurídica para Operadores do Direito',
+    description: 'Automatize documentos jurídicos com IA especializada para operadores do direito - 2025.',
     images: ['https://lexai.com.br/og-image.png'],
   },
   metadataBase: new URL('https://lexai.com.br'),

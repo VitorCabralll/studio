@@ -5,9 +5,9 @@ import { Scale, Mail, Phone, MapPin } from "lucide-react";
 export function Footer() {
   const footerLinks = {
     product: [
-      { name: "Funcionalidades", href: "#features" },
-      { name: "Como Funciona", href: "#how-it-works" },
+      { name: "Recursos", href: "#features" },
       { name: "Preços", href: "#pricing" },
+      { name: "Segurança", href: "#security" },
     ],
     support: [
       { name: "Configurações", href: "/settings" },
@@ -90,7 +90,7 @@ export function Footer() {
             </p>
             <div className="mt-4 flex space-x-6 md:mt-0">
               <span className="text-sm text-gray-400">
-                Desenvolvido com ❤️ para advogados brasileiros
+                Desenvolvido com ❤️ para todos os brasileiros
               </span>
             </div>
           </div>

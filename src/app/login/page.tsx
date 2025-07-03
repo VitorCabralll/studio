@@ -7,5 +7,5 @@ export default function LoginPage() {
 
 export const metadata = {
   title: "Login - LexAI",
-  description: "Entre na sua conta LexAI e continue automatizando seus documentos jurídicos",
+  description: "Entre na sua conta LexAI e continue automatizando seus documentos jurídicos com IA especializada",
 };

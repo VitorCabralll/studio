@@ -1,10 +1,10 @@
 'use client';
 
-import { getAuth, onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-import { getFirebaseAuth } from '@/lib/firebase';
+import { getFirebaseAuth, getGoogleAuthProvider, testFirestoreConnection } from '@/lib/firebase';
 import { getUserProfile, UserProfile } from '@/services/user-service';
 
 /**
@@ -30,9 +30,8 @@ interface AuthContextType {
    * Create new account with email and password
    * @param email - User's email address
    * @param password - User's password  
-   * @param userData - Optional additional user data for profile creation
    */
-  signup: (email: string, password: string, userData?: any) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   /** Login using Google OAuth popup */
   loginWithGoogle: () => Promise<void>;
   /** Sign out current user and clear state */
@@ -90,6 +89,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize Firebase auth state listener
   useEffect(() => {
+    // Skip during build/SSR to prevent hangs
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+    
     let isComponentMounted = true;
     setMounted(true);
     
@@ -121,7 +126,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const result = await getUserProfile(currentUser.uid);
           if (result.success && result.data) {
             setUserProfile(result.data);
-            console.log('Perfil carregado com sucesso:', result.data);
+            console.log('Perfil carregado:', result.data);
+            
+            // Se há erro mas success=true, é modo offline
+            if (result.error?.code === 'offline-mode') {
+              console.warn('🔶 Funcionando em modo offline:', result.error.message);
+            }
           } else {
             console.error('Erro ao carregar/criar perfil do usuário:', result.error);
             // Mesmo com erro, manter o usuário logado mas sem perfil
@@ -172,7 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (email: string, password: string, userData?: any) => {
+  const signup = async (email: string, password: string) => {
     if (authProcessing) {
       console.log('Auth processing em andamento, ignorando signup');
       return;
@@ -200,16 +210,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       setError(null);
+      setLoading(true);
+      
+      // Testar conectividade antes de tentar autenticar
+      const isConnected = await testFirestoreConnection();
+      if (!isConnected) {
+        throw new Error('Sem conexão com o servidor. Verifique sua internet.');
+      }
       
       const auth = getFirebaseAuth();
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const provider = getGoogleAuthProvider();
       
-      // Não redirecionar nem fazer mais nada - onAuthStateChanged cuidará de tudo
-      console.log('Login com Google realizado com sucesso');
+      const result = await signInWithPopup(auth, provider);
+      console.log('Login com Google realizado com sucesso:', result.user.email);
+      
     } catch (error: any) {
       console.error('Erro no login com Google:', error);
-      setError(error.message || 'Erro ao fazer login com Google');
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = 'Erro ao fazer login com Google';
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Login cancelado pelo usuário';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Pop-up bloqueado. Permita pop-ups para este site.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Erro de conexão. Verifique sua internet.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
