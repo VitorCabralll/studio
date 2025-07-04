@@ -1,17 +1,9 @@
 /**
- * Firebase configuration extractor for Firebase App Hosting
- * 
- * Firebase App Hosting automatically injects FIREBASE_CONFIG and FIREBASE_WEBAPP_CONFIG
- * This utility extracts the required variables from these injected configs
+ * Firebase Configuration - Unified and Clean
+ * Consolidates all Firebase configuration logic
  */
 
-interface FirebaseAppHostingConfig {
-  projectId: string;
-  storageBucket: string;
-  databaseURL?: string;
-}
-
-interface FirebaseWebAppConfig {
+interface FirebaseConfig {
   apiKey: string;
   authDomain: string;
   projectId: string;
@@ -22,15 +14,13 @@ interface FirebaseWebAppConfig {
 }
 
 /**
- * Get Firebase configuration from Firebase App Hosting injected variables
- * Falls back to environment variables if not in App Hosting environment
+ * Get Firebase configuration from environment variables
  */
-export function getFirebaseConfig() {
-  // Try to get from Firebase App Hosting injected config first
+export function getFirebaseConfig(): FirebaseConfig {
+  // Try Firebase App Hosting config first
   if (process.env.FIREBASE_WEBAPP_CONFIG) {
     try {
-      const webappConfig: FirebaseWebAppConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
-      
+      const webappConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG);
       return {
         apiKey: webappConfig.apiKey,
         authDomain: webappConfig.authDomain,
@@ -45,41 +35,42 @@ export function getFirebaseConfig() {
     }
   }
   
-  // Fallback to standard environment variables
-  return {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  // Detect environment and set appropriate authDomain
+  const getAuthDomain = () => {
+    // Use env variable if set
+    if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) {
+      return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+    }
+    
+    // Always use the firebaseapp.com domain for OAuth
+    // This is the correct domain for Firebase Auth redirects
+    return 'lexai-ef0ab.firebaseapp.com';
+  };
+
+  // Fallback to environment variables
+  const config = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: getAuthDomain(),
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   };
-}
 
-/**
- * Validate that all required Firebase config values are present
- */
-export function validateFirebaseConfig(config: ReturnType<typeof getFirebaseConfig>) {
+  // Validate required fields
   const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
   const missing = required.filter(key => !config[key as keyof typeof config]);
   
   if (missing.length > 0) {
-    throw new Error(
-      `❌ Missing required Firebase configuration values:\n${missing.map(v => `  - ${v}`).join('\n')}\n\n` +
-      `This can happen if:\n` +
-      `1. You're running locally without .env.local configured\n` +
-      `2. Firebase App Hosting environment variables are not set\n` +
-      `3. FIREBASE_WEBAPP_CONFIG is malformed\n\n` +
-      `See .env.example for the required format.`
-    );
+    throw new Error(`Missing Firebase configuration: ${missing.join(', ')}`);
   }
-  
+
   return config;
 }
 
 /**
- * Check if we're running in Firebase App Hosting environment
+ * Check if we're in Firebase App Hosting environment
  */
 export function isFirebaseAppHosting(): boolean {
   return !!(process.env.FIREBASE_CONFIG || process.env.FIREBASE_WEBAPP_CONFIG);

@@ -1,326 +1,267 @@
 'use client';
 
-import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { 
+  User, 
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut 
+} from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
-import { getFirebaseAuth, getGoogleAuthProvider, testFirestoreConnection } from '@/lib/firebase';
+import { getFirebaseAuth, getGoogleAuthProvider } from '@/lib/firebase';
 import { getUserProfile, UserProfile } from '@/services/user-service';
+import { parseAuthError, AuthError } from '@/lib/auth-errors';
 
-/**
- * Context type for authentication state and methods.
- * Provides complete authentication functionality for the LexAI application.
- */
-interface AuthContextType {
-  /** Current authenticated Firebase user or null if not logged in */
+interface AuthState {
   user: User | null;
-  /** Extended user profile data from Firestore or null if not loaded */
   userProfile: UserProfile | null;
-  /** Whether authentication state is being determined */
   loading: boolean;
-  /** Current authentication error message or null */
-  error: string | null;
-  /** 
-   * Login with email and password
-   * @param email - User's email address
-   * @param password - User's password
-   */
-  login: (email: string, password: string) => Promise<void>;
-  /** 
-   * Create new account with email and password
-   * @param email - User's email address
-   * @param password - User's password  
-   */
-  signup: (email: string, password: string) => Promise<void>;
-  /** Login using Google OAuth popup */
-  loginWithGoogle: () => Promise<void>;
-  /** Sign out current user and clear state */
-  logout: () => void;
-  /** 
-   * Update user profile state locally (for optimistic updates)
-   * @param data - Partial profile data to update
-   */
-  updateUserProfileState: (data: Partial<UserProfile>) => void;
-  /** Clear current error state */
-  clearError: () => void;
+  error: AuthError | null;
+  isInitialized: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  userProfile: null,
-  loading: true,
-  error: null,
-  login: async () => {},
-  signup: async () => {},
-  loginWithGoogle: async () => {},
-  logout: () => {},
-  updateUserProfileState: () => {},
-  clearError: () => {},
-});
+interface AuthActions {
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+  updateUserProfileState: (data: Partial<UserProfile>) => void;
+  retryLoadProfile: () => Promise<void>;
+}
 
-/**
- * Authentication Provider component that manages Firebase auth state and user profiles.
- * 
- * Features:
- * - Firebase Authentication integration
- * - Automatic profile loading from Firestore
- * - Google OAuth support
- * - Race condition prevention
- * - Automatic redirection based on user state
- * 
- * @param children - React children to wrap with auth context
- * @returns JSX element providing authentication context
- * 
- * @example
- * ```tsx
- * <AuthProvider>
- *   <App />
- * </AuthProvider>
- * ```
- */
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(false); // INICIANDO FALSE PARA DESTRAVAR UI
-  const [error, setError] = useState<string | null>(null);
-  const [authProcessing, setAuthProcessing] = useState(false);
+type AuthContextType = AuthState & AuthActions;
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    userProfile: null,
+    loading: true,
+    error: null,
+    isInitialized: false,
+  });
+  
   const router = useRouter();
 
-  // Initialize Firebase auth state listener
-  useEffect(() => {
-    // Skip during build/SSR to prevent hangs
-    if (typeof window === 'undefined') {
-      setLoading(false);
-      return;
-    }
-    
-    let isComponentMounted = true;
-    
-    // Definir loading false imediatamente para desbloquear UI
-    setLoading(false);
-    
-    const auth = getFirebaseAuth();
-    
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // Prevenir race conditions com abort controller
-      if (!isComponentMounted) {
-        console.log('Componente desmontado, ignorando mudança de auth');
-        return;
+  // Helper function to load user profile
+  const loadUserProfile = async (user: User): Promise<UserProfile | null> => {
+    try {
+      const result = await getUserProfile(user.uid);
+      
+      if (result.success && result.data) {
+        return result.data;
       }
       
-      // Timeout para evitar locks permanentes
-      const processingTimeout = setTimeout(() => {
-        if (isComponentMounted) {
-          setAuthProcessing(false);
-          setLoading(false);
-        }
-      }, 10000); // 10 segundos timeout
+      // If profile loading fails, throw error for proper handling
+      throw new Error(result.error?.message || 'Failed to load user profile');
+    } catch (error) {
+      console.error('Profile loading error:', error);
+      throw error;
+    }
+  };
+
+  // Auth state listener
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setState(prev => ({ ...prev, loading: false, isInitialized: true }));
+      return;
+    }
+
+    const auth = getFirebaseAuth();
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔄 Auth state changed:', { hasUser: !!user, uid: user?.uid });
       
-      setAuthProcessing(true);
-      setLoading(true);
-      
-      try {
-        if (currentUser) {
-          setUser(currentUser);
-          
-          // Buscar ou criar perfil do usuário
-          const result = await getUserProfile(currentUser.uid);
-          if (result.success && result.data) {
-            setUserProfile(result.data);
-            console.log('Perfil carregado:', result.data);
-            
-            // Se há erro mas success=true, é modo offline
-            if (result.error?.code === 'offline-mode') {
-              console.warn('🔶 Funcionando em modo offline:', result.error.message);
-            }
-          } else {
-            console.error('Erro ao carregar/criar perfil do usuário:', result.error);
-            // Mesmo com erro, manter o usuário logado mas sem perfil
-            setUserProfile(null);
-          }
-        } else {
-          setUser(null);
-          setUserProfile(null);
+      if (user) {
+        // User is signed in
+        setState(prev => ({ ...prev, user, loading: true, error: null }));
+        
+        try {
+          const userProfile = await loadUserProfile(user);
+          setState(prev => ({ 
+            ...prev, 
+            userProfile,
+            loading: false,
+            isInitialized: true
+          }));
+        } catch (error) {
+          console.error('Failed to load profile:', error);
+          setState(prev => ({ 
+            ...prev, 
+            userProfile: null,
+            loading: false,
+            error: parseAuthError(error),
+            isInitialized: true
+          }));
         }
-      } catch (error) {
-        console.error('Erro não tratado no onAuthStateChanged:', error);
-        setUser(null);
-        setUserProfile(null);
-      } finally {
-        clearTimeout(processingTimeout);
-        // Só atualizar estados se componente ainda estiver montado
-        if (isComponentMounted) {
-          setLoading(false);
-          setAuthProcessing(false);
-        }
+      } else {
+        // User is signed out
+        setState({
+          user: null,
+          userProfile: null,
+          loading: false,
+          error: null,
+          isInitialized: true,
+        });
       }
     });
 
-    return () => {
-      isComponentMounted = false;
-      unsubscribe();
-    };
-  }, []); // Remover dependências que podem causar loops
+    return unsubscribe;
+  }, []);
 
-  const login = async (email: string, password: string) => {
-    if (authProcessing) {
-      console.log('Auth processing em andamento, ignorando login');
-      return;
-    }
+  // Retry loading profile
+  const retryLoadProfile = async (): Promise<void> => {
+    if (!state.user) return;
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      setError(null);
-      
+      const userProfile = await loadUserProfile(state.user);
+      setState(prev => ({ 
+        ...prev, 
+        userProfile,
+        loading: false,
+      }));
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        userProfile: null,
+        loading: false,
+        error: parseAuthError(error)
+      }));
+    }
+  };
+
+  // Auth actions
+  const login = async (email: string, password: string): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
       const auth = getFirebaseAuth();
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
-    } catch (error: unknown) {
-      console.error('Erro no login:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao fazer login');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+      throw error;
     }
   };
 
-  const signup = async (email: string, password: string) => {
-    if (authProcessing) {
-      console.log('Auth processing em andamento, ignorando signup');
-      return;
-    }
+  const signup = async (email: string, password: string): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      setError(null);
-      
       const auth = getFirebaseAuth();
       await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/onboarding');
-    } catch (error: unknown) {
-      console.error('Erro no cadastro:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao criar conta');
-    } finally {
-      setLoading(false);
+      // Navigation will be handled by onAuthStateChanged
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+      throw error;
     }
   };
 
-  const loginWithGoogle = async () => {
-    if (authProcessing) {
-      console.log('Auth processing em andamento, ignorando Google login');
-      return;
-    }
+  const loginWithGoogle = async (): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      setError(null);
-      setLoading(true);
-      
-      // Testar conectividade antes de tentar autenticar
-      const isConnected = await testFirestoreConnection();
-      if (!isConnected) {
-        throw new Error('Sem conexão com o servidor. Verifique sua internet.');
-      }
-      
       const auth = getFirebaseAuth();
       const provider = getGoogleAuthProvider();
       
-      const result = await signInWithPopup(auth, provider);
-      console.log('Login com Google realizado com sucesso:', result.user.email);
-      
-    } catch (error: unknown) {
-      console.error('Erro no login com Google:', error);
-      
-      // Mensagens de erro mais específicas
-      const authError = error as { code?: string; message?: string };
-      let errorMessage = 'Erro ao fazer login com Google';
-      if (authError.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Login cancelado pelo usuário';
-      } else if (authError.code === 'auth/popup-blocked') {
-        errorMessage = 'Pop-up bloqueado. Permita pop-ups para este site.';
-      } else if (authError.code === 'auth/network-request-failed') {
-        errorMessage = 'Erro de conexão. Verifique sua internet.';
-      } else if (authError.code === 'auth/unauthorized-domain') {
-        errorMessage = 'Domínio não autorizado. Entre em contato com o suporte.';
-        console.error('🚨 ERRO AUTH/UNAUTHORIZED-DOMAIN:', {
-          currentUrl: window.location.href,
-          authDomain: getFirebaseAuth().app.options.authDomain,
-          error: error
-        });
-      } else if (error instanceof Error && error.message) {
-        errorMessage = error.message;
+      try {
+        // Try popup first
+        await signInWithPopup(auth, provider);
+      } catch (popupError: unknown) {
+        const error = popupError as { code?: string };
+        
+        // If popup is blocked, use redirect
+        if (error.code === 'auth/popup-blocked') {
+          console.log('Popup blocked, using redirect method');
+          await signInWithRedirect(auth, provider);
+          return; // Redirect will handle the rest
+        }
+        throw popupError;
       }
       
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+      router.push('/');
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+      throw error;
     }
   };
 
-  const logout = () => {
-    const auth = getFirebaseAuth();
-    signOut(auth);
+  const logout = async (): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const auth = getFirebaseAuth();
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+    }
   };
 
-  const updateUserProfileState = (data: Partial<UserProfile>) => {
-    setUserProfile(prev => {
-      const updated = prev ? { ...prev, ...data } : null;
-      return updated;
-    });
+  const clearError = (): void => {
+    setState(prev => ({ ...prev, error: null }));
   };
 
-  const clearError = () => {
-    setError(null);
+  const updateUserProfileState = (data: Partial<UserProfile>): void => {
+    setState(prev => ({
+      ...prev,
+      userProfile: prev.userProfile ? { ...prev.userProfile, ...data } : null
+    }));
+  };
+
+  const contextValue: AuthContextType = {
+    ...state,
+    login,
+    signup,
+    loginWithGoogle,
+    logout,
+    clearError,
+    updateUserProfileState,
+    retryLoadProfile,
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      userProfile, 
-      loading, 
-      error, 
-      login, 
-      signup, 
-      loginWithGoogle, 
-      logout, 
-      updateUserProfileState,
-      clearError 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-/**
- * Hook to access authentication context and methods.
- * 
- * Must be used within an AuthProvider component.
- * 
- * @returns AuthContextType with current auth state and methods
- * 
- * @throws Error if used outside of AuthProvider
- * 
- * @example
- * ```tsx
- * function MyComponent() {
- *   const { user, loading, login, logout } = useAuth();
- *   
- *   if (loading) return <div>Loading...</div>;
- *   
- *   return (
- *     <div>
- *       {user ? (
- *         <button onClick={logout}>Logout {user.email}</button>
- *       ) : (
- *         <button onClick={() => login('email', 'password')}>Login</button>
- *       )}
- *     </div>
- *   );
- * }
- * ```
- */
-export const useAuth = (): AuthContextType => {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
 
-export type { UserProfile };
+// Re-export types for convenience
+export type { UserProfile, AuthError };

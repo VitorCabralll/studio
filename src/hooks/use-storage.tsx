@@ -46,6 +46,26 @@ export function useStorage(): UseStorageReturn {
     setError(null);
   }, []);
 
+  // Atualizar lista de arquivos do usuário
+  const refreshUserFiles = useCallback(async (path?: string): Promise<void> => {
+    if (!user) return;
+
+    setError(null);
+
+    try {
+      const result = await listUserFiles(user.uid, path);
+      
+      if (result.success && result.data) {
+        setUserFiles(result.data);
+      } else {
+        setError(result.error?.message || 'Erro ao carregar arquivos');
+      }
+    } catch (err) {
+      setError('Erro inesperado ao carregar arquivos');
+      console.error('Erro em refreshUserFiles:', err);
+    }
+  }, [user]);
+
   // Upload de template único
   const uploadSingleTemplate = useCallback(async (
     file: File, 
@@ -87,7 +107,7 @@ export function useStorage(): UseStorageReturn {
       setUploading(false);
       setTimeout(() => setUploadProgress(0), 1000);
     }
-  }, [user]);
+  }, [user, refreshUserFiles]);
 
   // Upload de múltiplos templates
   const uploadTemplates = useCallback(async (
@@ -108,15 +128,7 @@ export function useStorage(): UseStorageReturn {
     setUploadProgress(0);
 
     try {
-      // Simular progresso para múltiplos arquivos
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 5, 90));
-      }, 200);
-
       const result = await uploadMultipleTemplates(files, path, user.uid);
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
 
       if (result.success && result.data) {
         // Atualizar lista de arquivos
@@ -134,7 +146,7 @@ export function useStorage(): UseStorageReturn {
       setUploading(false);
       setTimeout(() => setUploadProgress(0), 1000);
     }
-  }, [user]);
+  }, [user, refreshUserFiles]);
 
   // Remover arquivo
   const removeFile = useCallback(async (fullPath: string): Promise<boolean> => {
@@ -157,26 +169,6 @@ export function useStorage(): UseStorageReturn {
       return false;
     }
   }, []);
-
-  // Atualizar lista de arquivos do usuário
-  const refreshUserFiles = useCallback(async (path?: string): Promise<void> => {
-    if (!user) return;
-
-    setError(null);
-
-    try {
-      const result = await listUserFiles(user.uid, path);
-      
-      if (result.success && result.data) {
-        setUserFiles(result.data);
-      } else {
-        setError(result.error?.message || 'Erro ao carregar arquivos');
-      }
-    } catch (err) {
-      setError('Erro inesperado ao carregar arquivos');
-      console.error('Erro em refreshUserFiles:', err);
-    }
-  }, [user]);
 
   // Obter URL de download
   const getDownloadURL = useCallback(async (fullPath: string): Promise<string | null> => {
@@ -211,6 +203,6 @@ export function useStorage(): UseStorageReturn {
     removeFile,
     refreshUserFiles,
     getDownloadURL,
-    clearError
+    clearError,
   };
 }

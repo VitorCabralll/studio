@@ -1,5 +1,5 @@
-import { cleanupDocumentData, DATA_RETENTION_CONFIG } from './data-cleanup';
-import type { ServiceResult, ServiceError } from './user-service';
+import { cleanupDocumentData } from './data-cleanup';
+import type { ServiceResult } from './user-service';
 
 // Configurações específicas para privacidade máxima
 const PRIVACY_ENFORCEMENT = {

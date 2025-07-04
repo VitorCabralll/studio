@@ -1,12 +1,10 @@
 import { 
-  getStorage, 
   ref, 
   uploadBytes, 
   getDownloadURL, 
   deleteObject, 
   listAll,
-  getMetadata,
-  FirebaseStorage
+  getMetadata
 } from 'firebase/storage';
 
 import type { ServiceResult, ServiceError } from './user-service';
