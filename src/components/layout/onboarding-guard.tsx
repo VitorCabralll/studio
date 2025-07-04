@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading, userProfile } = useAuth();
+  const { user, loading, userProfile, isInitialized, error } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
@@ -25,7 +25,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    if (!mounted || loading || !router) {
+    if (!mounted || !isInitialized || !router) {
       return;
     }
     
@@ -41,27 +41,37 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If user is authenticated, but profile is not loaded yet, wait with timeout
-    if (!userProfile) {
-      // Se demorar mais de 15 segundos para carregar perfil, assumir erro e redirecionar
-      const timeoutId = setTimeout(() => {
-        if (mounted && user && !userProfile) {
-          console.warn('Timeout ao carregar perfil do usuário, redirecionando para onboarding');
-          if (pathname !== '/onboarding') {
-            router.replace('/onboarding');
-          }
-        }
-      }, 15000);
-      
-      return () => {
-        clearTimeout(timeoutId);
-      };
+    // If user is authenticated but profile failed to load, show error handling
+    if (user && !userProfile && error && !loading) {
+      // For now, redirect to onboarding which can handle profile creation
+      if (pathname !== '/onboarding') {
+        router.replace('/onboarding');
+      } else {
+        setIsVerified(true);
+      }
+      return;
+    }
+
+    // If user is authenticated but profile is still loading, wait
+    if (user && !userProfile && loading) {
+      return;
     }
 
     // --- User is authenticated and profile is loaded from this point ---
+    if (!userProfile) {
+      return; // Safety check - should not happen
+    }
+
+    console.log('🎯 OnboardingGuard - Profile loaded:', {
+      primeiro_acesso: userProfile.primeiro_acesso,
+      initial_setup_complete: userProfile.initial_setup_complete,
+      pathname: pathname,
+      userProfile: userProfile
+    });
 
     // 1. Check if user needs to go through the initial profile setup.
     if (userProfile.primeiro_acesso) {
+      console.log('🔀 Redirecting to onboarding - primeiro_acesso = true');
       if (pathname !== '/onboarding') {
         router.replace('/onboarding');
       } else {
@@ -98,7 +108,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       setIsVerified(true);
     }
 
-  }, [mounted, user, userProfile, loading, pathname, router]);
+  }, [mounted, user, userProfile, loading, pathname, router, isInitialized, error]);
 
   if (!isVerified) {
     return (

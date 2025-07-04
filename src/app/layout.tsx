@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
+import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import './globals.css';
 
 // Lazy load do componente de debug apenas em desenvolvimento
@@ -71,7 +72,9 @@ export default function RootLayout({
           >
               <AuthProvider>
                 <WorkspaceProvider>
-                  {children}
+                  <OnboardingGuard>
+                    {children}
+                  </OnboardingGuard>
                   <Toaster />
                   <AuthDebug />
                   <ResourcePreloader />

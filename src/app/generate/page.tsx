@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { Loader2, Sparkles } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 
 // Lazy load do wizard pesado com loading fallback aprimorado
 const GenerationWizard = dynamic(
@@ -67,9 +66,5 @@ const GenerationWizard = dynamic(
 );
 
 export default function GeneratePage() {
-  return (
-    <OnboardingGuard>
-      <GenerationWizard />
-    </OnboardingGuard>
-  );
+  return <GenerationWizard />;
 }

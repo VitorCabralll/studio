@@ -9,18 +9,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import { useAuth } from '@/hooks/use-auth';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
-  return (
-    <OnboardingGuard>
-      <SettingsPageContent />
-    </OnboardingGuard>
-  );
+  return <SettingsPageContent />;
 }
 
 function SettingsPageContent() {

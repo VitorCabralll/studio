@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut 
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -20,6 +21,7 @@ interface AuthState {
   userProfile: UserProfile | null;
   loading: boolean;
   error: AuthError | null;
+  isInitialized: boolean;
 }
 
 interface AuthActions {
@@ -29,6 +31,7 @@ interface AuthActions {
   logout: () => Promise<void>;
   clearError: () => void;
   updateUserProfileState: (data: Partial<UserProfile>) => void;
+  retryLoadProfile: () => Promise<void>;
 }
 
 type AuthContextType = AuthState & AuthActions;
@@ -45,80 +48,99 @@ export function AuthProvider({ children }: AuthProviderProps) {
     userProfile: null,
     loading: true,
     error: null,
+    isInitialized: false,
   });
   
   const router = useRouter();
 
+  // Helper function to load user profile
+  const loadUserProfile = async (user: User): Promise<UserProfile | null> => {
+    try {
+      const result = await getUserProfile(user.uid);
+      
+      if (result.success && result.data) {
+        return result.data;
+      }
+      
+      // If profile loading fails, throw error for proper handling
+      throw new Error(result.error?.message || 'Failed to load user profile');
+    } catch (error) {
+      console.error('Profile loading error:', error);
+      throw error;
+    }
+  };
+
   // Auth state listener
   useEffect(() => {
     if (typeof window === 'undefined') {
-      setState(prev => ({ ...prev, loading: false }));
+      setState(prev => ({ ...prev, loading: false, isInitialized: true }));
       return;
     }
 
     const auth = getFirebaseAuth();
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        if (user) {
-          // User is signed in - set user first
-          setState(prev => ({ ...prev, user, loading: true, error: null }));
-          
-          // Load user profile with timeout
-          const profilePromise = getUserProfile(user.uid);
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Profile load timeout')), 10000)
-          );
-          
-          try {
-            const profileResult = await Promise.race([profilePromise, timeoutPromise]) as any;
-            
-            if (profileResult.success && profileResult.data) {
-              setState(prev => ({ 
-                ...prev, 
-                userProfile: profileResult.data,
-                loading: false 
-              }));
-            } else {
-              // Profile loading failed, but keep user authenticated
-              setState(prev => ({ 
-                ...prev, 
-                userProfile: null,
-                loading: false,
-                error: profileResult.error ? parseAuthError(profileResult.error) : null
-              }));
-            }
-          } catch (profileError) {
-            console.warn('Profile load failed:', profileError);
-            // Keep user authenticated even if profile fails
-            setState(prev => ({ 
-              ...prev, 
-              userProfile: null,
-              loading: false,
-              error: parseAuthError(profileError)
-            }));
-          }
-        } else {
-          // User is signed out
-          setState({
-            user: null,
+      console.log('🔄 Auth state changed:', { hasUser: !!user, uid: user?.uid });
+      
+      if (user) {
+        // User is signed in
+        setState(prev => ({ ...prev, user, loading: true, error: null }));
+        
+        try {
+          const userProfile = await loadUserProfile(user);
+          setState(prev => ({ 
+            ...prev, 
+            userProfile,
+            loading: false,
+            isInitialized: true
+          }));
+        } catch (error) {
+          console.error('Failed to load profile:', error);
+          setState(prev => ({ 
+            ...prev, 
             userProfile: null,
             loading: false,
-            error: null,
-          });
+            error: parseAuthError(error),
+            isInitialized: true
+          }));
         }
-      } catch (error) {
-        console.error('Auth state change error:', error);
-        setState(prev => ({
-          ...prev,
+      } else {
+        // User is signed out
+        setState({
+          user: null,
+          userProfile: null,
           loading: false,
-          error: parseAuthError(error)
-        }));
+          error: null,
+          isInitialized: true,
+        });
       }
     });
 
     return unsubscribe;
   }, []);
+
+  // Retry loading profile
+  const retryLoadProfile = async (): Promise<void> => {
+    if (!state.user) return;
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const userProfile = await loadUserProfile(state.user);
+      setState(prev => ({ 
+        ...prev, 
+        userProfile,
+        loading: false,
+      }));
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        userProfile: null,
+        loading: false,
+        error: parseAuthError(error)
+      }));
+    }
+  };
 
   // Auth actions
   const login = async (email: string, password: string): Promise<void> => {
@@ -144,7 +166,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const auth = getFirebaseAuth();
       await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/onboarding');
+      // Navigation will be handled by onAuthStateChanged
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -162,9 +184,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const auth = getFirebaseAuth();
       const provider = getGoogleAuthProvider();
       
-      await signInWithPopup(auth, provider);
+      try {
+        // Try popup first
+        await signInWithPopup(auth, provider);
+      } catch (popupError: unknown) {
+        const error = popupError as { code?: string };
+        
+        // If popup is blocked, use redirect
+        if (error.code === 'auth/popup-blocked') {
+          console.log('Popup blocked, using redirect method');
+          await signInWithRedirect(auth, provider);
+          return; // Redirect will handle the rest
+        }
+        throw popupError;
+      }
       
-      // Router will be handled by auth state change
+      router.push('/');
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -210,6 +245,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     clearError,
     updateUserProfileState,
+    retryLoadProfile,
   };
 
   return (

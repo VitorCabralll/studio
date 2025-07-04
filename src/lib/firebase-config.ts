@@ -35,10 +35,22 @@ export function getFirebaseConfig(): FirebaseConfig {
     }
   }
   
+  // Detect environment and set appropriate authDomain
+  const getAuthDomain = () => {
+    // Use env variable if set
+    if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) {
+      return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+    }
+    
+    // Always use the firebaseapp.com domain for OAuth
+    // This is the correct domain for Firebase Auth redirects
+    return 'lexai-ef0ab.firebaseapp.com';
+  };
+
   // Fallback to environment variables
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'lexai-ef0ab.firebaseapp.com',
+    authDomain: getAuthDomain(),
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,

@@ -330,8 +330,14 @@ export default function OnboardingPage() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!user || !userProfile) return;
+    if (!user || !userProfile) {
+      console.error('🚨 onSubmit: Missing user or userProfile', { user: !!user, userProfile: !!userProfile });
+      return;
+    }
+    
+    console.log('🚀 onSubmit: Starting profile update', { userId: user.uid, data });
     setIsSubmitting(true);
+    
     try {
       const profileData: Partial<UserProfile> = {
         ...data,
@@ -339,19 +345,23 @@ export default function OnboardingPage() {
         initial_setup_complete: false,
       };
       
+      console.log('📋 onSubmit: Calling updateUserProfile', profileData);
       const result = await updateUserProfile(user.uid, profileData);
+      console.log('📄 onSubmit: updateUserProfile result', result);
+      
       if (result.success) {
+        console.log('✅ onSubmit: Profile updated successfully, updating state and redirecting');
         updateUserProfileState(profileData);
         router.push('/onboarding/success');
       } else {
-        console.error("Erro ao salvar perfil:", result.error);
-        // Aqui você poderia mostrar um toast de erro para o usuário
+        console.error("❌ onSubmit: Erro ao salvar perfil:", result.error);
+        // TODO: Mostrar toast de erro para o usuário
+        setIsSubmitting(false); // Reset loading state on error
       }
       
     } catch (error) {
-      console.error("Erro não tratado ao salvar perfil:", error);
-    } finally {
-        setIsSubmitting(false);
+      console.error("💥 onSubmit: Erro não tratado ao salvar perfil:", error);
+      setIsSubmitting(false); // Reset loading state on error
     }
   }
 

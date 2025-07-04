@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError, DocumentSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FirestoreError } from 'firebase/firestore';
 
 import { getFirebaseDb } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
@@ -99,63 +99,8 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
     const db = getFirebaseDb();
     const docRef = doc(db, addNamespace('usuarios'), uid);
     
-    // Tentar múltiplas vezes com timeouts progressivos
-    let docSnap;
-    let lastError: any;
-    
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const timeout = attempt * 3000; // 3s, 6s, 9s
-        console.log(`Tentativa ${attempt}/3 - Timeout: ${timeout}ms`);
-        
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Timeout tentativa ${attempt}: Servidor não responde`)), timeout);
-        });
-        
-        docSnap = await Promise.race([
-          getDoc(docRef),
-          timeoutPromise
-        ]) as DocumentSnapshot;
-        
-        // Se chegou aqui, deu certo
-        break;
-        
-      } catch (error) {
-        lastError = error;
-        console.warn(`Tentativa ${attempt} falhou:`, error);
-        
-        if (attempt < 3) {
-          // Aguardar antes da próxima tentativa
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-      }
-    }
-    
-    // Se todas as tentativas falharam, criar perfil local temporário
-    if (!docSnap) {
-      console.error('Todas as tentativas de conexão falharam, criando perfil local temporário');
-      
-      // Retornar perfil padrão temporário para não quebrar a aplicação
-      const temporaryProfile: UserProfile = {
-        cargo: '',
-        areas_atuacao: [],
-        primeiro_acesso: true,
-        initial_setup_complete: false,
-        data_criacao: new Date(),
-        workspaces: [],
-        displayName: 'Usuário (Offline)'
-      };
-      
-      return {
-        data: temporaryProfile,
-        error: {
-          code: 'offline-mode',
-          message: 'Funcionando offline. Dados não serão salvos.',
-          details: 'Conectividade com servidor perdida'
-        },
-        success: true // true para não quebrar o fluxo
-      };
-    }
+    // Single attempt with reasonable timeout
+    const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       const data = docSnap.data() as UserProfile;
@@ -264,9 +209,12 @@ export async function updateUserProfile(
   uid: string, 
   data: Partial<UserProfile>
 ): Promise<ServiceResult<Partial<UserProfile>>> {
+  console.log('🔄 updateUserProfile: Starting', { uid, data });
+  
   try {
     // Validação de entrada
     if (!uid || uid.trim() === '') {
+      console.error('❌ updateUserProfile: Invalid UID');
       return {
         data: null,
         error: {
@@ -278,6 +226,7 @@ export async function updateUserProfile(
     }
 
     if (!data || Object.keys(data).length === 0) {
+      console.error('❌ updateUserProfile: No data provided');
       return {
         data: null,
         error: {
@@ -288,18 +237,24 @@ export async function updateUserProfile(
       };
     }
 
-
-    const userDocRef = doc(getFirebaseDb(), addNamespace('usuarios'), uid);
+    console.log('📡 updateUserProfile: Getting Firestore instance');
+    const db = getFirebaseDb();
+    const namespace = addNamespace('usuarios');
+    const userDocRef = doc(db, namespace, uid);
+    
+    console.log('📝 updateUserProfile: Document reference', { namespace, uid });
     
     // Preparar dados para atualização (remover campos que não devem ser sobrescritos)
     const updateData = { ...data };
     delete updateData.data_criacao; // Não permitir sobrescrever data de criação
     
+    console.log('💾 updateUserProfile: Saving to Firestore', updateData);
     await setDoc(userDocRef, updateData, { merge: true });
-
+    
+    console.log('✅ updateUserProfile: Successfully saved');
     return { data: updateData, error: null, success: true };
   } catch (error) {
-    console.error('Erro em updateUserProfile:', error);
+    console.error('💥 updateUserProfile: Error occurred', error);
     return {
       data: null,
       error: createServiceError(error, 'atualizar perfil do usuário'),

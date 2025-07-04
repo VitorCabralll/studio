@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import { useAuth } from '@/hooks/use-auth';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { updateUserProfile } from '@/services/user-service';
@@ -20,19 +19,15 @@ import { updateUserProfile } from '@/services/user-service';
 // Animation variants removed for now
 
 export default function WorkspacePage() {
-  return (
-    <OnboardingGuard>
-      <WorkspacePageContent />
-    </OnboardingGuard>
-  );
+  return <WorkspacePageContent />;
 }
 
 function WorkspacePageContent() {
   const [newWorkspaceName, setNewWorkspaceName] = useState("Meu Novo Workspace");
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
-  const { user, userProfile, updateUserProfileState } = useAuth();
-  const { workspaces, createWorkspace, setCurrentWorkspace, isLoading: workspaceLoading } = useWorkspace();
+  const { user, updateUserProfileState } = useAuth();
+  const { workspaces, createWorkspace, setCurrentWorkspace } = useWorkspace();
 
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim() || !user) return;
@@ -64,7 +59,7 @@ function WorkspacePageContent() {
     }
   };
   
-  const handleOpenWorkspace = (workspace: any) => {
+  const handleOpenWorkspace = (workspace: { id: string; name: string; members: string[]; owners: string[]; createdAt: Date; updatedAt: Date }) => {
     setCurrentWorkspace(workspace);
     router.push('/generate'); // ou '/dashboard' se preferir
   };
