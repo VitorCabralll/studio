@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import { SpeedInsights } from "@vercel/speed-insights/next";
+// import { SpeedInsights } from "@vercel/speed-insights/next"; // Temporarily disabled to fix 404 error
 import { fontVariables } from './fonts';
 import { ErrorBoundary } from '@/components/layout/error-boundary';
 import { SkipLinks } from '@/components/layout/skip-links';
@@ -82,9 +82,9 @@ export default function RootLayout({
                 </WorkspaceProvider>
               </AuthProvider>
           </ThemeProvider>
-          <ErrorBoundary>
+          {/* <ErrorBoundary>
             <SpeedInsights />
-          </ErrorBoundary>
+          </ErrorBoundary> */}
         </ErrorBoundary>
       </body>
     </html>

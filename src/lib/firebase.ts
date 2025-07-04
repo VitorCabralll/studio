@@ -42,8 +42,10 @@ export function getFirebaseAuth(): Auth {
     const app = initializeFirebaseApp();
     auth = getAuth(app);
     
-    // Connect to emulator in development
-    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
+    // Connect to emulator in development - apenas se explicitamente habilitado
+    if (typeof window !== 'undefined' && 
+        process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true' && 
+        process.env.NODE_ENV === 'development') {
       const authEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST;
       if (authEmulatorHost && !auth.emulatorConfig) {
         try {
@@ -66,8 +68,10 @@ export function getFirebaseDb(): Firestore {
     const app = initializeFirebaseApp();
     db = getFirestore(app);
     
-    // Connect to emulator in development
-    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true') {
+    // Connect to emulator in development - apenas se explicitamente habilitado
+    if (typeof window !== 'undefined' && 
+        process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true' && 
+        process.env.NODE_ENV === 'development') {
       const firestoreEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST;
       if (firestoreEmulatorHost) {
         try {
@@ -79,9 +83,17 @@ export function getFirebaseDb(): Firestore {
         }
       }
     } else if (typeof window !== 'undefined') {
-      // Enable network for production
+      // Enable network for production - com retry
       enableNetwork(db).catch(error => {
         console.warn('Failed to enable Firestore network:', error);
+        // Retry after 2 seconds
+        setTimeout(() => {
+          if (db) {
+            enableNetwork(db).catch(() => {
+              console.error('Failed to enable Firestore network after retry');
+            });
+          }
+        }, 2000);
       });
     }
   }

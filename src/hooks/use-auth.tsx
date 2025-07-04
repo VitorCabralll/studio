@@ -92,6 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             ...prev, 
             userProfile,
             loading: false,
+            error: null, // Clear any previous errors
             isInitialized: true
           }));
         } catch (error) {
@@ -103,6 +104,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
             error: parseAuthError(error),
             isInitialized: true
           }));
+          
+          // Auto-retry after 3 seconds for network errors
+          if (error instanceof Error && (
+            error.message.includes('network') || 
+            error.message.includes('offline') ||
+            error.message.includes('unavailable')
+          )) {
+            console.log('🔄 Tentando recarregar perfil em 3 segundos...');
+            setTimeout(async () => {
+              try {
+                const retryProfile = await loadUserProfile(user);
+                setState(prev => ({ 
+                  ...prev, 
+                  userProfile: retryProfile,
+                  error: null
+                }));
+              } catch (retryError) {
+                console.error('Retry failed:', retryError);
+              }
+            }, 3000);
+          }
         }
       } else {
         // User is signed out

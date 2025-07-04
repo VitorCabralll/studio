@@ -15,21 +15,11 @@ const nextConfig = {
     ],
   },
   
-  // Performance optimizations for Next.js 14.x
-  experimental: {
-    optimizePackageImports: [
-      'lucide-react', 
-      '@radix-ui/react-icons',
-      'framer-motion',
-      'react-hook-form',
-      '@hookform/resolvers',
-      'zod',
-      'clsx'
-    ],
-  },
+  // Configuração estável - sem experimentais
+  // experimental: removido para máxima estabilidade
   
   // Enhanced webpack configuration with clean bundle analysis
-  webpack: (config, { dev, isServer, webpack }) => {
+  webpack: (config, { dev, isServer }) => {
     // Path alias - explicit resolution for Firebase App Hosting
     const path = require('path');
     config.resolve.alias = {
@@ -43,21 +33,14 @@ const nextConfig = {
       '@/ai': path.resolve(__dirname, 'src/ai'),
     };
     
-    // Bundle analysis - clean implementation without hangs
+    // Bundle analysis simplificado
     if (process.env.ANALYZE === 'true' && !isServer) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      
       config.plugins.push(
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
           openAnalyzer: false,
-          reportFilename: '../bundle-analysis.html',
-          generateStatsFile: true,
-          statsFilename: '../bundle-stats.json',
-          // Prevent hang issues
-          analyzerHost: '127.0.0.1',
-          analyzerPort: 'auto',
-          logLevel: 'error'
+          reportFilename: '../bundle-analysis.html'
         })
       );
     }

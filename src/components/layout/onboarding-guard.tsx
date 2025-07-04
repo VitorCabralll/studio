@@ -3,112 +3,80 @@
 import { Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
 import { useAuth } from '@/hooks/use-auth';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading, userProfile, isInitialized, error } = useAuth();
+  const { user, loading, userProfile, isInitialized } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
-    // Skip during build/SSR to prevent redirect loops
-    if (typeof window === 'undefined') {
-      setIsVerified(true);
-      return;
-    }
-    
-    if (!mounted || !isInitialized || !router) {
+    // Aguardar inicialização completa
+    if (!isInitialized) {
       return;
     }
     
     const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-    // Redirect to login if not authenticated and not on an auth page
+    // 1. Usuário não autenticado
     if (!user) {
       if (!isAuthPage) {
         router.replace('/login');
-      } else {
-        setIsVerified(true);
+        return;
       }
+      setIsVerified(true);
       return;
     }
 
-    // If user is authenticated but profile failed to load, show error handling
-    if (user && !userProfile && error && !loading) {
-      // For now, redirect to onboarding which can handle profile creation
+    // 2. Usuário autenticado mas ainda carregando perfil
+    if (user && loading) {
+      return;
+    }
+
+    // 3. Usuário autenticado mas sem perfil (precisa onboarding)
+    if (user && !userProfile) {
       if (pathname !== '/onboarding') {
         router.replace('/onboarding');
-      } else {
-        setIsVerified(true);
+        return;
       }
+      setIsVerified(true);
       return;
     }
 
-    // If user is authenticated but profile is still loading, wait
-    if (user && !userProfile && loading) {
-      return;
-    }
-
-    // --- User is authenticated and profile is loaded from this point ---
-    if (!userProfile) {
-      return; // Safety check - should not happen
-    }
-
-    console.log('🎯 OnboardingGuard - Profile loaded:', {
-      primeiro_acesso: userProfile.primeiro_acesso,
-      initial_setup_complete: userProfile.initial_setup_complete,
-      pathname: pathname,
-      userProfile: userProfile
-    });
-
-    // 1. Check if user needs to go through the initial profile setup.
-    if (userProfile.primeiro_acesso) {
-      console.log('🔀 Redirecting to onboarding - primeiro_acesso = true');
+    // 4. Usuário com perfil válido - verificar fluxo de onboarding
+    if (userProfile && userProfile.primeiro_acesso) {
       if (pathname !== '/onboarding') {
         router.replace('/onboarding');
-      } else {
-        setIsVerified(true);
+        return;
       }
+      setIsVerified(true);
       return;
     }
 
-    // 2. Check if user has completed the entire setup flow (workspace + first agent).
-    if (!userProfile.initial_setup_complete) {
-      const allowedPaths = [
-        '/workspace',
-        '/workspace/success',
-        '/agente/criar',
-        '/settings',
-        '/onboarding/success',
-      ];
+    // 5. Setup incompleto - direcionar para workspace
+    if (userProfile && !userProfile.initial_setup_complete) {
+      const allowedPaths = ['/workspace', '/agente/criar', '/settings', '/onboarding/success'];
       const isAllowed = allowedPaths.some(p => pathname.startsWith(p));
-
+      
       if (!isAllowed) {
-        // If not on an allowed page, start the flow.
         router.replace('/workspace');
-      } else {
-        setIsVerified(true);
+        return;
       }
+      setIsVerified(true);
       return;
     }
     
-    // 3. User is fully onboarded. Allow access to all pages except setup pages.
+    // 6. Usuário completamente configurado
     const setupPages = ['/login', '/signup', '/onboarding'];
     if (setupPages.some(p => pathname.startsWith(p))) {
       router.replace('/');
-    } else {
-      setIsVerified(true);
+      return;
     }
+    
+    setIsVerified(true);
 
-  }, [mounted, user, userProfile, loading, pathname, router, isInitialized, error]);
+  }, [user, userProfile, loading, pathname, router, isInitialized]);
 
   if (!isVerified) {
     return (
