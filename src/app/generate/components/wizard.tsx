@@ -60,7 +60,7 @@ export function GenerationWizard() {
   const [instructions, setInstructions] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [extractedText, setExtractedText] = useState('');
-  const [structuredData, setStructuredData] = useState<any>(null);
+  const [structuredData, setStructuredData] = useState<Record<string, unknown> | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDocument, setGeneratedDocument] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -427,7 +427,7 @@ export function GenerationWizard() {
                             onFilesChange={setFiles}
                             onTextExtracted={(text, structured) => {
                               setExtractedText(text);
-                              setStructuredData(structured);
+                              setStructuredData(structured || null);
                               announce(`Texto extraído com sucesso! ${text.length} caracteres processados.`);
                             }}
                             enableOCR={true}

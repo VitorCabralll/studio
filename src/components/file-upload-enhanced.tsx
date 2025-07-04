@@ -26,10 +26,15 @@ const OCRProcessor = dynamic(
   }
 );
 
+interface FileExtractedText {
+  text: string;
+  metadata?: Record<string, unknown>;
+}
+
 interface FileUploadEnhancedProps {
   onFilesChange: (files: File[]) => void;
-  onTextExtracted?: (text: string, structured?: any) => void;
-  onTextsProcessed?: (extractedTexts: any[]) => void;
+  onTextExtracted?: (text: string, structured?: Record<string, unknown>) => void;
+  onTextsProcessed?: (extractedTexts: FileExtractedText[]) => void;
   documentId?: string;
   enableOCR?: boolean;
   className?: string;
@@ -53,7 +58,6 @@ export function FileUploadEnhanced({
     progress, 
     status,
     error: processingError,
-    extractedTexts: processedTexts,
     clearError 
   } = useDocumentProcessor();
 
@@ -67,7 +71,11 @@ export function FileUploadEnhanced({
       clearError();
       const processedTexts = await processFiles(acceptedFiles, documentId);
       if (processedTexts) {
-        onTextsProcessed?.(processedTexts);
+        const fileTexts: FileExtractedText[] = processedTexts.map(item => ({
+          text: item.content,
+          metadata: { source: item.source, type: item.type }
+        }));
+        onTextsProcessed?.(fileTexts);
       }
     }
   }, [files, onFilesChange, enableOCR, documentId, processFiles, onTextsProcessed, clearError]);
@@ -90,7 +98,7 @@ export function FileUploadEnhanced({
     multiple: true
   });
 
-  const handleOCRTextExtracted = useCallback((text: string, structured?: any) => {
+  const handleOCRTextExtracted = useCallback((text: string, structured?: Record<string, unknown>) => {
     setExtractedTexts(prev => [...prev, text]);
     onTextExtracted?.(text, structured);
   }, [onTextExtracted]);

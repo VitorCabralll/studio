@@ -7,8 +7,7 @@ import {
   processUserDocuments,
   addUserInstruction,
   getExtractedTexts,
-  type ExtractedText,
-  type DocumentProcessingResult
+  type ExtractedText
 } from '@/services/document-processor';
 
 interface UseDocumentProcessorReturn {

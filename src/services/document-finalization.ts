@@ -1,7 +1,7 @@
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
 import { getFirebaseDb } from '@/lib/firebase';
-import { cleanupDocumentData, DATA_RETENTION_CONFIG } from './data-cleanup';
+import { cleanupDocumentData } from './data-cleanup';
 
 // Tipos para finalização de documentos
 export interface DocumentFinalization {

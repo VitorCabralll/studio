@@ -1,6 +1,6 @@
 "use client";
 
-import { Scale, Mail, Phone, MapPin } from "lucide-react";
+import { Scale, Mail, MapPin } from "lucide-react";
 
 export function Footer() {
   const footerLinks = {

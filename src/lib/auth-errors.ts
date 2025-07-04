@@ -12,9 +12,10 @@ export interface AuthError {
 /**
  * Parse Firebase Auth errors into user-friendly messages
  */
-export function parseAuthError(error: any): AuthError {
-  const code = error?.code || 'unknown';
-  const originalMessage = error?.message || 'Unknown error';
+export function parseAuthError(error: unknown): AuthError {
+  const errorObj = error as { code?: string; message?: string };
+  const code = errorObj?.code || 'unknown';
+  const originalMessage = errorObj?.message || 'Unknown error';
   
   const errorMessages: Record<string, string> = {
     // Authentication errors
@@ -54,7 +55,7 @@ export function parseAuthError(error: any): AuthError {
   return {
     code,
     message,
-    originalError: error
+    originalError: error instanceof Error ? error : undefined
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, MessageCircle } from "lucide-react";
+import { Mail, MapPin, Send, MessageCircle } from "lucide-react";
 import { FadeIn } from "@/components/magic-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

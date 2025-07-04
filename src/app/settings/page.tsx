@@ -46,7 +46,7 @@ function SettingsPageContent() {
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível salvar as alterações.",
@@ -74,7 +74,7 @@ function SettingsPageContent() {
       } else {
         throw new Error(result.error);
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o workspace.",
@@ -107,7 +107,7 @@ function SettingsPageContent() {
       } else {
         throw new Error(result.error);
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível excluir o workspace.",

@@ -1,7 +1,6 @@
 import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
 import { getFirebaseDb } from '@/lib/firebase';
-import { cleanupDocumentData } from './data-cleanup';
 import { enforceMaximumPrivacy } from './privacy-enforcer';
 
 // Tipos para processamento de documentos
