@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowRight, Scale, CheckCircle, User, Briefcase, Target } from 'lucide-react';
+import { Loader2, ArrowRight, Scale, CheckCircle, User, Briefcase, Target, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth, UserProfile } from '@/hooks/use-auth';
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { roles, legalAreas } from '@/lib/legal-constants';
@@ -65,7 +66,8 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
                     Olá! Bem-vindo(a) ao <span className="text-primary">LexAI</span>
                 </h1>
                 <p className="text-body-large mx-auto max-w-2xl leading-relaxed text-muted-foreground">
-                    Sua assistente jurídica inteligente está quase pronta. Vamos personalizar sua experiência em apenas 2 minutos?
+                    Vamos configurar seu ambiente LexAI para uma <span className="font-semibold text-primary">produtividade sem precedentes</span>. 
+                    Apenas 2 minutos separam você da IA jurídica mais avançada do mercado.
                 </p>
             </motion.div>
             
@@ -149,8 +151,21 @@ function RoleStep({ form, onNext }: { form: UseFormReturn<ProfileFormValues>, on
                     >
                         <User className="size-8 text-blue-600 dark:text-blue-400" />
                     </motion.div>
-                    <CardTitle id="role-step-title" className="font-headline text-2xl" tabIndex={-1}>
+                    <CardTitle id="role-step-title" className="font-headline text-2xl flex items-center gap-3" tabIndex={-1}>
                         Como você atua no sistema de justiça?
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <HelpCircle className="size-5 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">
+                                        Sua função determina quais templates, agentes e funcionalidades 
+                                        serão priorizados na sua experiência personalizada.
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </CardTitle>
                     <CardDescription className="mt-2 text-base">
                         Esta informação nos ajuda a personalizar as ferramentas e conteúdo específicos para sua função.
@@ -226,8 +241,21 @@ function AreasStep({ form, isSubmitting }: { form: UseFormReturn<ProfileFormValu
                     >
                         <Briefcase className="size-8 text-green-600 dark:text-green-400" />
                     </motion.div>
-                    <CardTitle id="areas-step-title" className="font-headline text-2xl" tabIndex={-1}>
+                    <CardTitle id="areas-step-title" className="font-headline text-2xl flex items-center gap-3" tabIndex={-1}>
                         Quais são suas áreas de atuação?
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <HelpCircle className="size-5 text-muted-foreground hover:text-primary cursor-help transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">
+                                        Suas áreas de especialização nos ajudam a recomendar agentes de IA 
+                                        e templates mais adequados para sua prática jurídica.
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </CardTitle>
                     <CardDescription className="mt-2 text-base">
                         Selecione uma ou mais áreas para personalizarmos os templates e sugestões de conteúdo.

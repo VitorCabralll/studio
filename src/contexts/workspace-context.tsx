@@ -39,7 +39,7 @@ export interface WorkspaceContextType {
   // Helpers
   isOwner: (workspaceId: string, userId?: string) => boolean;
   isMember: (workspaceId: string, userId?: string) => boolean;
-  getUserWorkspaces: () => Promise<void>;
+  getUserWorkspaces: () => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -90,9 +90,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           setWorkspaces(userWorkspaces);
           
           // Se não há workspace atual e tem workspaces, selecionar o primeiro
-          if (!currentWorkspace && userWorkspaces.length > 0) {
-            setCurrentWorkspace(userWorkspaces[0]);
-          }
+          setCurrentWorkspace(prev => {
+            if (!prev && userWorkspaces.length > 0) {
+              return userWorkspaces[0];
+            }
+            return prev;
+          });
         }
       } catch (err) {
         if (isComponentMounted) {
@@ -116,9 +119,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return () => {
       isComponentMounted = false;
     };
-  }, [user, currentWorkspace]);
+  }, [user]);
 
-  const getUserWorkspaces = async () => {
+  const getUserWorkspaces = () => {
     // Esta função agora é apenas um trigger para recarregar
     // A lógica real está no useEffect para evitar memory leaks
     if (!user) return;

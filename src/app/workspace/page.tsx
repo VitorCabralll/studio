@@ -183,10 +183,117 @@ function WorkspacePageContent() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
-          <AnimatePresence>
-            {workspaces.map((ws, index) => (
+          {workspaces.length === 0 ? (
+            // Estado vazio premium
+            <div className="flex flex-col items-center justify-center space-y-8 py-16 text-center">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="relative"
+              >
+                <div className="shadow-apple-lg flex size-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10 border-2 border-primary/20">
+                  <Building className="size-12 text-primary" />
+                </div>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                  className="absolute -right-2 -top-2"
+                >
+                  <div className="shadow-apple-sm flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600">
+                    <PlusCircle className="size-4 text-white" />
+                  </div>
+                </motion.div>
+              </motion.div>
+              
+              <div className="max-w-md space-y-4">
+                <h2 className="text-headline">Nenhum workspace encontrado</h2>
+                <p className="text-body-large leading-relaxed text-muted-foreground">
+                  Crie seu primeiro workspace para começar a organizar seus projetos jurídicos com <span className="font-semibold text-primary">máxima eficiência</span>.
+                </p>
+              </div>
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    size="lg" 
+                    className="shadow-apple-lg hover:shadow-apple-lg h-16 bg-gradient-to-r from-primary to-primary/90 px-10 text-lg font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
+                  >
+                    <PlusCircle className="mr-3 size-6" />
+                    Criar Meu Primeiro Workspace
+                    <ArrowRight className="ml-3 size-6" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="surface-elevated shadow-apple-lg border-2 border-border/50 sm:max-w-lg">
+                  <DialogHeader className="space-y-6 text-center">
+                    <div className="shadow-apple-md mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80">
+                      <Building className="size-8 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-headline mb-3">Criar Primeiro Workspace</DialogTitle>
+                      <DialogDescription className="text-body-large leading-relaxed">
+                        Dê um nome descritivo ao seu workspace. Você poderá convidar membros da equipe posteriormente.
+                      </DialogDescription>
+                    </div>
+                  </DialogHeader>
+                  <div className="space-y-8 py-6">
+                    <div className="space-y-4">
+                      <Label htmlFor="name" className="flex items-center gap-3 text-base font-semibold">
+                        <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                          <Briefcase className="size-3 text-primary" />
+                        </div>
+                        Nome do Workspace
+                      </Label>
+                      <Input 
+                        id="name" 
+                        value={newWorkspaceName}
+                        onChange={(e) => setNewWorkspaceName(e.target.value)}
+                        className="shadow-apple-sm hover:shadow-apple-md h-12 border-2 text-base transition-all duration-300 focus:border-primary/50 focus:ring-primary/20"
+                        placeholder="Ex: Meu Escritório, Projetos Especiais..."
+                      />
+                    </div>
+                    
+                    <div className="shadow-apple-sm rounded-xl border border-blue-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:border-blue-800/50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                      <div className="mb-2 flex items-center gap-3">
+                        <div className="flex size-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                          <Briefcase className="size-2.5 text-blue-600" />
+                        </div>
+                        <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Dica</span>
+                      </div>
+                      <p className="text-caption leading-relaxed text-blue-600 dark:text-blue-300">
+                        Use nomes descritivos como &quot;Direito Civil&quot;, &quot;Equipe Trabalhista&quot; ou &quot;Projetos 2024&quot;
+                      </p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      type="button" 
+                      onClick={handleCreateWorkspace} 
+                      disabled={isCreating || !newWorkspaceName.trim()}
+                      className="shadow-apple-md hover:shadow-apple-lg h-12 w-full bg-gradient-to-r from-primary to-primary/90 text-base font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
+                    >
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="mr-3 size-5 animate-spin" />
+                          Criando...
+                        </>
+                      ) : (
+                        <>
+                          <Building className="mr-3 size-5" />
+                          Criar Workspace
+                          <ArrowRight className="ml-3 size-5" />
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <AnimatePresence>
+                {workspaces.map((ws, index) => (
               <motion.div
                 key={ws.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -308,8 +415,10 @@ function WorkspacePageContent() {
                   </CardFooter>
                 </Card>
               </motion.div>
-            ))}
-          </AnimatePresence>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

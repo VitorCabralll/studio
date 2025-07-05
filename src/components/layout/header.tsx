@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { ChevronsLeftRight, User, Settings, LogOut, Building2, Plus } from "lucide-react";
+import { ChevronsLeftRight, User, Settings, LogOut, Building2, Plus, Shield } from "lucide-react";
 import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -145,6 +145,14 @@ export function AppHeader() {
                       <Settings className="size-4 text-muted-foreground" />
                     </div>
                     <span className="font-medium">Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/seguranca" className="flex items-center gap-3 rounded-lg p-3 hover:bg-green-50 dark:hover:bg-green-950/20">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
+                      <Shield className="size-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span className="font-medium text-green-700 dark:text-green-300">Segurança</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>

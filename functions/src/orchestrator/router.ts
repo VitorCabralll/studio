@@ -10,6 +10,7 @@ import {
   TaskType, 
   ProcessingInput 
 } from './types';
+import { isProviderAvailable } from './clients';
 
 export class LLMRouter {
   private availableLLMs: LLMConfig[] = [];
@@ -98,6 +99,11 @@ export class LLMRouter {
    */
   private filterCompatibleLLMs(input: ProcessingInput, criteria: RoutingCriteria): LLMConfig[] {
     return this.availableLLMs.filter(llm => {
+      // NOVO: Verifica se provider está disponível (tem API key)
+      if (!isProviderAvailable(llm.provider)) {
+        return false;
+      }
+
       // Verifica se suporta a especialização
       if (criteria.specialization && 
           !llm.capabilities.specializations.includes(criteria.specialization)) {

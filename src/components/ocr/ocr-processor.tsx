@@ -21,13 +21,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { OCRErrorBoundary } from '@/components/error-boundaries/ocr-error-boundary';
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { copyToClipboard as copyTextToClipboard } from '@/lib/clipboard';
 import { useOCR, OCRResult } from '@/hooks/use-ocr';
 
 
+interface StructuredData {
+  title?: string;
+  sections?: string[];
+  metadata?: Record<string, unknown>;
+  structured?: Record<string, string[]>;
+  fullText?: string;
+  confidence?: number;
+  [key: string]: unknown;
+}
+
 interface OCRProcessorProps {
-  onTextExtracted?: (text: string, structured?: any) => void;
+  onTextExtracted?: (text: string, structured?: StructuredData) => void;
   onResults?: (results: OCRResult[]) => void;
   maxFiles?: number;
   language?: string;
@@ -44,7 +55,7 @@ export function OCRProcessor({
   const [results, setResults] = useState<OCRResult[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [extractedText, setExtractedText] = useState('');
-  const [structuredData, setStructuredData] = useState<any>(null);
+  const [structuredData, setStructuredData] = useState<StructuredData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   const { announce, AnnouncementRegion } = useFocusManagement();
@@ -113,7 +124,7 @@ export function OCRProcessor({
       }
 
       // Callbacks
-      onTextExtracted?.(combinedText, structuredData);
+      onTextExtracted?.(combinedText, structuredData || undefined);
       onResults?.(ocrResults);
 
       announce(`OCR concluído! ${ocrResults.length} documento(s) processado(s).`);
@@ -153,11 +164,15 @@ export function OCRProcessor({
   };
 
   return (
-    <div className="space-y-6">
-      <AnnouncementRegion />
-      
-      {/* Upload Area */}
-      <Card>
+    <OCRErrorBoundary 
+      onRetry={() => window.location.reload()} 
+      onFileRemove={clearResults}
+    >
+      <div className="space-y-6">
+        <AnnouncementRegion />
+        
+        {/* Upload Area */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ScanText className="size-5" />
@@ -322,7 +337,7 @@ export function OCRProcessor({
                   <Separator className="my-4" />
                   <h4 className="mb-2 font-medium">Dados Estruturados Detectados:</h4>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {Object.entries(structuredData.structured).map(([key, values]) => {
+                    {Object.entries(structuredData.structured || {}).map(([key, values]) => {
                       const valueArray = Array.isArray(values) ? values : [];
                       return valueArray.length > 0 && (
                         <div key={key} className="space-y-1">
@@ -344,6 +359,7 @@ export function OCRProcessor({
           )}
         </Card>
       )}
-    </div>
+      </div>
+    </OCRErrorBoundary>
   );
 }

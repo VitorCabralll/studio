@@ -18,124 +18,6 @@ import {
   SecurityConfig
 } from './types';
 
-/**
- * Configuração do sistema de fallback transparente
- * Para garantir resiliência em produção
- */
-export const DEMO_FALLBACK_CONFIG = {
-  ENABLE_FALLBACK: process.env.NEXT_PUBLIC_DEMO_MODE === 'true',
-  FALLBACK_DOCUMENTS: {
-    'petition': `PETIÇÃO INICIAL
-
-Excelentíssimo Senhor Doutor Juiz de Direito da Vara Cível da Comarca de Cuiabá/MT
-
-[CABEÇALHO PROCESSUAL]
-
-Processo: [Processo em análise via IA]
-Requerente: [Parte identificada automaticamente]
-Requerido: [Parte identificada automaticamente]
-
-[FUNDAMENTAÇÃO LEGAL]
-
-O presente documento foi estruturado com base na análise automatizada dos documentos fornecidos, utilizando inteligência artificial especializada em direito brasileiro.
-
-DOS FATOS:
-
-Com base na documentação analisada, verifica-se que [fatos extraídos dos documentos anexados pelo usuário seriam inseridos aqui pela IA em operação normal].
-
-DO DIREITO:
-
-A fundamentação legal aplicável ao caso em questão encontra respaldo nos dispositivos legais pertinentes à matéria, conforme análise automatizada dos precedentes e doutrina aplicável.
-
-DOS PEDIDOS:
-
-Ante o exposto, requer-se:
-
-a) [Pedidos específicos baseados na análise do caso]
-b) A procedência total dos pedidos
-c) A condenação da parte requerida ao pagamento das custas processuais
-
-Protesta-se pela juntada de documentos e demais provas em direito admitidas.
-
-Requer deferimento.
-
-Cuiabá/MT, ${new Date().toLocaleDateString('pt-BR')}.
-
-[Assinatura Digital]
-Dr. [Nome do Advogado]
-OAB/MT [Número]
-
----
-DOCUMENTO GERADO EM MODO FALLBACK
-Sistema: LexAI v.Beta | Data: ${new Date().toISOString()}
-Motivo: API temporariamente indisponível`,
-
-    'contract': `CONTRATO DE PRESTAÇÃO DE SERVIÇOS
-
-Pelo presente instrumento particular de contrato de prestação de serviços, as partes:
-
-CONTRATANTE: [Identificado automaticamente nos documentos]
-CONTRATADO: [Identificado automaticamente nos documentos]
-
-CLÁUSULA PRIMEIRA - DO OBJETO
-O presente contrato tem por objeto [objeto extraído da análise dos documentos].
-
-CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES
-[Obrigações definidas com base na análise automatizada]
-
-CLÁUSULA TERCEIRA - DO VALOR E FORMA DE PAGAMENTO
-[Valores e condições identificados nos documentos]
-
-CLÁUSULA QUARTA - DO PRAZO
-[Prazos estabelecidos conforme documentação analisada]
-
-CLÁUSULA QUINTA - DA RESCISÃO
-[Condições de rescisão padrão]
-
-CLÁUSULA SEXTA - DO FORO
-Fica eleito o foro da Comarca de Cuiabá/MT para dirimir questões oriundas deste contrato.
-
-E por estarem assim justas e contratadas, as partes assinam o presente em duas vias de igual teor.
-
-Cuiabá/MT, ${new Date().toLocaleDateString('pt-BR')}.
-
-________________________    ________________________
-    CONTRATANTE              CONTRATADO
-
----
-DOCUMENTO GERADO EM MODO FALLBACK
-Sistema: LexAI v.Beta | Data: ${new Date().toISOString()}
-Motivo: API temporariamente indisponível`,
-
-    'brief': `RESUMO EXECUTIVO - ANÁLISE JURÍDICA
-
-DOCUMENTO: Análise automática de documentos jurídicos
-DATA: ${new Date().toLocaleDateString('pt-BR')}
-SISTEMA: LexAI Beta
-
-SUMÁRIO EXECUTIVO:
-O presente resumo foi gerado automaticamente com base nos documentos fornecidos, utilizando inteligência artificial especializada em análise jurídica.
-
-PONTOS PRINCIPAIS IDENTIFICADOS:
-• [Pontos principais seriam extraídos dos documentos em operação normal]
-• [Questões legais relevantes identificadas pela IA]
-• [Recomendações baseadas na análise automatizada]
-
-ANÁLISE LEGAL:
-[Análise detalhada seria inserida aqui com base no processamento dos documentos]
-
-RECOMENDAÇÕES:
-[Recomendações específicas baseadas no caso]
-
-PRÓXIMOS PASSOS SUGERIDOS:
-[Passos recomendados pela análise da IA]
-
----
-NOTA: Este documento foi gerado em modo fallback
-Motivo: Serviços de IA temporariamente indisponíveis
-Sistema: LexAI | Cuiabá/MT | ${new Date().toISOString()}`
-  }
-};
 
 /**
  * Configurações dos LLMs disponíveis - GOOGLE AI + OPENAI
@@ -193,10 +75,10 @@ export const DEFAULT_LLM_CONFIGS: LLMConfig[] = [
     }
   },
 
-  // OpenAI GPT-4.1-nano - Backup para Google AI (via Apoia)
+  // OpenAI GPT-4o - Backup para Google AI
   {
     provider: 'openai',
-    model: 'gpt-4.1-nano',
+    model: 'gpt-4o',
     capabilities: {
       maxTokens: 8192,
       supportedLanguages: ['pt-BR', 'en', 'es'],
@@ -213,8 +95,8 @@ export const DEFAULT_LLM_CONFIGS: LLMConfig[] = [
       lastUpdated: new Date('2024-01-01')
     },
     costs: {
-      inputTokenPrice: 0.03,   // $30 per 1M tokens
-      outputTokenPrice: 0.06,  // $60 per 1M tokens  
+      inputTokenPrice: 0.005,   // $5 per 1M tokens
+      outputTokenPrice: 0.015,  // $15 per 1M tokens  
       currency: 'USD'
     }
   },
@@ -365,21 +247,21 @@ export const DOCUMENT_TYPE_CONFIGS = {
     qualityRequirement: 'premium' as const,
     preferredLLMs: ['google', 'openai'], // Gemini Pro, fallback GPT-4
     preferredModel: 'gemini-1.5-pro',
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     estimatedTokens: 3000
   },
   contract: {
     qualityRequirement: 'premium' as const,
     preferredLLMs: ['google', 'openai'], // Gemini Pro, fallback GPT-4
     preferredModel: 'gemini-1.5-pro',
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     estimatedTokens: 2500
   },
   legal_opinion: {
     qualityRequirement: 'premium' as const,
     preferredLLMs: ['google', 'openai'], // Gemini Pro, fallback GPT-4
     preferredModel: 'gemini-1.5-pro',
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     estimatedTokens: 2000
   },
   notification: {
@@ -412,13 +294,13 @@ export const LEGAL_AREA_CONFIGS = {
   civil: {
     specializedLLMs: ['google', 'openai'],
     preferredModel: 'gemini-1.5-pro', // Complexidade alta
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     complexityMultiplier: 1.2
   },
   criminal: {
     specializedLLMs: ['google', 'openai'],
     preferredModel: 'gemini-1.5-pro', // Máxima precisão
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     complexityMultiplier: 1.5
   },
   labor: {
@@ -430,19 +312,19 @@ export const LEGAL_AREA_CONFIGS = {
   corporate: {
     specializedLLMs: ['google', 'openai'],
     preferredModel: 'gemini-1.5-pro', // Complexidade alta
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     complexityMultiplier: 1.3
   },
   tax: {
     specializedLLMs: ['google', 'openai'],
     preferredModel: 'gemini-1.5-pro', // Precisão tributária
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     complexityMultiplier: 1.4
   },
   constitutional: {
     specializedLLMs: ['google', 'openai'],
     preferredModel: 'gemini-1.5-pro', // Máxima qualidade
-    fallbackModel: 'gpt-4.1-nano',
+    fallbackModel: 'gpt-4o',
     complexityMultiplier: 1.6
   },
   administrative: {

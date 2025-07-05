@@ -4,9 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateDocument } from '@/services/orchestrator-client';
+import { orchestrator } from '@/services/build-aware-orchestrator';
 import { getAdminAuth, isAdminConfigured } from '@/lib/firebase-admin';
-import type { ProcessingInput, DocumentType, LegalArea } from '@/ai/orchestrator/types';
+import { validateDocumentRequest, rateLimiter, createSafeLogData } from '@/lib/input-validation';
+import type { DocumentProcessingRequest } from '@/services/build-aware-orchestrator';
+import type { LegalArea } from '@/ai/orchestrator/types';
 
 // Tipos para a API
 interface GenerateRequest {
@@ -33,6 +35,8 @@ interface GenerateResponse {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateResponse>> {
+  const startTime = Date.now();
+  
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('Authorization');
@@ -46,11 +50,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       }, { status: 401 });
     }
 
+    let userId = 'anonymous';
     try {
       const adminAuth = getAdminAuth();
       if (isAdminConfigured() && adminAuth) {
         const token = authHeader.split('Bearer ')[1];
-        await adminAuth.verifyIdToken(token);
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        userId = decodedToken.uid;
       }
     } catch {
       return NextResponse.json({
@@ -62,50 +68,68 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       }, { status: 401 });
     }
 
-    // Parse do body da requisição
-    const body: GenerateRequest = await request.json();
-    
-    // Validação básica
-    if (!body.instructions?.trim()) {
+    // Rate limiting
+    if (!rateLimiter.isAllowed(userId, 10, 60 * 1000)) { // 10 requests por minuto
       return NextResponse.json({
         success: false,
         error: {
-          message: 'Instruções são obrigatórias',
-          code: 'MISSING_INSTRUCTIONS'
+          message: 'Rate limit exceeded. Try again later.',
+          code: 'RATE_LIMIT_EXCEEDED'
+        }
+      }, { status: 429 });
+    }
+
+    // Parse e validação do body da requisição
+    const body: GenerateRequest = await request.json();
+    
+    const validation = validateDocumentRequest(body);
+    if (!validation.success) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: validation.error || 'Invalid request format',
+          code: 'VALIDATION_ERROR'
         }
       }, { status: 400 });
     }
 
     // Mapear dados do frontend para formato do orquestrador
-    const orchestratorInput: ProcessingInput = {
+    const orchestratorInput: DocumentProcessingRequest = {
       taskType: 'document_generation',
       documentType: mapModeToDocumentType(body.mode),
-      legalArea: mapAgentToLegalArea(body.agent),
-      instructions: body.instructions,
-      context: mapAttachmentsToContext(body.attachments || [])
+      content: body.instructions,
+      context: {
+        preferences: {
+          legalArea: mapAgentToLegalArea(body.agent)
+        }
+      },
+      budget: 'low',
+      priority: 'medium'
     };
 
-    // Log da requisição (desenvolvimento)
-    console.log('[API] Iniciando geração de documento:', {
+    // Log da requisição (seguro)
+    console.log('[API] Iniciando geração de documento:', createSafeLogData({
+      userId,
       agent: body.agent,
       mode: body.mode,
       hasAttachments: (body.attachments?.length || 0) > 0,
-      instructionsLength: body.instructions.length
-    });
+      instructionsLength: body.instructions.length,
+      timestamp: new Date().toISOString()
+    }));
 
     // Chamar orquestrador (SEM ALTERAR SUA LÓGICA)
-    const result = await generateDocument(orchestratorInput);
+    const result = await orchestrator.processDocument(orchestratorInput);
 
     // Mapear resposta do orquestrador para formato da API
     if (result.success && result.result) {
       return NextResponse.json({
         success: true,
-        document: result.result.content,
+        document: result.result.finalDocument || result.result.content,
         metadata: {
           processingTime: result.metadata.processingTime,
           cost: result.metadata.totalCost,
-          confidence: result.metadata.confidence,
-          llmUsed: result.metadata.llmUsed.map(llm => `${llm.provider}:${llm.model}`)
+          confidence: result.metadata.quality,
+          llmUsed: result.metadata.modelsUsed
         }
       });
     } else {
@@ -113,15 +137,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       return NextResponse.json({
         success: false,
         error: {
-          message: result.error?.message || 'Erro desconhecido no processamento',
-          code: result.error?.code || 'ORCHESTRATOR_ERROR'
+          message: result.error || 'Erro desconhecido no processamento',
+          code: 'ORCHESTRATOR_ERROR'
         }
       }, { status: 500 });
     }
 
   } catch (error) {
-    // Erro na API route
-    console.error('[API] Erro na geração de documento:', error);
+    // Erro na API route - log seguro
+    const responseTime = Date.now() - startTime;
+    console.error('[API] Erro na geração de documento:', createSafeLogData({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      responseTime,
+      timestamp: new Date().toISOString()
+    }));
     
     return NextResponse.json({
       success: false,
@@ -134,7 +163,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
 }
 
 // Funções de mapeamento (adaptadores)
-function mapModeToDocumentType(mode: 'outline' | 'full'): DocumentType {
+function mapModeToDocumentType(mode: 'outline' | 'full'): 'petition' | 'contract' | 'brief' | 'motion' | 'other' {
   switch (mode) {
     case 'outline':
       return 'brief';
@@ -157,17 +186,18 @@ function mapAgentToLegalArea(agent: 'geral' | 'civil' | 'stj'): LegalArea {
   }
 }
 
-function mapAttachmentsToContext(attachments: string[]): Array<{
-  type: 'file_content';
-  content: string;
-  source: string;
-}> {
-  return attachments.map((dataUri, index) => ({
-    type: 'file_content' as const,
-    content: dataUri,
-    source: `attachment_${index + 1}`
-  }));
-}
+// Função removida - não utilizada
+// function mapAttachmentsToContext(attachments: string[]): Array<{
+//   type: 'file_content';
+//   content: string;
+//   source: string;
+// }> {
+//   return attachments.map((dataUri, index) => ({
+//     type: 'file_content' as const,
+//     content: dataUri,
+//     source: `attachment_${index + 1}`
+//   }));
+// }
 
 // Endpoint de healthcheck
 export async function GET(): Promise<NextResponse> {

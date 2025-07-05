@@ -66,10 +66,13 @@ export class GoogleAIClient extends BaseLLMClient {
       ],
     };
 
-    const url = `${this.baseUrl}/models/${request.model}:generateContent?key=${this.options.apiKey}`;
+    const url = `${this.baseUrl}/models/${request.model}:generateContent`;
 
     try {
-      const response = await this.makeRequest(url, body) as GoogleResponse;
+      const response = await this.makeRequest(url, body, {
+        'X-API-Key': this.options.apiKey,
+        'Content-Type': 'application/json'
+      }) as GoogleResponse;
 
       if (!response.candidates || response.candidates.length === 0) {
         throw new Error('No response candidates from Gemini');
@@ -94,7 +97,12 @@ export class GoogleAIClient extends BaseLLMClient {
         model: request.model,
       };
     } catch (error) {
-      console.error('Google AI API Error:', error);
+      const { log } = await import('@/lib/logger');
+      log.error('Google AI API request failed', error as Error, {
+        component: 'GoogleAIClient',
+        action: 'generateText',
+        metadata: { model: request.model }
+      });
       throw new Error(`Google AI API failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

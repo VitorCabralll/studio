@@ -132,8 +132,8 @@ export function ScaleIn({ children, className, delay, duration, triggerOnce = tr
   );
 }
 
-// Componente para cards com hover
-export function AnimatedCard({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps) {
+// Componente para cards com hover premium
+export function AnimatedCard({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps & { variant?: "default" | "premium" | "elevated" }) {
   const [ref, inView] = useInView({
     triggerOnce,
     threshold,
@@ -145,15 +145,25 @@ export function AnimatedCard({ children, className, delay, duration, triggerOnce
       ? createDelayedTransition(delay, animationPresets.card.transition)
       : animationPresets.card.transition;
 
+  const variant = (props as any).variant || "default";
+
   return (
     <motion.div
       ref={ref}
-      className={cn(className)}
+      className={cn(
+        "rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300",
+        variant === "premium" && "border-gradient-to-r from-primary/20 to-accent/20 bg-gradient-to-br from-white/90 to-white/80 shadow-apple-md backdrop-blur-sm",
+        variant === "elevated" && "shadow-apple-lg",
+        className
+      )}
       variants={animationPresets.card.variants}
       initial={animationPresets.card.initial}
       animate={inView ? animationPresets.card.animate : animationPresets.card.initial}
-      whileHover={animationPresets.card.whileHover}
-      whileTap={animationPresets.card.whileTap}
+      whileHover={variant === "premium" || variant === "elevated" 
+        ? { scale: 1.02, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)", transition: { duration: 0.3 } }
+        : { scale: 1.01, transition: { duration: 0.2 } }
+      }
+      whileTap={{ scale: 0.99 }}
       transition={customTransition}
       {...props}
     >
@@ -162,21 +172,25 @@ export function AnimatedCard({ children, className, delay, duration, triggerOnce
   );
 }
 
-// Componente para botões com animações
-export const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps & { disabled?: boolean }>(
-  ({ children, className, disabled, ...props }, ref) => {
+// Componente para botões com animações premium
+export const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps & { disabled?: boolean; variant?: string }>(
+  ({ children, className, disabled, variant, ...props }, ref) => {
     return (
       <motion.div
         variants={animationPresets.button.variants}
         initial={animationPresets.button.initial}
-        whileHover={!disabled ? animationPresets.button.whileHover : undefined}
-        whileTap={!disabled ? animationPresets.button.whileTap : undefined}
+        whileHover={!disabled ? { scale: 1.02, transition: { duration: 0.2 } } : undefined}
+        whileTap={!disabled ? { scale: 0.98, transition: { duration: 0.1 } } : undefined}
         animate={disabled ? "loading" : "idle"}
         transition={animationPresets.button.transition}
       >
         <Button
           ref={ref}
-          className={cn(className)}
+          className={cn(
+            variant === "premium" && "[&_svg]:transition-transform [&_svg]:duration-300 hover:[&_svg]:translate-x-0.5",
+            className
+          )}
+          variant={variant as any}
           disabled={disabled}
           {...props}
         >

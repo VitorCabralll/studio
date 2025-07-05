@@ -43,13 +43,15 @@ export class LLMRouter {
     scoredLLMs.sort((a, b) => b.score - a.score);
 
     const selected = scoredLLMs[0];
-    const alternatives = scoredLLMs.slice(1, 4).map(s => s.llm);
+    
+    // NÃO FORNECER ALTERNATIVES - Se o selecionado falhar, FALHE HONESTAMENTE
+    // Alternatives dão falsa sensação de que "vai funcionar de qualquer jeito"
 
     return {
       selectedLLM: selected.llm,
       reasoning: this.generateReasoning(selected.llm, effectiveCriteria),
       confidence: this.calculateConfidence(selected.score, scoredLLMs),
-      alternatives,
+      alternatives: [], // REMOVIDO: Não mentir que há alternativas automáticas
       estimatedCost: selected.estimatedCost,
       estimatedLatency: selected.estimatedLatency
     };

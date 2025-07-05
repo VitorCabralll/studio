@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-// import { SpeedInsights } from "@vercel/speed-insights/next"; // Temporarily disabled to fix 404 error
+// import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from './fonts';
-import { ErrorBoundary } from '@/components/layout/error-boundary';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { SkipLinks } from '@/components/layout/skip-links';
 import { ResourcePreloader } from '@/components/optimization/resource-preloader';
 import { WebVitals } from '@/components/optimization/web-vitals';
@@ -82,7 +82,8 @@ export default function RootLayout({
                 </WorkspaceProvider>
               </AuthProvider>
           </ThemeProvider>
-          {/* <ErrorBoundary>
+          {/* Speed Insights temporarily disabled
+          <ErrorBoundary>
             <SpeedInsights />
           </ErrorBoundary> */}
         </ErrorBoundary>

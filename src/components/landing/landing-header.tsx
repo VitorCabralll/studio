@@ -12,7 +12,7 @@ export function LandingHeader() {
   const navigation = [
     { name: "Recursos", href: "#features" },
     { name: "Preços", href: "#pricing" },
-    { name: "Segurança", href: "#security" },
+    { name: "Depoimentos", href: "#testimonials" },
     { name: "Contato", href: "#contact" },
   ];
 

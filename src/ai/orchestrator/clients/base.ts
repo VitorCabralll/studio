@@ -73,8 +73,10 @@ export abstract class BaseLLMClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout');
+        // NÃO MASCARAR - Timeout é falha específica da API/rede
+        throw new Error(`LLM API timeout após ${this.options.timeout || 30000}ms. Serviço indisponível ou sobregregado.`);
       }
+      // NÃO MASCARAR ERRO ORIGINAL
       throw error;
     }
   }

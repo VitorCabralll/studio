@@ -22,19 +22,34 @@ abstract class BaseLLMProcessor implements PipelineProcessor {
     context: PipelineContext, 
     criteria?: any
   ): Promise<LLMResponse> {
-    // FORÇA O USO APENAS DO GOOGLE AI
+    const { isProviderAvailable } = await import('./clients');
     const { DOCUMENT_TYPE_CONFIGS } = await import('./config');
+    
     const documentConfig = context.input.documentType && 
       context.input.documentType in DOCUMENT_TYPE_CONFIGS ? 
       DOCUMENT_TYPE_CONFIGS[context.input.documentType as keyof typeof DOCUMENT_TYPE_CONFIGS] : null;
     
-    // Determina qual modelo Gemini usar
-    const model = criteria?.preferredModel || 
-                  documentConfig?.preferredModel || 
-                  (criteria?.qualityRequirement === 'premium' ? 'gemini-1.5-pro' : 'gemini-1.5-flash');
+    // Escolhe provider baseado na disponibilidade
+    let provider: 'google' | 'openai' = 'google';
+    let model = criteria?.preferredModel || documentConfig?.preferredModel || 'gemini-1.5-pro';
+    
+    // Se Google AI não disponível, usa OpenAI
+    if (!isProviderAvailable('google') && isProviderAvailable('openai')) {
+      provider = 'openai';
+      model = documentConfig?.fallbackModel || 'gpt-4o';
+    } else if (!isProviderAvailable('google') && !isProviderAvailable('openai')) {
+      throw new Error('Nenhum provider de IA disponível. Verifique as API keys.');
+    }
 
-    const client = createLLMClient('google', {
-      apiKey: process.env.GOOGLE_AI_API_KEY || '',
+    const apiKeyEnv = provider === 'google' ? 'GOOGLE_AI_API_KEY' : 'OPENAI_API_KEY';
+    const apiKey = process.env[apiKeyEnv];
+    
+    if (!apiKey) {
+      throw new Error(`API key não encontrada para ${provider}`);
+    }
+
+    const client = createLLMClient(provider, {
+      apiKey,
       timeout: 30000
     });
 
@@ -248,17 +263,31 @@ Forneça estrutura clara e hierárquica.
  */
 export class ContentGenerationProcessor extends BaseLLMProcessor {
   async process(input: any, context: PipelineContext): Promise<any> {
-    // Corrigido: obter structure dos resultados intermediários
-    const structure = context.intermediateResults['structure_definition'];
+    // Obtém structure dos resultados intermediários ou usa input direto
+    const structure = context.intermediateResults['structure_definition'] || input;
     const sections: Record<string, string> = {};
     
-    // Validação: garantir que structure.sections existe e é iterável
-    if (!structure || !Array.isArray(structure.sections)) {
-      throw new Error('Invalid structure: sections not found or not iterable');
+    // Validação melhorada: aceita diferentes formatos de estrutura
+    let sectionsToProcess: string[] = [];
+    
+    if (structure?.sections && Array.isArray(structure.sections)) {
+      sectionsToProcess = structure.sections;
+    } else if (Array.isArray(structure)) {
+      sectionsToProcess = structure;
+    } else if (typeof structure === 'object' && structure?.outline) {
+      // Extrai seções do outline se disponível
+      sectionsToProcess = this.extractSectionsFromOutline(structure.outline);
+    } else {
+      // Fallback para seções padrão
+      sectionsToProcess = ['introdução', 'desenvolvimento', 'conclusão'];
+    }
+    
+    if (sectionsToProcess.length === 0) {
+      throw new Error('Nenhuma seção válida encontrada para processamento');
     }
     
     // Gera conteúdo para cada seção
-    for (const section of structure.sections) {
+    for (const section of sectionsToProcess) {
       const prompt = this.buildSectionPrompt(section, context);
       const response = await this.callLLM(prompt, context, {
         preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
@@ -272,6 +301,14 @@ export class ContentGenerationProcessor extends BaseLLMProcessor {
     }
     
     return sections;
+  }
+  
+  private extractSectionsFromOutline(outline: string): string[] {
+    // Extrai seções de um outline de texto
+    const matches = outline.match(/\d+\.[\s]*([^:\n]+)/g) || [];
+    return matches.map(match => 
+      match.replace(/\d+\.[\s]*/, '').trim()
+    ).filter(section => section.length > 0);
   }
 
   private buildSectionPrompt(section: string, context: PipelineContext): string {

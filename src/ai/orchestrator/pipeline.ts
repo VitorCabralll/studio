@@ -94,32 +94,8 @@ export class DocumentPipeline {
         });
       }
       
-      return {
-        success: false,
-        error: {
-          code: 'PIPELINE_ERROR',
-          message: this.getUserFriendlyErrorMessage(error, context.stage),
-          stage: context.stage,
-          retryable: this.isRetryableError(error),
-          timestamp: new Date(),
-          details: process.env.NODE_ENV === 'development' ? {
-            originalError: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
-          } : undefined
-        },
-        metadata: {
-          processingTime: trace.totalDuration,
-          llmUsed: [],
-          totalCost: trace.totalCost,
-          tokensUsed: {
-            promptTokens: 0,
-            completionTokens: 0,
-            totalTokens: 0
-          },
-          confidence: 0
-        },
-        pipeline: trace
-      };
+      // NÃO RETORNAR METADATA FAKE - Falha é falha, sem dados cosméticos
+      throw new Error(`Pipeline falhou no estágio '${context.stage}': ${error instanceof Error ? error.message : 'Erro técnico desconhecido'}`);
     }
   }
 
@@ -130,7 +106,7 @@ export class DocumentPipeline {
     const stageTrace: StageTrace = {
       stageName: stage.name,
       startTime: new Date(),
-      input: context.intermediateResults
+      input: context.input
     };
 
     context.stage = stage.name;
@@ -138,13 +114,13 @@ export class DocumentPipeline {
 
     try {
       // Valida entrada se necessário
-      if (stage.processor.validate && !stage.processor.validate(context.intermediateResults)) {
+      if (stage.processor.validate && !stage.processor.validate(context.input)) {
         throw new Error(`Validação falhou para o estágio ${stage.name}`);
       }
 
       // Executa o processador
       const result = await this.executeWithTimeout(
-        () => stage.processor.process(context.intermediateResults, context),
+        () => stage.processor.process(context.input, context),
         stage.timeout || 30000
       );
 
@@ -226,7 +202,7 @@ export class DocumentPipeline {
 
         // Tenta executar novamente
         const result = await this.executeWithTimeout(
-          () => stage.processor.process(context.intermediateResults, context),
+          () => stage.processor.process(context.input, context),
           stage.timeout || 30000
         );
 
@@ -265,14 +241,12 @@ export class DocumentPipeline {
       suggestions: this.generateSuggestions(intermediateResults),
       citations: this.extractCitations(intermediateResults),
       structuredData: {
-        summary: summary || '',
-        structure: structure || '',
-        sections: sections || '',
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          taskType: input.taskType,
-          legalArea: input.legalArea
-        }
+        summary: summary as string || '',
+        structure: JSON.stringify(structure) || '',
+        sections: JSON.stringify(sections) || '',
+        generatedAt: new Date().toISOString(),
+        taskType: input.taskType,
+        legalArea: input.legalArea || ''
       }
     };
   }

@@ -39,8 +39,8 @@ export function OfflineBanner({ isOffline, message }: OfflineBannerProps) {
   if (!isVisible) return null;
 
   const displayMessage = message || (networkStatus === 'offline' 
-    ? 'Sem conexão com a internet. Funcionando em modo offline.'
-    : 'Sem conexão com o servidor. Alguns recursos podem não funcionar.');
+    ? 'Sem conexão com internet. OCR funciona localmente, mas salvamento/sincronização indisponíveis.'
+    : 'Sem conexão com servidor Firebase. Dados não serão salvos até reconexão.');
 
   return (
     <Alert className="border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-200">

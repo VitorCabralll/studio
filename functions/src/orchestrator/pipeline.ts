@@ -3,7 +3,6 @@
  * Executa as etapas sequenciais de geração de documentos
  */
 
-import { DEMO_FALLBACK_CONFIG } from './config';
 import {
   ProcessingInput,
   ProcessingOutput,
@@ -84,11 +83,11 @@ export class DocumentPipeline {
     } catch (error) {
       trace.totalDuration = Date.now() - startTime;
       
-      // Verifica se deve usar fallback transparente
-      if (DEMO_FALLBACK_CONFIG.ENABLE_FALLBACK) {
-        console.warn('Pipeline falhou, usando fallback transparente:', error);
-        return this.generateFallbackResponse(input, error, trace.totalDuration);
-      }
+      // Log do erro para debugging
+      console.error('[Pipeline Error]', {
+        stage: context.stage,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       
       return {
         success: false,
@@ -252,7 +251,7 @@ export class DocumentPipeline {
     const finalContent = intermediateResults['assembly'] || '';
 
     return {
-      content: finalContent || this.fallbackAssembly(sections, structure),
+      content: finalContent || this.assembleFromSections(sections, structure),
       documentType: input.documentType,
       confidence: this.calculateDocumentConfidence(intermediateResults),
       suggestions: this.generateSuggestions(intermediateResults),
@@ -271,9 +270,9 @@ export class DocumentPipeline {
   }
 
   /**
-   * Montagem de fallback se o estágio de assembly falhar
+   * Montagem de documento a partir das seções geradas
    */
-  private fallbackAssembly(sections: any, _structure: any): string {
+  private assembleFromSections(sections: any, _structure: any): string {
     if (typeof sections === 'string') return sections;
     
     if (typeof sections === 'object') {
@@ -333,88 +332,5 @@ export class DocumentPipeline {
     return Array.isArray(citations) ? citations : [];
   }
 
-  /**
-   * Gera resposta de fallback transparente
-   * TRANSPARENTE: Informa claramente que é um fallback
-   */
-  private generateFallbackResponse(input: ProcessingInput, originalError: any, processingTime: number): ProcessingOutput {
-    // Mapear tipo de documento
-    const docType = this.mapDocumentType(input.documentType);
-    const fallbackDoc = DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS[docType as keyof typeof DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS] || 
-                       DEMO_FALLBACK_CONFIG.FALLBACK_DOCUMENTS['petition'];
 
-    // Simular tempo de processamento realista (2-5 segundos)
-    const simulatedTime = Math.max(processingTime, 2000 + Math.random() * 3000);
-
-    return {
-      success: true,
-      result: {
-        content: fallbackDoc,
-        documentType: input.documentType,
-        confidence: 0.85, // Boa qualidade, mas não perfeita
-        suggestions: [
-          'Este documento foi gerado em modo fallback',
-          'Para geração personalizada, verifique conectividade das APIs',
-          'Documento baseado em template padrão para demonstração'
-        ],
-        citations: [],
-        structuredData: {
-          summary: 'Documento gerado em modo fallback para demonstração',
-          structure: { type: 'fallback_template' },
-          sections: { content: fallbackDoc },
-          metadata: {
-            generatedAt: new Date().toISOString(),
-            taskType: input.taskType,
-            legalArea: input.legalArea,
-            fallbackMode: true, // TRANSPARÊNCIA TOTAL
-            originalError: originalError?.message || 'API temporariamente indisponível'
-          }
-        }
-      },
-      metadata: {
-        processingTime: simulatedTime,
-        llmUsed: [{ provider: 'fallback_system', model: 'template' } as any],
-        totalCost: 0, // Fallback não custa nada
-        tokensUsed: {
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
-          cost: 0
-        },
-        confidence: 0.85
-        // fallbackUsed e fallbackReason adicionados via structuredData.metadata
-      },
-      pipeline: {
-        stages: [{
-          stageName: 'fallback_generation',
-          startTime: new Date(),
-          endTime: new Date(),
-          duration: simulatedTime,
-          input: { fallback: true },
-          llmUsed: { provider: 'fallback_system', model: 'template' } as any,
-          output: 'Documento gerado via sistema de fallback'
-        }],
-        totalDuration: simulatedTime,
-        totalCost: 0,
-        totalTokens: 0,
-        errors: []
-      }
-    };
-  }
-
-  /**
-   * Mapeia tipos de documento para templates de fallback
-   */
-  private mapDocumentType(documentType: string): string {
-    const mapping: Record<string, string> = {
-      'petition': 'petition',
-      'contract': 'contract', 
-      'brief': 'brief',
-      'motion': 'petition',
-      'appeal': 'petition',
-      'agreement': 'contract'
-    };
-    
-    return mapping[documentType] || 'petition';
-  }
 }

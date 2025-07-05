@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/fires
 import type { ServiceResult, ServiceError } from './user-service';
 import { getFirebaseDb } from '@/lib/firebase';
 import { enforceMaximumPrivacy } from './privacy-enforcer';
+import { processFileWithOCR, convertToExtractedText, isFileSupported } from './ocr-service';
 
 // Tipos para processamento de documentos
 export interface ExtractedText {
@@ -219,40 +220,54 @@ export async function processUserDocuments(
       onProgress?.(progress, `Processando ${file.name}...`);
 
       try {
-        // Aqui seria a integração com OCR (Tesseract.js)
-        // Por enquanto, simulação para arquivos de texto
-        let extractedText = '';
+        let extractedText: ExtractedText;
         
         if (file.type.startsWith('text/')) {
-          // Arquivos de texto podem ser lidos diretamente
-          extractedText = await file.text();
+          // Arquivos de texto - leitura direta
+          console.log(`📄 Lendo arquivo de texto: ${file.name}`);
+          const textContent = await file.text();
+          extractedText = {
+            source: file.name,
+            content: textContent,
+            type: 'ocr',
+            confidence: 1.0,
+            processedAt: new Date(),
+            size: file.size
+          };
+        } else if (isFileSupported(file)) {
+          // Arquivos de imagem/PDF - OCR REAL LOCAL
+          console.log(`🔍 Processando ${file.name} com OCR local...`);
+          
+          const ocrResult = await processFileWithOCR(file, {
+            language: 'por+eng',
+            onProgress: (progress, message) => {
+              const overallProgress = Math.round(((i + progress) / totalFiles) * 100);
+              onProgress?.(overallProgress, `${message} (${file.name})`);
+            }
+          });
+          
+          extractedText = convertToExtractedText(ocrResult, file.name, file.size);
+          
+          console.log(`✅ OCR concluído: ${file.name} (${(ocrResult.confidence * 100).toFixed(1)}% confiança)`);
         } else {
-          // Para PDFs e imagens, seria usado o Tesseract.js
-          // Simulação por enquanto
-          extractedText = `[SIMULAÇÃO OCR] Texto extraído de ${file.name}`;
+          // Tipo não suportado
+          throw new Error(`Tipo de arquivo não suportado: ${file.type}`);
         }
 
-        const textData: ExtractedText = {
-          source: file.name,
-          content: extractedText,
-          type: 'ocr',
-          confidence: 0.95, // Simulação
-          processedAt: new Date(),
-          size: file.size
-        };
-
-        extractedTexts.push(textData);
+        extractedTexts.push(extractedText);
 
         // IMPORTANTE: O arquivo File não é salvo em lugar nenhum
-        // Apenas o texto extraído é mantido
+        // Apenas o texto extraído é mantido - MÁXIMA PRIVACIDADE
 
       } catch (fileError) {
-        console.error(`Erro ao processar arquivo ${file.name}:`, fileError);
+        console.error(`❌ FALHA no processamento de ${file.name}:`, fileError);
         
-        // Continuar com próximo arquivo mesmo se um falhar
+        // Registrar falha mas continuar com outros arquivos
+        const errorDetails = fileError instanceof Error ? fileError.message : 'Erro técnico não identificado';
+        
         const errorText: ExtractedText = {
           source: file.name,
-          content: `[ERRO] Não foi possível extrair texto de ${file.name}`,
+          content: '', // Texto vazio para falhas reais
           type: 'ocr',
           confidence: 0,
           processedAt: new Date(),
@@ -260,6 +275,9 @@ export async function processUserDocuments(
         };
 
         extractedTexts.push(errorText);
+        
+        // Log detalhado para debugging
+        console.warn(`⚠️ Arquivo ${file.name} falhou: ${errorDetails} (${file.type}, ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       }
     }
 

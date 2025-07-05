@@ -78,6 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     const auth = getFirebaseAuth();
+    let retryTimeoutRef: NodeJS.Timeout;
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('🔄 Auth state changed:', { hasUser: !!user, uid: user?.uid });
@@ -109,10 +110,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (error instanceof Error && (
             error.message.includes('network') || 
             error.message.includes('offline') ||
-            error.message.includes('unavailable')
+            error.message.includes('unavailable') ||
+            error.message.includes('Failed to get document')
           )) {
             console.log('🔄 Tentando recarregar perfil em 3 segundos...');
-            setTimeout(async () => {
+            retryTimeoutRef = setTimeout(async () => {
               try {
                 const retryProfile = await loadUserProfile(user);
                 setState(prev => ({ 
@@ -121,7 +123,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   error: null
                 }));
               } catch (retryError) {
-                console.error('Retry failed:', retryError);
+                console.error('Retry failed, creating default profile:', retryError);
+                // Se falhar novamente, criar perfil padrão
+                const defaultProfile = {
+                  cargo: '',
+                  areas_atuacao: [],
+                  primeiro_acesso: true,
+                  initial_setup_complete: false,
+                  data_criacao: new Date(),
+                  workspaces: [],
+                };
+                setState(prev => ({ 
+                  ...prev, 
+                  userProfile: defaultProfile,
+                  error: null
+                }));
               }
             }, 3000);
           }
@@ -138,7 +154,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (retryTimeoutRef) {
+        clearTimeout(retryTimeoutRef);
+      }
+    };
   }, []);
 
   // Retry loading profile

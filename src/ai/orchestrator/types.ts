@@ -44,7 +44,7 @@ export interface ContextItem {
   content: string;
   confidence?: number;
   source?: string;
-  structured?: Record<string, unknown>;
+  structured?: StructuredData;
 }
 
 export interface ProcessingOutput {
@@ -61,7 +61,7 @@ export interface GeneratedDocument {
   confidence: number;
   suggestions?: string[];
   citations?: Citation[];
-  structuredData?: Record<string, unknown>;
+  structuredData?: StructuredData;
 }
 
 // ====================================
@@ -107,7 +107,7 @@ export interface LLMRequest {
   temperature?: number;
   systemPrompt?: string;
   functions?: LLMFunction[];
-  options?: Record<string, unknown>;
+  options?: LLMRequestOptions;
 }
 
 export interface LLMResponse {
@@ -115,7 +115,7 @@ export interface LLMResponse {
   finishReason: 'stop' | 'length' | 'function_call' | 'content_filter' | 'error';
   usage?: TokenUsage;
   functionCall?: FunctionCall;
-  metadata?: Record<string, unknown>;
+  metadata?: LLMResponseMetadata;
 }
 
 export interface LLMFunction {
@@ -126,7 +126,7 @@ export interface LLMFunction {
 
 export interface FunctionCall {
   name: string;
-  arguments: Record<string, unknown>;
+  arguments: FunctionArguments;
 }
 
 export interface TokenUsage {
@@ -173,15 +173,15 @@ export interface PipelineStage {
 }
 
 export interface PipelineProcessor {
-  process(input: unknown, context: PipelineContext): Promise<unknown>;
-  validate?(input: unknown): boolean;
-  transform?(output: unknown): unknown;
+  process(input: ProcessingInput, context: PipelineContext): Promise<ProcessingResult>;
+  validate?(input: ProcessingInput): boolean;
+  transform?(output: ProcessingResult): ProcessingResult;
 }
 
 export interface PipelineContext {
   stage: string;
   input: ProcessingInput;
-  intermediateResults: Record<string, unknown>;
+  intermediateResults: Record<string, ProcessingResult>;
   llmClients: Record<LLMProvider, LLMClientInterface>;
   config: OrchestratorConfig;
   trace: PipelineTrace;
@@ -200,8 +200,8 @@ export interface StageTrace {
   startTime: Date;
   endTime?: Date;
   duration?: number;
-  input: unknown;
-  output?: unknown;
+  input: ProcessingInput;
+  output?: ProcessingResult;
   error?: ProcessingError;
   llmUsed?: LLMConfig;
   tokensUsed?: TokenUsage;
@@ -257,7 +257,7 @@ export interface TemplateVariable {
   type: 'string' | 'number' | 'date' | 'boolean' | 'array';
   required: boolean;
   description: string;
-  defaultValue?: unknown;
+  defaultValue?: TemplateVariableValue;
 }
 
 export interface ValidationRule {
@@ -281,7 +281,7 @@ export interface DocumentVector {
   id: string;
   content: string;
   embedding: number[];
-  metadata: Record<string, unknown>;
+  metadata: DocumentMetadata;
 }
 
 export interface LegalPrecedent {
@@ -319,7 +319,7 @@ export interface ProcessingError {
   provider?: LLMProvider;
   retryable: boolean;
   timestamp: Date;
-  details?: Record<string, unknown>;
+  details?: ErrorDetails;
 }
 
 export interface RetryConfig {
@@ -389,4 +389,80 @@ export interface Citation {
   type: 'law' | 'precedent' | 'regulation' | 'doctrine';
   relevance: number;
   excerpt?: string;
+}
+
+// ====================================
+// ENHANCED TYPE DEFINITIONS
+// ====================================
+
+export interface StructuredData {
+  [key: string]: JSONSchemaType;
+}
+
+export interface LLMRequestOptions {
+  temperature?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stop?: string[];
+  seed?: number;
+  logitBias?: Record<string, number>;
+  user?: string;
+  [key: string]: string | number | boolean | null | undefined | string[] | Record<string, number>;
+}
+
+export interface LLMResponseMetadata {
+  model?: string;
+  timestamp?: Date;
+  processingTime?: number;
+  requestId?: string;
+  [key: string]: string | number | boolean | null | undefined | Date;
+}
+
+export interface FunctionArguments {
+  [key: string]: JSONSchemaType;
+}
+
+export type ProcessingResult = string | StructuredData | GeneratedDocument | ContextAnalysisResult | StructureDefinition;
+
+export interface ContextAnalysisResult {
+  mainTopics: string[];
+  legalAreas: LegalArea[];
+  documentTypes: DocumentType[];
+  keyEntities: string[];
+  confidence: number;
+}
+
+export interface StructureDefinition {
+  sections: SectionDefinition[];
+  format: 'formal' | 'casual' | 'technical';
+  estimatedLength: number;
+}
+
+export interface SectionDefinition {
+  name: string;
+  description: string;
+  required: boolean;
+  minLength?: number;
+  maxLength?: number;
+}
+
+export type TemplateVariableValue = string | number | Date | boolean | Array<JSONSchemaType>;
+
+export interface DocumentMetadata {
+  createdAt?: Date;
+  updatedAt?: Date;
+  author?: string;
+  version?: string;
+  tags?: string[];
+  size?: number;
+  [key: string]: string | number | boolean | null | undefined | Date | string[];
+}
+
+export interface ErrorDetails {
+  stack?: string;
+  context?: string;
+  userId?: string;
+  requestId?: string;
+  [key: string]: string | number | boolean | null | undefined;
 }

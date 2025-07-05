@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, File, X, ScanText, FileImage, CheckCircle } from 'lucide-react';
+import { UploadCloud, File, X, ScanText, FileImage, CheckCircle, Shield } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -149,8 +149,25 @@ export function FileUploadEnhanced({
               </h3>
               <p className="text-body-large mx-auto max-w-md leading-relaxed text-muted-foreground">
                 Clique para selecionar arquivos ou arraste e solte aqui. 
-                {enableOCR && <span className="font-medium text-blue-600">Texto será extraído via OCR local (arquivos não são salvos)</span>}
               </p>
+              {enableOCR && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mx-auto max-w-sm rounded-lg border border-green-200/50 bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:border-green-800/50 dark:from-green-950/30 dark:to-emerald-950/30"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="size-4 text-green-600 dark:text-green-400" />
+                    <span className="font-semibold text-green-800 dark:text-green-200">
+                      100% Seguro
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-green-600 dark:text-green-300">
+                    OCR processado localmente • Seus arquivos nunca saem do seu dispositivo
+                  </p>
+                </motion.div>
+              )}
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <Badge variant="secondary" className="bg-muted/50 text-xs text-muted-foreground">
                   PDF
@@ -184,10 +201,15 @@ export function FileUploadEnhanced({
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {processing ? 'Processando documentos...' : 'Processamento concluído!'}
+                {processing ? 'Processando documentos com segurança...' : 'Processamento concluído!'}
               </p>
               {status && (
                 <p className="text-xs text-muted-foreground">{status}</p>
+              )}
+              {processing && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  🔒 Processamento local • Dados não são transmitidos
+                </p>
               )}
               <Progress value={progress} className="mt-1 h-1" />
             </div>

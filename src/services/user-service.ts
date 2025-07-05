@@ -45,23 +45,23 @@ function createServiceError(error: unknown, operation: string): ServiceError {
   };
 }
 
-// Mensagens amigáveis para códigos de erro do Firestore
+// TRANSPARÊNCIA TOTAL - Erro real sem mascaramento
 function getFirestoreErrorMessage(code: string): string {
   switch (code) {
     case 'permission-denied':
-      return 'Você não tem permissão para acessar este recurso.';
+      return `Firestore rejeitou acesso: permission-denied. Verifique regras de segurança.`;
     case 'not-found':
-      return 'Dados não encontrados.';
+      return `Firestore: Documento/coleção não existe (not-found).`;
     case 'unavailable':
-      return 'Serviço temporariamente indisponível. Tente novamente.';
+      return `Firestore indisponível (unavailable). Servidor com problemas.`;
     case 'cancelled':
-      return 'Operação cancelada.';
+      return `Firestore: Operação cancelada pelo servidor (cancelled).`;
     case 'deadline-exceeded':
-      return 'Tempo limite excedido. Verifique sua conexão.';
+      return `Firestore timeout (deadline-exceeded). Consulta muito lenta ou rede instável.`;
     case 'unauthenticated':
-      return 'Você precisa estar logado para realizar esta ação.';
+      return `Firestore: Token de autenticação inválido/expirado (unauthenticated).`;
     default:
-      return 'Ocorreu um erro inesperado. Tente novamente.';
+      return `Firestore erro desconhecido: ${code}. Consulte documentação Firebase.`;
   }
 }
 

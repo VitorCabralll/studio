@@ -136,7 +136,7 @@ export class ErrorBoundary extends Component<Props, State> {
 // Hook para uso em componentes funcionais (opcional)
 export function useErrorHandler() {
   return (error: Error, errorInfo?: string) => {
-    console.error('Erro capturado:', error);
+    console.error('Erro capturado:', error, errorInfo);
     throw error; // Re-throw para que o ErrorBoundary possa capturar
   };
 }

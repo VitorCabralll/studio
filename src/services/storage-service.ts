@@ -45,6 +45,92 @@ function createStorageError(error: unknown, operation: string): ServiceError {
 }
 
 /**
+ * Validar arquivo por magic numbers (headers dos arquivos)
+ * Previne upload de arquivos maliciosos com MIME type falsificado
+ * @param file - Arquivo a ser validado
+ * @returns Resultado da validação
+ */
+async function validateFileByMagicNumbers(file: File): Promise<ServiceResult<boolean>> {
+  try {
+    // Ler apenas os primeiros 16 bytes para verificar magic numbers
+    const buffer = await file.slice(0, 16).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    
+    // Converter para string hexadecimal para comparação
+    const hex = Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Magic numbers conhecidos para arquivos permitidos
+    const magicNumbers = {
+      // DOCX files (ZIP-based format)
+      docx: ['504b0304', '504b0506', '504b0708'], // PK headers
+      // PDF files
+      pdf: ['25504446'] // %PDF
+    };
+    
+    // Verificar se o arquivo corresponde aos magic numbers esperados
+    const isValidDOCX = magicNumbers.docx.some(magic => 
+      hex.toLowerCase().startsWith(magic.toLowerCase())
+    );
+    
+    const isValidPDF = magicNumbers.pdf.some(magic => 
+      hex.toLowerCase().startsWith(magic.toLowerCase())
+    );
+    
+    if (!isValidDOCX && !isValidPDF) {
+      return {
+        data: false,
+        error: {
+          code: 'invalid-file-format',
+          message: 'Arquivo não corresponde ao formato esperado. Possível tentativa de upload malicioso.',
+          details: `Magic number detectado: ${hex.substring(0, 8)}`
+        },
+        success: false
+      };
+    }
+    
+    // Validação adicional: verificar se MIME type está consistente com magic number
+    if (isValidDOCX && !file.type.includes('wordprocessingml')) {
+      return {
+        data: false,
+        error: {
+          code: 'mime-type-mismatch',
+          message: 'MIME type não corresponde ao formato real do arquivo.',
+          details: `MIME type informado: ${file.type}, formato real: DOCX`
+        },
+        success: false
+      };
+    }
+    
+    if (isValidPDF && !file.type.includes('pdf')) {
+      return {
+        data: false,
+        error: {
+          code: 'mime-type-mismatch',
+          message: 'MIME type não corresponde ao formato real do arquivo.',
+          details: `MIME type informado: ${file.type}, formato real: PDF`
+        },
+        success: false
+      };
+    }
+    
+    return { data: true, error: null, success: true };
+    
+  } catch (error) {
+    return {
+      data: false,
+      error: {
+        code: 'validation-error',
+        message: 'Erro na validação do arquivo',
+        details: String(error)
+      },
+      success: false
+    };
+  }
+}
+
+/**
  * Upload de template para Firebase Storage
  * APENAS para templates de agentes (.docx) - NÃO para documentos do usuário
  * @param file - Arquivo de template (.docx)
@@ -83,6 +169,16 @@ export async function uploadTemplate(
           code: 'invalid-file-type',
           message: 'Apenas arquivos .docx (templates) e .pdf (gerados) são permitidos.'
         },
+        success: false
+      };
+    }
+
+    // Validação adicional por magic numbers (headers dos arquivos)
+    const magicNumberValidation = await validateFileByMagicNumbers(file);
+    if (!magicNumberValidation.success) {
+      return {
+        data: null,
+        error: magicNumberValidation.error,
         success: false
       };
     }

@@ -11,21 +11,28 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { GenerationErrorBoundary } from '@/components/error-boundaries/generation-error-boundary';
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { copyToClipboard as copyTextToClipboard } from '@/lib/clipboard';
 
-// Temporarily commented out to fix import errors
+// Flows importados mas não utilizados ainda - remover temporariamente
 // import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
 // import { contextualDocumentGeneration, ContextualDocumentGenerationInput } from '@/ai/flows/contextual-document-generation';
 
-// Temporary types (commented out - not currently used)
-
-const steps = [
-  { id: 1, title: 'Modo de Geração' },
-  { id: 2, title: 'Seleção de Agente' },
-  { id: 3, title: 'Instruções' },
-  { id: 4, title: 'Anexos' },
-];
+const getSteps = (mode: 'simple' | 'advanced') => {
+  if (mode === 'simple') {
+    return [
+      { id: 1, title: 'Instruções' },
+      { id: 2, title: 'Anexos' },
+    ];
+  }
+  return [
+    { id: 1, title: 'Modo de Geração' },
+    { id: 2, title: 'Seleção de Agente' },
+    { id: 3, title: 'Instruções' },
+    { id: 4, title: 'Anexos' },
+  ];
+};
 
 const progressStages = [
   'Analisando instruções...',
@@ -53,10 +60,16 @@ const agentInfo = {
   }
 };
 
-export function GenerationWizard() {
+interface GenerationWizardProps {
+  mode?: 'simple' | 'advanced';
+}
+
+export function GenerationWizard({ mode = 'advanced' }: GenerationWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [generationMode, setGenerationMode] = useState<'outline' | 'full'>('outline');
+  const [generationMode, setGenerationMode] = useState<'outline' | 'full'>(mode === 'simple' ? 'full' : 'outline');
   const [agent, setAgent] = useState('geral');
+  
+  const steps = getSteps(mode);
   const [instructions, setInstructions] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [extractedText, setExtractedText] = useState('');
@@ -196,12 +209,34 @@ export function GenerationWizard() {
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-3">
-      <AnnouncementRegion />
+    <GenerationErrorBoundary 
+      onRetry={() => {
+        setError(null);
+        setIsGenerating(false);
+        setGeneratedDocument('');
+      }}
+      onBack={() => setCurrentStep(1)}
+    >
+      <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-3">
+        <AnnouncementRegion />
       <Card className="surface-elevated shadow-apple-md hover:shadow-apple-lg flex flex-col transition-all duration-500 lg:col-span-1">
         <CardHeader className="pb-6">
-          <CardTitle id="wizard-title" className="text-headline">Gerar Novo Documento</CardTitle>
-          <CardDescription className="text-body-large">Siga os passos para criar seu documento com IA.</CardDescription>
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle id="wizard-title" className="text-headline">Gerar Novo Documento</CardTitle>
+            <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+              mode === 'simple' 
+                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
+                : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+            }`}>
+              {mode === 'simple' ? '⚡ Modo Simples' : '⚙️ Modo Avançado'}
+            </div>
+          </div>
+          <CardDescription className="text-body-large">
+            {mode === 'simple' 
+              ? 'Interface otimizada para geração rápida de documentos.' 
+              : 'Siga os passos para criar seu documento com IA.'
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col justify-between">
             <div>
@@ -250,7 +285,7 @@ export function GenerationWizard() {
                 </div>
                 <div className="mt-8 space-y-4">
                   <AnimatePresence mode="wait">
-                    {currentStep === 1 && (
+                    {mode === 'advanced' && currentStep === 1 && (
                       <motion.div
                         key="step-1"
                         initial={{ opacity: 0, x: 20 }}
@@ -297,7 +332,7 @@ export function GenerationWizard() {
                         </RadioGroup>
                       </motion.div>
                     )}
-                    {currentStep === 2 && (
+                    {mode === 'advanced' && currentStep === 2 && (
                       <motion.div
                         key="step-2"
                         initial={{ opacity: 0, x: 20 }}
@@ -363,7 +398,7 @@ export function GenerationWizard() {
                         )}
                       </motion.div>
                     )}
-                    {currentStep === 3 && (
+                    {((mode === 'simple' && currentStep === 1) || (mode === 'advanced' && currentStep === 3)) && (
                       <motion.div
                         key="step-3"
                         initial={{ opacity: 0, x: 20 }}
@@ -411,7 +446,7 @@ export function GenerationWizard() {
                         )}
                       </motion.div>
                     )}
-                    {currentStep === 4 && (
+                    {((mode === 'simple' && currentStep === 2) || (mode === 'advanced' && currentStep === 4)) && (
                       <motion.div
                         key="step-4"
                         initial={{ opacity: 0, x: 20 }}
@@ -678,6 +713,7 @@ export function GenerationWizard() {
           </AnimatePresence>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </GenerationErrorBoundary>
   );
 }

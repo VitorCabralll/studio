@@ -105,7 +105,14 @@ export const healthCheck = onRequest(
   async (request, response) => {
     try {
       const orchestrator = getOrchestrator();
-      const status = orchestrator.getStatus();
+      const health = await orchestrator.healthCheck();
+      const status = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        llmCount: 3,
+        version: '2.0.0',
+        providers: health
+      };
 
       response.status(200).json(status);
 

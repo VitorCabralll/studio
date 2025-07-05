@@ -1,15 +1,24 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, ArrowRight, Sparkles, Briefcase, Users } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Sparkles, Briefcase, Users, Scale, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function OnboardingSuccessPage() {
+  const { userProfile } = useAuth();
+  const router = useRouter();
+
+  const handleContinue = () => {
+    router.push('/workspace');
+  };
+
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-background via-background to-green-50/30 p-4 dark:to-green-950/20 md:p-8">
+    <div className="flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-8">
       {/* Background Pattern */}
       <div className="bg-grid-slate-200/20 dark:bg-grid-slate-700/20 pointer-events-none absolute inset-0" />
       
@@ -28,7 +37,7 @@ export default function OnboardingSuccessPage() {
               transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
               className="relative mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600"
             >
-              <CheckCircle className="size-10 text-white" />
+              <CheckCircle2 className="size-10 text-white" />
               
               {/* Sparkles animation */}
               <motion.div
@@ -57,7 +66,7 @@ export default function OnboardingSuccessPage() {
                 transition={{ delay: 0.4 }}
                 className="font-headline text-4xl font-bold text-green-600 dark:text-green-400"
               >
-                Parabéns! 🎉
+                🎉 Perfeito! Você está pronto!
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
@@ -65,7 +74,7 @@ export default function OnboardingSuccessPage() {
                 transition={{ delay: 0.5 }}
                 className="text-xl font-semibold"
               >
-                Seu perfil foi configurado com sucesso!
+                Vamos configurar seu ambiente LexAI para uma produtividade sem precedentes.
               </motion.p>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
@@ -73,7 +82,7 @@ export default function OnboardingSuccessPage() {
                 transition={{ delay: 0.6 }}
                 className="mx-auto max-w-lg text-lg leading-relaxed text-muted-foreground"
               >
-                Agora você está pronto para começar a criar documentos jurídicos com inteligência artificial. Escolha como gostaria de começar:
+                Agora vamos ao que realmente importa: <span className="font-semibold text-primary">transformar sua prática jurídica</span> com IA personalizada para {userProfile?.cargo || 'sua função'}.
               </motion.p>
             </div>
           </CardHeader>
@@ -134,22 +143,45 @@ export default function OnboardingSuccessPage() {
               </motion.div>
             </div>
             
-            {/* Quick Start */}
+            {/* Security Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+              className="mb-4"
+            >
+              <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <Shield className="size-5 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                      🔒 Seus dados estão protegidos com criptografia ponta-a-ponta e processamento local
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Main CTA */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
+              transition={{ delay: 1.2 }}
               className="border-t pt-6"
             >
-              <p className="mb-4 text-sm text-muted-foreground">
-                Ou pule direto para a criação de documentos:
-              </p>
-              <Button asChild variant="ghost" className="text-primary hover:text-primary/80">
-                <Link href="/generate">
-                  <Sparkles className="mr-2 size-4" />
-                  Gerar Documento Agora
-                </Link>
+              <Button 
+                onClick={handleContinue}
+                size="lg" 
+                className="w-full bg-gradient-to-r from-primary via-primary to-primary/90 shadow-xl hover:shadow-2xl h-14 text-lg font-semibold transition-all duration-500 hover:scale-105"
+              >
+                <Scale className="mr-3 size-5" />
+                Acessar meu Workspace
+                <ArrowRight className="ml-3 size-5" />
               </Button>
+              
+              <p className="mt-4 text-sm text-muted-foreground text-center">
+                💡 Dica: Você pode retornar às configurações a qualquer momento
+              </p>
             </motion.div>
           </CardContent>
         </Card>

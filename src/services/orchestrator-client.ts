@@ -1,165 +1,115 @@
 /**
- * Cliente para comunicação com o Orquestrador de IA via Firebase Functions
- * Substitui a implementação local do orquestrador
+ * Cliente para o orquestrador Firebase Functions
+ * Interface única para comunicação com o orquestrador via Functions
  */
 
-import { 
-  ProcessingInput, 
-  ProcessingOutput, 
-  RoutingDecision 
-} from '../ai/orchestrator/types';
+import type { ProcessingInput, ProcessingOutput, RoutingDecision } from '@/ai/orchestrator/types';
 
-// URL base das Functions (ajustar conforme ambiente)
-const FUNCTIONS_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://127.0.0.1:5001/lexai-ef0ab/us-central1'
-  : 'https://us-central1-lexai-ef0ab.cloudfunctions.net';
+interface OrchestratorClientConfig {
+  functionUrl?: string;
+  timeout?: number;
+  retries?: number;
+}
 
 /**
- * Cliente do orquestrador como serviço remoto
+ * Cliente para comunicação com Firebase Functions
  */
 export class OrchestratorClient {
-  private baseUrl: string;
+  private config: Required<OrchestratorClientConfig>;
 
-  constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || FUNCTIONS_BASE_URL;
+  constructor(config: OrchestratorClientConfig = {}) {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'lexai-ef0ab';
+    const region = 'us-central1';
+    
+    this.config = {
+      functionUrl: config.functionUrl || `https://${region}-${projectId}.cloudfunctions.net`,
+      timeout: config.timeout || 120000, // 2 minutos
+      retries: config.retries || 2
+    };
   }
 
   /**
-   * Processa um documento via Functions
+   * Processa documento via Firebase Functions
    */
   async processDocument(input: ProcessingInput): Promise<ProcessingOutput> {
-    try {
-      console.log('[ORCHESTRATOR-CLIENT] Enviando para Functions:', {
-        taskType: input.taskType,
-        documentType: input.documentType,
-        contextItems: input.context.length
-      });
-
-      const response = await fetch(`${this.baseUrl}/processDocument`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result: ProcessingOutput = await response.json();
-      
-      console.log('[ORCHESTRATOR-CLIENT] Resposta recebida:', {
-        success: result.success,
-        confidence: result.metadata?.confidence,
-        processingTime: result.metadata?.processingTime
-      });
-
-      return result;
-
-    } catch (error) {
-      console.error('[ORCHESTRATOR-CLIENT] Erro na comunicação:', error);
-      
-      // Retorna erro estruturado
-      return {
-        success: false,
-        error: {
-          code: 'CLIENT_ERROR',
-          message: error instanceof Error ? error.message : 'Erro de comunicação',
-          retryable: true,
-          timestamp: new Date()
-        },
-        metadata: {
-          processingTime: 0,
-          llmUsed: [],
-          totalCost: 0,
-          tokensUsed: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-          confidence: 0
-        },
-        pipeline: {
-          stages: [],
-          totalDuration: 0,
-          totalCost: 0,
-          totalTokens: 0,
-          errors: []
-        }
-      };
-    }
+    return this.makeRequest('processDocument', input);
   }
 
   /**
-   * Testa roteamento via Functions
+   * Testa roteamento de LLM
    */
   async testRouting(input: ProcessingInput): Promise<RoutingDecision> {
-    try {
-      const response = await fetch(`${this.baseUrl}/testRouting`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-
-    } catch (error) {
-      console.error('[ORCHESTRATOR-CLIENT] Erro no teste de roteamento:', error);
-      throw error;
-    }
+    return this.makeRequest('testRouting', input);
   }
 
   /**
-   * Verifica status das Functions
+   * Health check do orquestrador
    */
   async healthCheck(): Promise<{ status: string; timestamp: string; llmCount: number; version: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/healthCheck`, {
-        method: 'GET'
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-
-    } catch (error) {
-      console.error('[ORCHESTRATOR-CLIENT] Erro no health check:', error);
-      throw error;
-    }
+    return this.makeRequest('healthCheck', {}, { method: 'GET' });
   }
 
   /**
-   * Testa conectividade
+   * Faz requisição para Firebase Functions
    */
-  async isAvailable(): Promise<boolean> {
-    try {
-      await this.healthCheck();
-      return true;
-    } catch {
-      return false;
+  private async makeRequest(
+    endpoint: string, 
+    body: any, 
+    options: { method?: string } = {}
+  ): Promise<any> {
+    const method = options.method || 'POST';
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.config.retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+        const response = await fetch(`${this.config.functionUrl}/${endpoint}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: method === 'POST' ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        return await response.json();
+
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Se não é o último attempt, aguarda antes de retry
+        if (attempt < this.config.retries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
     }
+
+    throw new Error(`Falha após ${this.config.retries} tentativas: ${lastError?.message}`);
   }
 }
 
 // Instância singleton
 export const orchestratorClient = new OrchestratorClient();
 
-/**
- * Função utilitária para processamento
- * Mantém compatibilidade com a interface local
- */
-export async function generateDocument(input: ProcessingInput): Promise<ProcessingOutput> {
+// Função de conveniência para uso direto
+export async function processDocument(input: ProcessingInput): Promise<ProcessingOutput> {
   return orchestratorClient.processDocument(input);
 }
 
-/**
- * Função utilitária para teste de roteamento
- */
-export async function testLLMRouting(input: ProcessingInput): Promise<RoutingDecision> {
+export async function testRouting(input: ProcessingInput): Promise<RoutingDecision> {
   return orchestratorClient.testRouting(input);
+}
+
+export async function checkOrchestratorHealth() {
+  return orchestratorClient.healthCheck();
 }

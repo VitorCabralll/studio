@@ -10,22 +10,29 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
+  
+  // Definir páginas públicas (acessíveis sem autenticação)
+  const publicPaths = ['/', '/legal', '/about', '/privacy', '/terms', '/contact'];
+  const isPublicPage = publicPaths.some(path => 
+    pathname === path || pathname.startsWith(`${path}/`)
+  );
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   useEffect(() => {
-    // Aguardar inicialização completa
-    if (!isInitialized) {
+    // Para páginas públicas, permitir acesso imediatamente
+    if (isPublicPage || isAuthPage) {
+      setIsVerified(true);
       return;
     }
     
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    // Aguardar inicialização completa para páginas protegidas
+    if (!isInitialized) {
+      return;
+    }
 
-    // 1. Usuário não autenticado
+    // 1. Usuário não autenticado tentando acessar página protegida
     if (!user) {
-      if (!isAuthPage) {
-        router.replace('/login');
-        return;
-      }
-      setIsVerified(true);
+      router.replace('/login');
       return;
     }
 
@@ -70,13 +77,13 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     // 6. Usuário completamente configurado
     const setupPages = ['/login', '/signup', '/onboarding'];
     if (setupPages.some(p => pathname.startsWith(p))) {
-      router.replace('/');
+      router.replace('/workspace');
       return;
     }
     
     setIsVerified(true);
 
-  }, [user, userProfile, loading, pathname, router, isInitialized]);
+  }, [user, userProfile, loading, pathname, router, isInitialized, isPublicPage, isAuthPage]);
 
   if (!isVerified) {
     return (

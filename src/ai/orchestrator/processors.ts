@@ -9,26 +9,17 @@ import {
   PipelineContext,
   ProcessingInput,
   LLMResponse,
-  RoutingCriteria
+  RoutingCriteria,
+  ContextAnalysisResult,
+  StructureDefinition,
+  ProcessingResult
 } from './types';
-
-interface ContextAnalysisResult {
-  keyPoints: string;
-  priorityAreas: string[];
-  legalStrategy: string;
-}
-
-interface StructureDefinition {
-  sections: string[];
-  outline: string;
-  sectionOrder: string[];
-}
 
 /**
  * Classe base para processadores com funcionalidade comum de LLM
  */
 abstract class BaseLLMProcessor implements PipelineProcessor {
-  abstract process(input: unknown, context: PipelineContext): Promise<unknown>;
+  abstract process(input: ProcessingInput, context: PipelineContext): Promise<ProcessingResult>;
 
   protected async callLLM(
     prompt: string, 
@@ -68,7 +59,7 @@ abstract class BaseLLMProcessor implements PipelineProcessor {
  * Extrai fatos principais dos documentos anexados
  */
 export class SummarizationProcessor extends BaseLLMProcessor {
-  async process(input: unknown, context: PipelineContext): Promise<string> {
+  async process(_input: ProcessingInput, context: PipelineContext): Promise<string> {
     const processingInput = context.input;
     
     // Extrai conteúdo OCR dos anexos
@@ -125,9 +116,8 @@ Resposta deve ser objetiva, factual e estruturada para uso em ${input.documentTy
  * Analisa instruções específicas e arquivos auxiliares
  */
 export class ContextAnalysisProcessor extends BaseLLMProcessor {
-  async process(input: unknown, context: PipelineContext): Promise<ContextAnalysisResult> {
+  async process(_input: ProcessingInput, context: PipelineContext): Promise<ContextAnalysisResult> {
     const processingInput = context.input;
-    const summary = input; // Recebe resultado da sumarização
     
     // Extrai instruções específicas e arquivos auxiliares
     const instructions = processingInput.instructions;
@@ -136,7 +126,8 @@ export class ContextAnalysisProcessor extends BaseLLMProcessor {
       .map(item => item.content)
       .join('\n\n');
 
-    const prompt = this.buildContextPrompt(summary as string, instructions, auxiliaryContent, processingInput);
+    const summary = (context.intermediateResults['summarization'] as string) || '';
+    const prompt = this.buildContextPrompt(summary, instructions, auxiliaryContent, processingInput);
     const response = await this.callLLM(prompt, context, {
       preferredModel: 'gemini-1.5-pro', // Qualidade para análise jurídica
       maxTokens: 2000,
@@ -148,9 +139,11 @@ export class ContextAnalysisProcessor extends BaseLLMProcessor {
     });
     
     return {
-      keyPoints: response.content,
-      priorityAreas: this.extractPriorityAreas(response.content),
-      legalStrategy: this.extractLegalStrategy(response.content)
+      mainTopics: this.extractMainTopics(response.content),
+      legalAreas: [processingInput.legalArea || 'civil'],
+      documentTypes: [processingInput.documentType],
+      keyEntities: this.extractKeyEntities(response.content),
+      confidence: 0.8
     } as ContextAnalysisResult;
   }
 
@@ -179,16 +172,16 @@ Forneça análise estratégica para orientar a geração do documento.
 `;
   }
 
-  private extractPriorityAreas(content: string): string[] {
-    // Lógica simples para extrair áreas prioritárias
-    const priorities = content.match(/\d+\.\s*([^:\n]+)/g) || [];
-    return priorities.map(p => p.replace(/\d+\.\s*/, '').trim()).slice(0, 5);
+  private extractMainTopics(content: string): string[] {
+    // Lógica simples para extrair tópicos principais
+    const topics = content.match(/\d+\.\s*([^:\n]+)/g) || [];
+    return topics.map(p => p.replace(/\d+\.\s*/, '').trim()).slice(0, 5);
   }
 
-  private extractLegalStrategy(content: string): string {
-    // Extrai estratégia principal
-    const strategyMatch = content.match(/ESTRATÉGIA JURÍDICA[:\s]*([^\.]+)/i);
-    return strategyMatch ? strategyMatch[1].trim() : 'Estratégia padrão baseada nos fatos apresentados';
+  private extractKeyEntities(content: string): string[] {
+    // Extrai entidades principais
+    const entities = content.match(/([A-Z][a-z]+(\s+[A-Z][a-z]+)*)/g) || [];
+    return [...new Set(entities)].slice(0, 10);
   }
 
 }
@@ -198,15 +191,15 @@ Forneça análise estratégica para orientar a geração do documento.
  * Define a estrutura do documento baseada no template
  */
 export class StructureDefinitionProcessor extends BaseLLMProcessor {
-  async process(input: unknown, context: PipelineContext): Promise<StructureDefinition> {
+  async process(_input: ProcessingInput, context: PipelineContext): Promise<StructureDefinition> {
     const processingInput = context.input;
-    const contextAnalysis = input;
     
     // Extrai template se disponível
     const template = processingInput.context
       .find(item => item.type === 'template')?.content || '';
 
-    const prompt = this.buildStructurePrompt(contextAnalysis as ContextAnalysisResult, template, processingInput);
+    const contextAnalysisResult = context.intermediateResults['context_analysis'] as ContextAnalysisResult;
+    const prompt = this.buildStructurePrompt(contextAnalysisResult, template, processingInput);
     const response = await this.callLLM(prompt, context, {
       preferredModel: 'gemini-1.5-flash', // Eficiente para estrutura
       maxTokens: 1500,
@@ -219,8 +212,8 @@ export class StructureDefinitionProcessor extends BaseLLMProcessor {
     
     return {
       sections: this.extractSections(response.content),
-      outline: response.content,
-      sectionOrder: this.defineSectionOrder(processingInput.documentType)
+      format: processingInput.preferences?.outputFormat || 'formal',
+      estimatedLength: this.estimateLength(response.content)
     } as StructureDefinition;
   }
 
@@ -247,23 +240,21 @@ Forneça estrutura clara e hierárquica.
 `;
   }
 
-  private extractSections(content: string): string[] {
+  private extractSections(content: string): Array<{ name: string; description: string; required: boolean }> {
     // Extrai seções do conteúdo
     const sections = content.match(/\d+\.\s*([A-ZÁÉÍÓÚÇ][^:\n]+)/g) || [];
-    return sections.map(s => s.replace(/\d+\.\s*/, '').trim());
+    return sections.map(s => ({
+      name: s.replace(/\d+\.\s*/, '').trim(),
+      description: 'Seção do documento',
+      required: true
+    }));
   }
 
-  private defineSectionOrder(documentType: string): string[] {
-    const defaultOrder = ['header', 'introduction', 'facts', 'legal_basis', 'conclusion', 'footer'];
-    
-    const orderMap: Record<string, string[]> = {
-      petition: ['header', 'parties', 'facts', 'legal_basis', 'requests', 'conclusion'],
-      contract: ['header', 'parties', 'definitions', 'obligations', 'conditions', 'signatures'],
-      legal_opinion: ['header', 'summary', 'analysis', 'legal_basis', 'conclusion', 'recommendations']
-    };
-
-    return orderMap[documentType] || defaultOrder;
+  private estimateLength(content: string): number {
+    // Estima tamanho baseado no conteúdo
+    return Math.max(1000, content.length * 3);
   }
+
 
 }
 
@@ -272,7 +263,7 @@ Forneça estrutura clara e hierárquica.
  * Gera conteúdo para cada seção usando LLM premium
  */
 export class ContentGenerationProcessor extends BaseLLMProcessor {
-  async process(input: unknown, context: PipelineContext): Promise<Record<string, string>> {
+  async process(input: ProcessingInput, context: PipelineContext): Promise<Record<string, string>> {
     // Corrigido: obter structure dos resultados intermediários
     const structure = context.intermediateResults['structure_definition'];
     const sections: Record<string, string> = {};
@@ -283,21 +274,25 @@ export class ContentGenerationProcessor extends BaseLLMProcessor {
     }
     
     // Gera conteúdo para cada seção
-    for (const section of (structure as StructureDefinition).sections) {
-      const prompt = this.buildSectionPrompt(section, context);
-      const response = await this.callLLM(prompt, context, {
-        preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
-        maxTokens: 3000,
-        taskComplexity: 'high',
-        qualityRequirement: 'premium',
-        latencyRequirement: 'thorough',
-        costBudget: 'high',
-        temperature: 0.4
-      });
-      sections[section] = response.content;
-      
-      // Pequeno delay entre seções
-      await new Promise(resolve => setTimeout(resolve, 500));
+    const structureDef = structure as StructureDefinition;
+    if (structureDef?.sections) {
+      for (const section of structureDef.sections) {
+        const sectionName = typeof section === 'string' ? section : section.name;
+        const prompt = this.buildSectionPrompt(sectionName, context);
+        const response = await this.callLLM(prompt, context, {
+          preferredModel: 'gemini-1.5-pro', // Máxima qualidade para conteúdo
+          maxTokens: 3000,
+          taskComplexity: 'high',
+          qualityRequirement: 'premium',
+          latencyRequirement: 'thorough',
+          costBudget: 'high',
+          temperature: 0.4
+        });
+        sections[sectionName] = response.content;
+        
+        // Pequeno delay entre seções
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
     
     return sections;
@@ -338,19 +333,27 @@ Redija apenas o conteúdo desta seção, sem cabeçalhos ou numeração.
  * Une todas as seções no documento final
  */
 export class AssemblyProcessor implements PipelineProcessor {
-  async process(input: unknown, context: PipelineContext): Promise<string> {
-    const sections = input;
-    const structure = context.intermediateResults['structure_definition'];
+  async process(_input: ProcessingInput, context: PipelineContext): Promise<string> {
     
-    // Monta documento seguindo a ordem definida
-    const sectionOrder = (structure as StructureDefinition)?.sectionOrder || Object.keys(sections as Record<string, string>);
+    // Monta documento seguindo a estrutura definida
+    const structureDef = context.intermediateResults['structure'] as StructureDefinition;
+    const sectionContent = context.intermediateResults['sections'] as Record<string, string>;
     
     let document = '';
     
-    for (const sectionName of sectionOrder) {
-      if ((sections as Record<string, string>)[sectionName]) {
+    if (structureDef?.sections) {
+      for (const section of structureDef.sections) {
+        const sectionName = typeof section === 'string' ? section : section.name;
+        if (sectionContent[sectionName]) {
+          document += `\n\n## ${this.formatSectionTitle(sectionName)}\n\n`;
+          document += sectionContent[sectionName];
+        }
+      }
+    } else {
+      // Fallback para caso estrutura não esteja definida
+      for (const [sectionName, content] of Object.entries(sectionContent)) {
         document += `\n\n## ${this.formatSectionTitle(sectionName)}\n\n`;
-        document += (sections as Record<string, string>)[sectionName];
+        document += content;
       }
     }
     
@@ -393,11 +396,11 @@ Este documento foi gerado automaticamente pelo LexAI.
 Recomenda-se revisão jurídica antes da utilização.`;
   }
 
-  validate(input: unknown): boolean {
-    return typeof input === 'object' && input !== null && Object.keys(input as Record<string, unknown>).length > 0;
+  validate(input: ProcessingInput): boolean {
+    return typeof input === 'object' && input !== null;
   }
 
-  transform(output: unknown): string {
+  transform(output: ProcessingResult): ProcessingResult {
     return typeof output === 'string' ? output : JSON.stringify(output);
   }
 }

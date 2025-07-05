@@ -6,8 +6,7 @@ import {
   Zap, 
   Crown, 
   Building,
-  ArrowRight,
-  Sparkles
+  ArrowRight
 } from "lucide-react";
 import { FadeIn } from "@/components/magic-ui";
 import { Button } from "@/components/ui/button";
@@ -17,17 +16,23 @@ import { Badge } from "@/components/ui/badge";
 const plans = [
   {
     name: "Starter",
-    description: "Perfeito para advogados autônomos",
+    description: "Recupere suas primeiras 10 horas/semana",
     price: "97",
+    originalPrice: "297",
     period: "/mês",
     icon: Zap,
     color: "border-gray-200 dark:border-gray-700",
     buttonStyle: "bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900",
+    valueProps: [
+      "10+ horas recuperadas por semana",
+      "Retorno sobre investimento comprovado",
+      "Suporte especializado em produto"
+    ],
     features: [
       "50 documentos por mês",
       "Tipos básicos (petições, contratos)",
       "OCR até 10MB por arquivo",
-      "Suporte por email",
+      "Suporte por email especializado",
       "Templates padrão",
       "Export PDF/DOCX"
     ],
@@ -35,18 +40,24 @@ const plans = [
   },
   {
     name: "Professional",
-    description: "Para escritórios em crescimento",
+    description: "Para quem quer recuperar 20+ horas/semana",
     price: "197",
+    originalPrice: "597",
     period: "/mês",
     icon: Crown,
-    color: "border-blue-500 dark:border-blue-400",
+    color: "border-emerald-500 dark:border-emerald-400",
     popular: true,
-    buttonStyle: "bg-blue-600 hover:bg-blue-700 text-white",
+    buttonStyle: "bg-emerald-600 hover:bg-emerald-700 text-white",
+    valueProps: [
+      "20+ horas recuperadas por semana",
+      "Investimento com retorno garantido",
+      "Suporte técnico especializado"
+    ],
     features: [
       "200 documentos por mês",
       "Todos os tipos de documento",
       "OCR até 50MB por arquivo",
-      "Suporte prioritário",
+      "Suporte prioritário (não call center)",
       "Templates customizáveis",
       "API access",
       "Revisão jurídica IA",
@@ -57,17 +68,23 @@ const plans = [
   },
   {
     name: "Enterprise",
-    description: "Para grandes escritórios",
+    description: "Consultoria dedicada + horas ilimitadas",
     price: "497",
+    originalPrice: "1497",
     period: "/mês",
     icon: Building,
     color: "border-purple-500 dark:border-purple-400",
     buttonStyle: "bg-purple-600 hover:bg-purple-700 text-white",
+    valueProps: [
+      "Horas ilimitadas recuperadas",
+      "Transformação comprovada do negócio",
+      "Suporte dedicado 24/7"
+    ],
     features: [
       "Documentos ilimitados",
       "Todos os recursos Premium",
       "OCR ilimitado",
-      "Suporte dedicado 24/7",
+      "Suporte dedicado 24/7 (prioritário)",
       "Templates personalizados",
       "Integrações customizadas",
       "White-label disponível",
@@ -84,15 +101,15 @@ export function PricingSection() {
     <section id="pricing" className="bg-white py-24 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-16 text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            Preços
+          <span className="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            Investimento que se paga
           </span>
           <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-            Planos que crescem
-            <span className="block text-blue-600 dark:text-blue-400">com seu escritório</span>
+            Quanto vale recuperar
+            <span className="block text-emerald-600 dark:text-emerald-400">15 horas da sua semana?</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-            Todos os planos incluem 14 dias de teste gratuito. Sem taxa de setup, cancele quando quiser.
+            <strong>Suporte especializado incluso em todos os planos.</strong> Teste 14 dias grátis, sem cartão obrigatório.
           </p>
         </FadeIn>
 
@@ -117,8 +134,8 @@ export function PricingSection() {
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <Badge className="bg-blue-600 px-4 py-1 text-white">
-                      <Sparkles className="mr-1 size-3" />
-                      Mais Popular
+                      <Crown className="mr-1 size-3" />
+                      Recomendado
                     </Badge>
                   </div>
                 )}
@@ -134,19 +151,33 @@ export function PricingSection() {
                     {plan.description}
                   </p>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                      R${plan.price}
-                    </span>
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-lg text-gray-400 line-through">
+                        R${plan.originalPrice}
+                      </span>
+                      <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                        R${plan.price}
+                      </span>
+                    </div>
                     <span className="text-gray-600 dark:text-gray-300">
                       {plan.period}
                     </span>
+                  </div>
+                  
+                  {/* Value Props */}
+                  <div className="mt-4 space-y-1">
+                    {plan.valueProps.map((prop, index) => (
+                      <div key={index} className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        ✓ {prop}
+                      </div>
+                    ))}
                   </div>
                 </CardHeader>
 
                 <CardContent className="pt-0">
                   <Button className={`mb-6 w-full ${plan.buttonStyle}`}>
                     <span className="flex items-center">
-                      Começar Teste Gratuito
+                      Otimizar Minha Prática
                       <ArrowRight className="ml-2 size-4" />
                     </span>
                   </Button>
@@ -171,9 +202,9 @@ export function PricingSection() {
                   {plan.name === "Enterprise" && (
                     <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
                       <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                        Precisa de algo específico?{" "}
-                        <button className="font-medium text-blue-600 hover:underline dark:text-blue-400">
-                          Fale conosco
+                        Precisa de suporte customizado?{" "}
+                        <button className="font-medium text-purple-600 hover:underline dark:text-purple-400">
+                          Fale com nossa equipe
                         </button>
                       </p>
                     </div>
@@ -205,8 +236,8 @@ export function PricingSection() {
                   answer: "Sim, oferecemos API e integrações com principais sistemas jurídicos."
                 },
                 {
-                  question: "Suporte técnico está incluído?",
-                  answer: "Todos os planos incluem suporte. Professional e Enterprise têm suporte prioritário."
+                  question: "Qual a diferença entre suporte básico e especializado?",
+                  answer: "Suporte básico resolve problemas técnicos. Suporte especializado inclui orientação sobre otimização de workflow e uso avançado da plataforma."
                 }
               ].map((faq, index) => (
                 <div key={index} className="space-y-2">

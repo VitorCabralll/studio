@@ -63,7 +63,15 @@ export async function enforceMaximumPrivacy(
 
     // Verificar se excedeu tempo máximo de retenção
     if (retentionTime > PRIVACY_ENFORCEMENT.MAX_RETENTION_TIME) {
-      console.warn(`⚠️  ALERTA DE SEGURANÇA: Documento ${documentId} excedeu tempo máximo de retenção (${retentionTime}ms > ${PRIVACY_ENFORCEMENT.MAX_RETENTION_TIME}ms)`);
+      const { log } = await import('@/lib/logger');
+      log.security(`Documento excedeu tempo máximo de retenção`, {
+        component: 'PrivacyEnforcer',
+        metadata: { 
+          documentId, 
+          retentionTime, 
+          maxRetention: PRIVACY_ENFORCEMENT.MAX_RETENTION_TIME 
+        }
+      });
     }
 
     // DESCARTE FORÇADO IMEDIATO - Não há opção de manter dados
@@ -71,7 +79,11 @@ export async function enforceMaximumPrivacy(
     
     if (!cleanupResult.success) {
       // FALHA CRÍTICA DE SEGURANÇA - dados não foram descartados
-      console.error(`🚨 FALHA CRÍTICA DE SEGURANÇA: Não foi possível descartar dados do documento ${documentId}`);
+      const { log } = await import('@/lib/logger');
+      log.security(`FALHA CRÍTICA: Não foi possível descartar dados do documento`, {
+        component: 'PrivacyEnforcer',
+        metadata: { documentId, error: cleanupResult.error?.message }
+      });
       
       await logSecurityAction({
         timestamp: new Date(),
@@ -110,13 +122,21 @@ export async function enforceMaximumPrivacy(
       details: `✅ Dados descartados com sucesso. Tempo total de retenção: ${retentionTime}ms`
     });
 
-    console.log(`🔒 PRIVACIDADE MÁXIMA APLICADA: Documento ${documentId} - dados descartados após ${retentionTime}ms`);
+    const { log } = await import('@/lib/logger');
+    log.audit('Privacy enforcement completed', userId, {
+      component: 'PrivacyEnforcer',
+      metadata: { documentId, retentionTime }
+    });
     
     return { data: result, error: null, success: true };
 
   } catch (error) {
     // Erro no enforcement - situação crítica de segurança
-    console.error(`🚨 ERRO CRÍTICO NO ENFORCEMENT DE PRIVACIDADE: ${error}`);
+    const { log } = await import('@/lib/logger');
+    log.security('ERRO CRÍTICO NO ENFORCEMENT DE PRIVACIDADE', {
+      component: 'PrivacyEnforcer',
+      metadata: { documentId, userId, error: String(error) }
+    });
     
     await logSecurityAction({
       timestamp: new Date(),
@@ -145,16 +165,31 @@ export async function enforceMaximumPrivacy(
  */
 export async function auditDataRetention(documentId: string): Promise<ServiceResult<boolean>> {
   try {
-    // Esta função verificaria se ainda existem dados no Firestore
-    // Por questões de segurança, assume que não devem existir dados após enforcement
+    const { getFirebaseDb } = await import('@/lib/firebase');
+    const { doc, getDoc } = await import('firebase/firestore');
     
     console.log(`🔍 Auditoria de retenção para documento ${documentId}`);
     
-    // Mock: em produção, verificaria document_processing/{documentId}
-    const dataStillExists = false; // Deveria sempre ser false após enforcement
+    // Verificar se ainda existem dados de processamento no Firestore
+    const processingDocRef = doc(getFirebaseDb(), 'document_processing', documentId);
+    const processingSnapshot = await getDoc(processingDocRef);
+    
+    // Verificar se ainda existe política de retenção
+    const retentionDocRef = doc(getFirebaseDb(), 'data_retention', documentId);
+    const retentionSnapshot = await getDoc(retentionDocRef);
+    
+    const dataStillExists = processingSnapshot.exists() || retentionSnapshot.exists();
     
     if (dataStillExists) {
       console.error(`🚨 VIOLAÇÃO DE PRIVACIDADE DETECTADA: Dados ainda existem para documento ${documentId}`);
+      
+      // Log específico sobre que dados ainda existem
+      if (processingSnapshot.exists()) {
+        console.error(`- Dados de processamento ainda existem em document_processing/${documentId}`);
+      }
+      if (retentionSnapshot.exists()) {
+        console.error(`- Política de retenção ainda existe em data_retention/${documentId}`);
+      }
     } else {
       console.log(`✅ Auditoria OK: Nenhum dado retido para documento ${documentId}`);
     }
