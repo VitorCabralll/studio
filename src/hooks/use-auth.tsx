@@ -8,7 +8,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
-  signOut 
+  signOut,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +30,7 @@ interface AuthActions {
   signup: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
   updateUserProfileState: (data: Partial<UserProfile>) => void;
   retryLoadProfile: () => Promise<void>;
@@ -269,6 +271,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const resetPassword = async (email: string): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const auth = getFirebaseAuth();
+      await sendPasswordResetEmail(auth, email);
+      setState(prev => ({ ...prev, loading: false }));
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+      throw error; // Re-throw para o componente tratar
+    }
+  };
+
   const clearError = (): void => {
     setState(prev => ({ ...prev, error: null }));
   };
@@ -286,6 +305,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     loginWithGoogle,
     logout,
+    resetPassword,
     clearError,
     updateUserProfileState,
     retryLoadProfile,

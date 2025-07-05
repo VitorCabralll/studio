@@ -76,7 +76,7 @@ export default function RootLayout({
                     {children}
                   </OnboardingGuard>
                   <Toaster />
-                  <AuthDebug />
+                  {process.env.NEXT_PUBLIC_FIREBASE_DEBUG === 'true' && <AuthDebug />}
                   <ResourcePreloader />
                   <WebVitals />
                 </WorkspaceProvider>

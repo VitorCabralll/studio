@@ -12,7 +12,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const [isVerified, setIsVerified] = useState(false);
   
   // Definir páginas públicas (acessíveis sem autenticação)
-  const publicPaths = ['/', '/legal', '/about', '/privacy', '/terms', '/contact'];
+  const publicPaths = ['/', '/legal', '/about', '/privacy', '/terms', '/contact', '/seguranca', '/forgot-password'];
   const isPublicPage = publicPaths.some(path => 
     pathname === path || pathname.startsWith(`${path}/`)
   );
