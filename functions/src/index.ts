@@ -21,7 +21,15 @@ setGlobalOptions({
  */
 export const processDocument = onRequest(
   {
-    cors: true
+    cors: {
+      origin: [
+        'https://lexai-ef0ab.web.app',
+        'https://lexai-ef0ab.firebaseapp.com',
+        'http://localhost:3000'
+      ],
+      methods: ['POST'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    }
   },
   async (request, response) => {
     // Apenas POST permitido
@@ -66,7 +74,15 @@ export const processDocument = onRequest(
  */
 export const testRouting = onRequest(
   {
-    cors: true,
+    cors: {
+      origin: [
+        'https://lexai-ef0ab.web.app',
+        'https://lexai-ef0ab.firebaseapp.com',
+        'http://localhost:3000'
+      ],
+      methods: ['POST'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    },
     memory: '512MiB',
     timeoutSeconds: 60
   },
@@ -98,7 +114,15 @@ export const testRouting = onRequest(
  */
 export const healthCheck = onRequest(
   {
-    cors: true,
+    cors: {
+      origin: [
+        'https://lexai-ef0ab.web.app',
+        'https://lexai-ef0ab.firebaseapp.com',
+        'http://localhost:3000'
+      ],
+      methods: ['GET', 'POST'],
+      allowedHeaders: ['Content-Type']
+    },
     memory: '256MiB',
     timeoutSeconds: 30
   },

@@ -90,6 +90,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         providerData: user?.providerData 
       });
       
+      // 🔧 Debug detalhado em desenvolvimento
+      if (process.env.NODE_ENV === 'development' && user) {
+        try {
+          const token = await user.getIdToken();
+          const tokenResult = await user.getIdTokenResult();
+          console.log('🔐 Auth debug:', {
+            uid: user.uid,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            hasToken: !!token,
+            tokenClaims: {
+              uid: tokenResult.claims.user_id,
+              email: tokenResult.claims.email,
+              authTime: tokenResult.claims.auth_time ? new Date(Number(tokenResult.claims.auth_time) * 1000) : null,
+              issuedAt: tokenResult.claims.iat ? new Date(Number(tokenResult.claims.iat) * 1000) : null,
+              expires: tokenResult.claims.exp ? new Date(Number(tokenResult.claims.exp) * 1000) : null
+            }
+          });
+        } catch (tokenError) {
+          console.error('🚨 Token debug error:', tokenError);
+        }
+      }
+      
       if (user) {
         // User is signed in
         setState(prev => ({ ...prev, user, loading: true, error: null }));

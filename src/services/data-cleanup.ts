@@ -13,6 +13,7 @@ import {
 
 import type { ServiceResult, ServiceError } from './user-service';
 import { getFirebaseDb } from '@/lib/firebase';
+import { addNamespace } from '@/lib/staging-config';
 
 // Configurações de retenção - PRIVACIDADE MÁXIMA
 const DATA_RETENTION_CONFIG = {
@@ -150,7 +151,7 @@ export async function runAutomaticCleanup(): Promise<ServiceResult<CleanupResult
 
     // Buscar documentos com data de expiração vencida
     const retentionQuery = query(
-      collection(getFirebaseDb(), 'data_retention'),
+      collection(getFirebaseDb(), addNamespace('data_retention')),
       where('expiresAt', '<=', Timestamp.fromDate(now)),
       where('autoCleanup', '==', true)
     );
@@ -248,7 +249,7 @@ export async function requestUserDataCleanup(
     } else {
       // Limpar todos os dados do usuário
       const processingQuery = query(
-        collection(getFirebaseDb(), 'document_processing'),
+        collection(getFirebaseDb(), addNamespace('document_processing')),
         where('userId', '==', userId)
       );
 

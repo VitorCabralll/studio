@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getFirebaseDb } from '@/lib/firebase';
+import { addNamespace } from '@/lib/staging-config';
 import { useAuth } from '@/hooks/use-auth';
 
 export interface Workspace {
@@ -63,11 +64,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       
       try {
         const db = getFirebaseDb();
-        const workspacesRef = collection(db, 'workspaces');
+        const workspacesCollection = addNamespace('workspaces');
+        const workspacesRef = collection(db, workspacesCollection);
         const q = query(
           workspacesRef, 
           where('members', 'array-contains', user.uid)
         );
+        
+        // 🔧 Debug logs para desenvolvimento
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🏢 Workspace query debug:', {
+            userId: user.uid,
+            query: `where('members', 'array-contains', '${user.uid}')`,
+            collection: workspacesCollection,
+            database: db.app.options.projectId,
+            namespace: process.env.NEXT_PUBLIC_APP_NAMESPACE
+          });
+        }
         
         const querySnapshot = await getDocs(q);
         const userWorkspaces: Workspace[] = [];
@@ -100,6 +113,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         if (isComponentMounted) {
           console.error('Erro ao carregar workspaces:', err);
+          
+          // 🔧 Debug detalhado para permission-denied em desenvolvimento
+          if (process.env.NODE_ENV === 'development' && err instanceof Error && 'code' in err && err.code === 'permission-denied') {
+            console.error('🚨 Workspace Permission Debug:', {
+              operation: 'loadWorkspaces',
+              collection: addNamespace('workspaces'),
+              userId: user?.uid,
+              error_code: err.code,
+              error_message: err.message,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
           setError('Erro ao carregar workspaces');
         }
       } finally {
@@ -169,7 +195,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       };
 
       const db = getFirebaseDb();
-      const docRef = await addDoc(collection(db, 'workspaces'), workspaceData);
+      const docRef = await addDoc(collection(db, addNamespace('workspaces')), workspaceData);
       
       const newWorkspace: Workspace = {
         id: docRef.id,
@@ -197,7 +223,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, 'workspaces', workspaceId);
+      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
       await updateDoc(workspaceRef, {
         ...updates,
         updatedAt: new Date()
@@ -229,7 +255,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      await deleteDoc(doc(db, 'workspaces', workspaceId));
+      await deleteDoc(doc(db, addNamespace('workspaces'), workspaceId));
 
       // Remover do estado local
       setWorkspaces(prev => prev.filter(ws => ws.id !== workspaceId));
@@ -250,7 +276,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const addMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, 'workspaces', workspaceId);
+      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       
       if (!workspaceDoc.exists()) {
@@ -278,7 +304,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const removeMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, 'workspaces', workspaceId);
+      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       
       if (!workspaceDoc.exists()) {

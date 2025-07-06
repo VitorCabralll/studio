@@ -106,11 +106,17 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
     const namespace = addNamespace('usuarios');
     const docRef = doc(db, namespace, uid);
     
-    console.log('🔍 Firestore query:', { 
-      database: db.app.options.projectId,
-      collection: namespace, 
-      uid 
-    });
+    // 🔧 Debug logs para desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Firestore query debug:', { 
+        database: db.app.options.projectId,
+        collection: namespace, 
+        uid,
+        environment: process.env.NEXT_PUBLIC_APP_ENV,
+        namespace_prefix: process.env.NEXT_PUBLIC_APP_NAMESPACE,
+        final_path: `${namespace}/${uid}`
+      });
+    }
     
     // Single attempt with reasonable timeout
     const docSnap = await getDoc(docRef);
@@ -154,6 +160,19 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
     }
   } catch (error) {
     console.error('Erro em getUserProfile:', error);
+    
+    // 🔧 Debug detalhado para permission-denied em desenvolvimento
+    if (process.env.NODE_ENV === 'development' && error instanceof Error && 'code' in error && error.code === 'permission-denied') {
+      console.error('🚨 Permission Debug:', {
+        operation: 'getUserProfile',
+        collection: addNamespace('usuarios'),
+        uid,
+        error_code: error.code,
+        error_message: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     return {
       data: null,
       error: createServiceError(error, 'buscar perfil do usuário'),
