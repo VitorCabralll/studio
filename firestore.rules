@@ -1,7 +1,7 @@
 rules_version = '2';
 
 service cloud.firestore {
-  match /databases/lexai/documents {
+  match /databases/{database}/documents {
     
     // ============================================================================
     // REGRAS PRINCIPAIS - LIMPAS E CONSISTENTES

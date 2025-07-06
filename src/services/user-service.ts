@@ -88,6 +88,8 @@ export interface UserProfile {
 
 export async function getUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
   try {
+    console.log('🔍 getUserProfile called with:', { uid });
+    
     // Validação de entrada
     if (!uid || uid.trim() === '') {
       return {
@@ -101,7 +103,14 @@ export async function getUserProfile(uid: string): Promise<ServiceResult<UserPro
     }
 
     const db = getFirebaseDb();
-    const docRef = doc(db, addNamespace('usuarios'), uid);
+    const namespace = addNamespace('usuarios');
+    const docRef = doc(db, namespace, uid);
+    
+    console.log('🔍 Firestore query:', { 
+      database: db.app.options.projectId,
+      collection: namespace, 
+      uid 
+    });
     
     // Single attempt with reasonable timeout
     const docSnap = await getDoc(docRef);

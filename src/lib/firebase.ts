@@ -66,8 +66,8 @@ export function getFirebaseAuth(): Auth {
 export function getFirebaseDb(): Firestore {
   if (!db) {
     const app = initializeFirebaseApp();
-    // Use the 'lexai' database instead of default
-    db = getFirestore(app, 'lexai');
+    // Use the default database for now to test rules
+    db = getFirestore(app);
     
     // Connect to emulator in development - apenas se explicitamente habilitado
     if (typeof window !== 'undefined' && 

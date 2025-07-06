@@ -83,7 +83,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let retryTimeoutRef: NodeJS.Timeout;
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔄 Auth state changed:', { hasUser: !!user, uid: user?.uid });
+      console.log('🔄 Auth state changed:', { 
+        hasUser: !!user, 
+        uid: user?.uid,
+        emailVerified: user?.emailVerified,
+        providerData: user?.providerData 
+      });
       
       if (user) {
         // User is signed in
