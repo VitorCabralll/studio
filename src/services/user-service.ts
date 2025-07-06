@@ -74,6 +74,10 @@ export interface Workspace {
 export interface UserProfile {
   name?: string;
   displayName?: string;
+  phone?: string;
+  company?: string;
+  oab?: string;
+  acceptNewsletter?: boolean;
   cargo: string;
   areas_atuacao: string[];
   primeiro_acesso: boolean;

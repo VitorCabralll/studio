@@ -50,7 +50,16 @@ export function SignupForm() {
       return;
     }
 
-    await signup(formData.email, formData.password);
+    // Passar dados adicionais para o signup
+    const additionalData = {
+      name: formData.name,
+      phone: formData.phone,
+      company: formData.company,
+      oab: formData.oab,
+      acceptNewsletter: formData.acceptNewsletter
+    };
+    
+    await signup(formData.email, formData.password, additionalData);
   };
 
   const handleGoogleSignup = async () => {

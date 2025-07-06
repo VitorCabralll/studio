@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from '@/hooks/use-auth';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useToast } from '@/hooks/use-toast';
+import { updateUserProfile } from '@/services/user-service';
 import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
@@ -19,7 +20,7 @@ export default function SettingsPage() {
 }
 
 function SettingsPageContent() {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, updateUserProfileState } = useAuth();
   const { currentWorkspace, updateWorkspace, deleteWorkspace } = useWorkspace();
   const { toast } = useToast();
   const [fullName, setFullName] = useState('');
@@ -37,16 +38,32 @@ function SettingsPageContent() {
   }, [userProfile, currentWorkspace]);
 
   const handleSaveProfile = async () => {
-    if (!user) return;
+    if (!user || !fullName.trim()) return;
     
     setIsLoading(true);
     try {
-      // TODO: Implementar updateUserProfile com nome
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
+      // Atualizar perfil do usuário com novo nome
+      const result = await updateUserProfile(user.uid, { 
+        name: fullName.trim(),
+        displayName: fullName.trim() 
       });
-    } catch {
+      
+      if (result.success) {
+        // Atualizar estado local
+        updateUserProfileState({ 
+          name: fullName.trim(),
+          displayName: fullName.trim() 
+        });
+        
+        toast({
+          title: "Perfil atualizado",
+          description: "Suas informações foram salvas com sucesso.",
+        });
+      } else {
+        throw new Error(result.error?.message || 'Erro ao salvar perfil');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
       toast({
         title: "Erro",
         description: "Não foi possível salvar as alterações.",

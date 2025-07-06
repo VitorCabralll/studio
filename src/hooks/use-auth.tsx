@@ -27,7 +27,7 @@ interface AuthState {
 
 interface AuthActions {
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, additionalData?: Partial<UserProfile>) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -205,12 +205,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signup = async (email: string, password: string): Promise<void> => {
+  const signup = async (email: string, password: string, additionalData?: Partial<UserProfile>): Promise<void> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const auth = getFirebaseAuth();
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Se temos dados adicionais, criar perfil inicial
+      if (additionalData && userCredential.user) {
+        const { createUserProfile } = await import('@/services/user-service');
+        await createUserProfile(userCredential.user.uid, {
+          ...additionalData,
+          cargo: additionalData.cargo || '',
+          areas_atuacao: additionalData.areas_atuacao || [],
+          primeiro_acesso: true,
+          initial_setup_complete: false,
+          data_criacao: new Date(),
+          workspaces: []
+        });
+      }
+      
       // Navigation will be handled by onAuthStateChanged
     } catch (error) {
       setState(prev => ({ 
