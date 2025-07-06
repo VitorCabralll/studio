@@ -78,10 +78,12 @@ const nextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   
-  // Cloud Workstation compatibility
-  allowedDevOrigins: [
-    'https://3000-firebase-studio-2-1751226604447.cluster-uf6urqn4lned4spwk4xorq6bpo.cloudworkstations.dev'
-  ],
+  // Cloud Workstation compatibility - apenas em desenvolvimento
+  ...(process.env.NODE_ENV === 'development' && {
+    allowedDevOrigins: [
+      'https://3000-firebase-studio-2-1751226604447.cluster-uf6urqn4lned4spwk4xorq6bpo.cloudworkstations.dev'
+    ]
+  }),
 };
 
 module.exports = nextConfig;
