@@ -7,13 +7,20 @@
  * Obter prefixo do namespace baseado no ambiente
  */
 export function getNamespacePrefix(): string {
+  // ✅ COM PROJETOS SEPARADOS: Namespaces não são mais necessários
+  // Cada ambiente usa um projeto Firebase diferente:
+  // - development: lexai-development  
+  // - production: lexai-ef0ab
+  
   const env = process.env.NEXT_PUBLIC_APP_ENV;
   const namespace = process.env.NEXT_PUBLIC_APP_NAMESPACE;
   
+  // Staging: usa namespace customizado se definido (para casos especiais)
   if (env === 'staging' && namespace) {
     return namespace;
   }
   
+  // NOVO PADRÃO: Sem namespaces - projetos separados garantem isolamento
   return '';
 }
 

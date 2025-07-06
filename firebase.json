@@ -25,34 +25,4 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "emulators": {
-    "apphosting": {
-      "port": 5002,
-      "host": "0.0.0.0",
-      "rootDirectory": "./",
-      "startCommand": "npm run dev"
-    },
-    "auth": {
-      "port": 9098,
-      "host": "0.0.0.0"
-    },
-    "functions": {
-      "port": 5001,
-      "host": "0.0.0.0"
-    },
-    "firestore": {
-      "port": 8081,
-      "host": "0.0.0.0"
-    },
-    "storage": {
-      "port": 9198,
-      "host": "0.0.0.0"
-    },
-    "ui": {
-      "enabled": true,
-      "port": 4001,
-      "host": "0.0.0.0"
-    },
-    "singleProjectMode": true
-  }
 }
