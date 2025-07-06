@@ -42,10 +42,21 @@ export function getFirebaseAuth(): Auth {
     const app = initializeFirebaseApp();
     auth = getAuth(app);
     
-    // Connect to emulator in development - apenas se explicitamente habilitado
+    // 🔧 Debug: Log environment variables
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('🔍 Firebase Auth Environment Debug:', {
+        USE_FIREBASE_EMULATORS: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS,
+        NODE_ENV: process.env.NODE_ENV,
+        AUTH_EMULATOR_HOST: process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST,
+        hasEmulatorConfig: !!auth.emulatorConfig
+      });
+    }
+    
+    // Connect to emulator in development - apenas se explicitamente habilitado E não estiver no App Hosting
     if (typeof window !== 'undefined' && 
         process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true' && 
-        process.env.NODE_ENV === 'development') {
+        process.env.NODE_ENV === 'development' &&
+        !window.location.hostname.includes('hosted.app')) {
       const authEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST;
       if (authEmulatorHost && !auth.emulatorConfig) {
         try {
@@ -54,6 +65,13 @@ export function getFirebaseAuth(): Auth {
         } catch (error) {
           console.warn('Falha ao conectar Auth emulator:', error);
         }
+      }
+    } else if (typeof window !== 'undefined') {
+      // 🔧 Garantir que não está conectado ao emulator
+      if (auth.emulatorConfig) {
+        console.warn('⚠️ Auth ainda conectado ao emulator, mas não deveria estar!');
+      } else {
+        console.log('✅ Firebase Auth usando produção');
       }
     }
   }
@@ -69,10 +87,20 @@ export function getFirebaseDb(): Firestore {
     // Use the default database for now to test rules
     db = getFirestore(app);
     
-    // Connect to emulator in development - apenas se explicitamente habilitado
+    // 🔧 Debug: Log environment variables
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('🔍 Firestore Environment Debug:', {
+        USE_FIREBASE_EMULATORS: process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS,
+        NODE_ENV: process.env.NODE_ENV,
+        FIRESTORE_EMULATOR_HOST: process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST
+      });
+    }
+    
+    // Connect to emulator in development - apenas se explicitamente habilitado E não estiver no App Hosting
     if (typeof window !== 'undefined' && 
         process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true' && 
-        process.env.NODE_ENV === 'development') {
+        process.env.NODE_ENV === 'development' &&
+        !window.location.hostname.includes('hosted.app')) {
       const firestoreEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST;
       if (firestoreEmulatorHost) {
         try {
@@ -85,6 +113,7 @@ export function getFirebaseDb(): Firestore {
       }
     } else if (typeof window !== 'undefined') {
       // Enable network for production - com retry
+      console.log('✅ Firestore usando produção, habilitando network...');
       enableNetwork(db).catch(error => {
         console.warn('Failed to enable Firestore network:', error);
         // Retry after 2 seconds
