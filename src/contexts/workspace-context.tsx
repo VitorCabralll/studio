@@ -143,6 +143,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
+    // Verificar limite de workspaces (máximo 5 por usuário)
+    if (workspaces.length >= 5) {
+      return { 
+        success: false, 
+        error: 'Limite máximo de 5 workspaces atingido. Exclua um workspace existente para criar um novo.' 
+      };
+    }
+
     setIsLoading(true);
     setError(null);
 

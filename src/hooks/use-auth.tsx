@@ -194,7 +194,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const auth = getFirebaseAuth();
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      // Não fazer redirecionamento aqui - deixar o OnboardingGuard decidir
+      // O onAuthStateChanged irá detectar o login e carregar o perfil
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -259,7 +260,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw popupError;
       }
       
-      router.push('/');
+      // Não fazer redirecionamento aqui - deixar o OnboardingGuard decidir
+      // O onAuthStateChanged irá detectar o login e carregar o perfil
     } catch (error) {
       setState(prev => ({ 
         ...prev, 

@@ -106,9 +106,11 @@ function WorkspacePageContent() {
                 <Button 
                   size="lg" 
                   className="shadow-apple-lg hover:shadow-apple-lg h-14 bg-gradient-to-r from-primary to-primary/90 px-8 text-lg font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
+                  disabled={workspaces.length >= 5}
+                  title={workspaces.length >= 5 ? "Limite máximo de 5 workspaces atingido" : "Criar novo workspace"}
                 >
                   <PlusCircle className="mr-3 size-6" />
-                  Criar Workspace
+                  {workspaces.length >= 5 ? `Limite atingido (${workspaces.length}/5)` : `Criar Workspace (${workspaces.length}/5)`}
                 </Button>
               </DialogTrigger>
               <DialogContent className="surface-elevated shadow-apple-lg border-2 border-border/50 sm:max-w-lg">
@@ -219,6 +221,8 @@ function WorkspacePageContent() {
                   <Button 
                     size="lg" 
                     className="shadow-apple-lg hover:shadow-apple-lg h-16 bg-gradient-to-r from-primary to-primary/90 px-10 text-lg font-semibold transition-all duration-500 hover:scale-105 hover:from-primary/90 hover:to-primary/80"
+                    disabled={workspaces.length >= 5}
+                    title={workspaces.length >= 5 ? "Limite máximo de 5 workspaces atingido" : "Criar seu primeiro workspace"}
                   >
                     <PlusCircle className="mr-3 size-6" />
                     Criar Meu Primeiro Workspace

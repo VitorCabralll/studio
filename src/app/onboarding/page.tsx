@@ -370,7 +370,7 @@ export default function OnboardingPage() {
       const profileData: Partial<UserProfile> = {
         ...data,
         primeiro_acesso: false,
-        initial_setup_complete: false,
+        initial_setup_complete: true,
       };
       
       console.log('📋 onSubmit: Calling updateUserProfile', profileData);
