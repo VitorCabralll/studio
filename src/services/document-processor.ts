@@ -1,8 +1,29 @@
 import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
-import { getFirebaseDb } from '@/lib/firebase';
+import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { enforceMaximumPrivacy } from './privacy-enforcer';
 import { processFileWithOCR, convertToExtractedText, isFileSupported } from './ocr-service';
+
+// 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
+async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    // Forçar refresh do token para garantir que está válido
+    await currentUser.getIdToken(true);
+    console.log('✅ Token JWT válido obtido para consulta Firestore');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erro ao validar token JWT:', error);
+    return { success: false, error: 'Falha na validação do token de autenticação' };
+  }
+}
 
 // Tipos para processamento de documentos
 export interface ExtractedText {
@@ -313,6 +334,19 @@ export async function processUserDocuments(
  */
 export async function getExtractedTexts(documentId: string): Promise<ServiceResult<ExtractedText[]>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: authValidation.error || 'Falha na autenticação'
+        },
+        success: false
+      };
+    }
+
     if (!documentId || documentId.trim() === '') {
       return {
         data: null,

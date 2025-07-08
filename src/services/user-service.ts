@@ -132,6 +132,38 @@ async function executeGetUserProfile(uid: string): Promise<ServiceResult<UserPro
     };
   }
 
+  // 🛡️ SOLUÇÃO CRÍTICA: Aguardar token válido antes da consulta
+  const { getFirebaseAuth } = await import('@/lib/firebase');
+  const auth = getFirebaseAuth();
+  const currentUser = auth.currentUser;
+  
+  if (!currentUser) {
+    return {
+      data: null,
+      error: {
+        code: 'unauthenticated',
+        message: 'Usuário não autenticado.'
+      },
+      success: false
+    };
+  }
+
+  try {
+    // Forçar refresh do token para garantir que está válido
+    await currentUser.getIdToken(true);
+    console.log('✅ Token JWT válido obtido para consulta Firestore');
+  } catch (tokenError) {
+    console.error('❌ Erro ao obter token JWT:', tokenError);
+    return {
+      data: null,
+      error: {
+        code: 'unauthenticated',
+        message: 'Falha ao obter token de autenticação.'
+      },
+      success: false
+    };
+  }
+
   const db = getFirebaseDb();
   const namespace = addNamespace('usuarios');
   const docRef = doc(db, namespace, uid);

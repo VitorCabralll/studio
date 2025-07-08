@@ -12,8 +12,29 @@ import {
 } from 'firebase/firestore';
 
 import type { ServiceResult, ServiceError } from './user-service';
-import { getFirebaseDb } from '@/lib/firebase';
+import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
+
+// 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
+async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    // Forçar refresh do token para garantir que está válido
+    await currentUser.getIdToken(true);
+    console.log('✅ Token JWT válido obtido para consulta Firestore');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erro ao validar token JWT:', error);
+    return { success: false, error: 'Falha na validação do token de autenticação' };
+  }
+}
 
 // Configurações de retenção - PRIVACIDADE MÁXIMA
 const DATA_RETENTION_CONFIG = {
@@ -83,6 +104,19 @@ export async function cleanupDocumentData(
   userRequested: boolean = false
 ): Promise<ServiceResult<boolean>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return {
+        data: false,
+        error: {
+          code: 'unauthenticated',
+          message: authValidation.error || 'Falha na autenticação'
+        },
+        success: false
+      };
+    }
+
     // Validações
     if (!documentId || documentId.trim() === '') {
       return {
@@ -141,6 +175,19 @@ export async function cleanupDocumentData(
  */
 export async function runAutomaticCleanup(): Promise<ServiceResult<CleanupResult>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: authValidation.error || 'Falha na autenticação'
+        },
+        success: false
+      };
+    }
+
     const now = new Date();
     const result: CleanupResult = {
       documentsProcessed: 0,
@@ -210,6 +257,19 @@ export async function requestUserDataCleanup(
   documentIds?: string[]
 ): Promise<ServiceResult<CleanupResult>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: authValidation.error || 'Falha na autenticação'
+        },
+        success: false
+      };
+    }
+
     // Validações
     if (!userId || userId.trim() === '') {
       return {
@@ -287,6 +347,19 @@ export async function requestUserDataCleanup(
  */
 export async function getDataRetentionStatus(documentId: string): Promise<ServiceResult<DataRetentionPolicy | null>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: authValidation.error || 'Falha na autenticação'
+        },
+        success: false
+      };
+    }
+
     if (!documentId || documentId.trim() === '') {
       return {
         data: null,

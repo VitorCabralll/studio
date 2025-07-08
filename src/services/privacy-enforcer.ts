@@ -165,6 +165,38 @@ export async function enforceMaximumPrivacy(
  */
 export async function auditDataRetention(documentId: string): Promise<ServiceResult<boolean>> {
   try {
+    // 🛡️ Validar token JWT antes da consulta
+    const { getFirebaseAuth } = await import('@/lib/firebase');
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: 'Usuário não autenticado para auditoria de dados'
+        },
+        success: false
+      };
+    }
+
+    try {
+      // Forçar refresh do token para garantir que está válido
+      await currentUser.getIdToken(true);
+      console.log('✅ Token JWT válido obtido para auditoria Firestore');
+    } catch (tokenError) {
+      console.error('❌ Erro ao obter token JWT:', tokenError);
+      return {
+        data: null,
+        error: {
+          code: 'unauthenticated',
+          message: 'Falha ao obter token de autenticação para auditoria'
+        },
+        success: false
+      };
+    }
+
     const { getFirebaseDb } = await import('@/lib/firebase');
     const { doc, getDoc } = await import('firebase/firestore');
     

@@ -10,8 +10,29 @@ import {
   getDoc,
   orderBy 
 } from 'firebase/firestore';
-import { getFirebaseDb } from '@/lib/firebase';
+import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
+
+// 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
+async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    // Forçar refresh do token para garantir que está válido
+    await currentUser.getIdToken(true);
+    console.log('✅ Token JWT válido obtido para consulta Firestore');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erro ao validar token JWT:', error);
+    return { success: false, error: 'Falha na validação do token de autenticação' };
+  }
+}
 
 export interface Agent {
   id: string;
@@ -48,6 +69,12 @@ export const agentService = {
    * Criar um novo agente
    */
   async createAgent(data: CreateAgentData): Promise<{ success: boolean; agent?: Agent; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentData = {
         name: data.name.trim(),
@@ -87,6 +114,12 @@ export const agentService = {
    * Listar agentes de um workspace
    */
   async getWorkspaceAgents(workspaceId: string): Promise<{ success: boolean; agents?: Agent[]; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentsRef = collection(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes');
       const q = query(
@@ -126,6 +159,12 @@ export const agentService = {
    * Buscar um agente específico
    */
   async getAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; agent?: Agent; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       const agentDoc = await getDoc(agentRef);
@@ -164,6 +203,12 @@ export const agentService = {
     agentId: string, 
     updates: Partial<Omit<Agent, 'id' | 'workspaceId' | 'createdBy' | 'createdAt'>>
   ): Promise<{ success: boolean; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
@@ -182,6 +227,12 @@ export const agentService = {
    * Desativar um agente (soft delete)
    */
   async deactivateAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
@@ -200,6 +251,12 @@ export const agentService = {
    * Deletar um agente completamente
    */
   async deleteAgent(workspaceId: string, agentId: string): Promise<{ success: boolean; error?: string }> {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error };
+    }
+
     try {
       const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
       await deleteDoc(agentRef);

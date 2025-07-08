@@ -2,9 +2,30 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
-import { getFirebaseDb } from '@/lib/firebase';
+import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
 import { useAuth } from '@/hooks/use-auth';
+
+// 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
+async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    // Forçar refresh do token para garantir que está válido
+    await currentUser.getIdToken(true);
+    console.log('✅ Token JWT válido obtido para consulta Firestore (workspace)');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Erro ao validar token JWT (workspace):', error);
+    return { success: false, error: 'Falha na validação do token de autenticação' };
+  }
+}
 
 export interface Workspace {
   id: string;
@@ -63,6 +84,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setError(null);
       
       try {
+        // 🛡️ Validar token JWT antes da consulta
+        const authValidation = await validateAuthToken();
+        if (!authValidation.success) {
+          throw new Error(authValidation.error || 'Falha na autenticação');
+        }
+
         const db = getFirebaseDb();
         const workspacesCollection = addNamespace('workspaces');
         const workspacesRef = collection(db, workspacesCollection);
@@ -169,6 +196,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error || 'Falha na autenticação' };
+    }
+
     // Verificar limite de workspaces (máximo 5 por usuário)
     if (workspaces.length >= 5) {
       return { 
@@ -221,6 +254,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error || 'Falha na autenticação' };
+    }
+
     try {
       const db = getFirebaseDb();
       const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
@@ -253,6 +292,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error || 'Falha na autenticação' };
+    }
+
     try {
       const db = getFirebaseDb();
       await deleteDoc(doc(db, addNamespace('workspaces'), workspaceId));
@@ -274,6 +319,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   const addMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error || 'Falha na autenticação' };
+    }
+
     try {
       const db = getFirebaseDb();
       const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
@@ -302,6 +353,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   const removeMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
+    // 🛡️ Validar token JWT antes da consulta
+    const authValidation = await validateAuthToken();
+    if (!authValidation.success) {
+      return { success: false, error: authValidation.error || 'Falha na autenticação' };
+    }
+
     try {
       const db = getFirebaseDb();
       const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
