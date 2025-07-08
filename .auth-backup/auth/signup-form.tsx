@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/magic-ui";
 import { useAuth } from '@/hooks/use-auth';
+import { AuthErrorBoundary } from './auth-error-boundary';
+import { authLogger } from '@/lib/auth-logger';
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -42,19 +44,34 @@ export function SignupForm() {
     
     // Validação de confirmação de senha
     if (formData.password !== formData.confirmPassword) {
-      setFormErrors({ confirmPassword: "As senhas não coincidem" });
+      const errorMsg = "As senhas não coincidem";
+      setFormErrors({ confirmPassword: errorMsg });
+      authLogger.error('Signup validation failed', new Error(errorMsg), {
+        context: 'signup-form',
+        operation: 'password_confirmation_mismatch',
+      });
       return;
     }
     
     // Validação de termos de uso
     if (!formData.acceptTerms) {
-      setFormErrors({ acceptTerms: "Você deve aceitar os termos de uso" });
+      const errorMsg = "Você deve aceitar os termos de uso";
+      setFormErrors({ acceptTerms: errorMsg });
+      authLogger.error('Signup validation failed', new Error(errorMsg), {
+        context: 'signup-form',
+        operation: 'terms_not_accepted',
+      });
       return;
     }
 
     // Validação de senha mínima
     if (formData.password.length < 6) {
-      setFormErrors({ password: "A senha deve ter pelo menos 6 caracteres" });
+      const errorMsg = "A senha deve ter pelo menos 6 caracteres";
+      setFormErrors({ password: errorMsg });
+      authLogger.error('Signup validation failed', new Error(errorMsg), {
+        context: 'signup-form',
+        operation: 'password_too_short',
+      });
       return;
     }
 
@@ -67,23 +84,16 @@ export function SignupForm() {
       acceptNewsletter: formData.acceptNewsletter
     };
     
-    try {
-      await signup(formData.email, formData.password, additionalData);
-    } catch (error) {
-      // Error is already handled by useAuth
-    }
+    await signup(formData.email, formData.password, additionalData);
   };
 
   const handleGoogleSignup = async () => {
-    try {
-      await loginWithGoogle();
-    } catch (error) {
-      // Error is already handled by useAuth
-    }
+    await loginWithGoogle();
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <AuthErrorBoundary context="signup-form">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <FadeIn className="w-full max-w-lg">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -402,6 +412,7 @@ export function SignupForm() {
           </Card>
         </motion.div>
       </FadeIn>
-    </div>
+      </div>
+    </AuthErrorBoundary>
   );
 }

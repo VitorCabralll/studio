@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 
 import { useAuth } from './use-auth';
+import { authLogger } from '@/lib/auth-logger';
 import { 
   uploadTemplate, 
   uploadMultipleTemplates, 
@@ -62,7 +63,11 @@ export function useStorage(): UseStorageReturn {
       }
     } catch (err) {
       setError('Erro inesperado ao carregar arquivos');
-      console.error('Erro em refreshUserFiles:', err);
+      authLogger.error('Failed to refresh user files', err as Error, {
+        context: 'use-storage',
+        operation: 'refresh_user_files',
+        userId: user?.uid,
+      });
     }
   }, [user]);
 
@@ -101,7 +106,12 @@ export function useStorage(): UseStorageReturn {
       }
     } catch (err) {
       setError('Erro inesperado durante upload');
-      console.error('Erro em uploadSingleFile:', err);
+      authLogger.error('Failed to upload single file', err as Error, {
+        context: 'use-storage',
+        operation: 'upload_single_file',
+        userId: user?.uid,
+        metadata: { fileName: file.name, fileSize: file.size },
+      });
       return null;
     } finally {
       setUploading(false);
@@ -140,7 +150,12 @@ export function useStorage(): UseStorageReturn {
       }
     } catch (err) {
       setError('Erro inesperado durante upload');
-      console.error('Erro em uploadFiles:', err);
+      authLogger.error('Failed to upload files', err as Error, {
+        context: 'use-storage',
+        operation: 'upload_files',
+        userId: user?.uid,
+        metadata: { fileCount: files.length },
+      });
       return null;
     } finally {
       setUploading(false);
@@ -165,7 +180,12 @@ export function useStorage(): UseStorageReturn {
       }
     } catch (err) {
       setError('Erro inesperado ao remover arquivo');
-      console.error('Erro em removeFile:', err);
+      authLogger.error('Failed to remove file', err as Error, {
+        context: 'use-storage',
+        operation: 'remove_file',
+        userId: user?.uid,
+        metadata: { fullPath },
+      });
       return false;
     }
   }, []);
@@ -185,7 +205,12 @@ export function useStorage(): UseStorageReturn {
       }
     } catch (err) {
       setError('Erro inesperado ao obter URL');
-      console.error('Erro em getDownloadURL:', err);
+      authLogger.error('Failed to get download URL', err as Error, {
+        context: 'use-storage',
+        operation: 'get_download_url',
+        userId: user?.uid,
+        metadata: { fullPath },
+      });
       return null;
     }
   }, []);

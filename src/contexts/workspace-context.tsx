@@ -5,9 +5,11 @@ import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, dele
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
 import { useAuth } from '@/hooks/use-auth';
+import { AuthCoordinator } from '@/lib/auth-coordinator';
+import { authLogger } from '@/lib/auth-logger';
 
-// 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
-async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
+// 🛡️ Função utilitária para validar auth usando AuthCoordinator
+async function validateAuthWithCoordinator(): Promise<{ success: boolean; error?: string }> {
   try {
     const auth = getFirebaseAuth();
     const currentUser = auth.currentUser;
@@ -16,13 +18,30 @@ async function validateAuthToken(): Promise<{ success: boolean; error?: string }
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    // Forçar refresh do token para garantir que está válido
-    await currentUser.getIdToken(true);
-    console.log('✅ Token JWT válido obtido para consulta Firestore (workspace)');
+    // Usar AuthCoordinator para validação coordenada
+    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
+    
+    if (!isAuthReady) {
+      authLogger.error('Workspace auth validation failed via AuthCoordinator', new Error('Auth not ready'), {
+        context: 'workspace-context',
+        operation: 'auth_validation',
+        userId: currentUser.uid,
+      });
+      return { success: false, error: 'Falha na validação coordenada de autenticação' };
+    }
+
+    authLogger.info('Workspace auth validation successful via AuthCoordinator', {
+      context: 'workspace-context',
+      operation: 'auth_validation',
+      userId: currentUser.uid,
+    });
     
     return { success: true };
-  } catch (error) {
-    console.error('❌ Erro ao validar token JWT (workspace):', error);
+  } catch (error: any) {
+    authLogger.error('Workspace auth validation error', error, {
+      context: 'workspace-context',
+      operation: 'auth_validation',
+    });
     return { success: false, error: 'Falha na validação do token de autenticação' };
   }
 }
@@ -84,8 +103,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setError(null);
       
       try {
-        // 🛡️ Validar token JWT antes da consulta
-        const authValidation = await validateAuthToken();
+        // 🛡️ Validar auth usando AuthCoordinator
+        const authValidation = await validateAuthWithCoordinator();
         if (!authValidation.success) {
           throw new Error(authValidation.error || 'Falha na autenticação');
         }
@@ -196,8 +215,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    // 🛡️ Validar token JWT antes da consulta
-    const authValidation = await validateAuthToken();
+    // 🛡️ Validar auth usando AuthCoordinator
+    const authValidation = await validateAuthWithCoordinator();
     if (!authValidation.success) {
       return { success: false, error: authValidation.error || 'Falha na autenticação' };
     }
@@ -254,8 +273,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    // 🛡️ Validar token JWT antes da consulta
-    const authValidation = await validateAuthToken();
+    // 🛡️ Validar auth usando AuthCoordinator
+    const authValidation = await validateAuthWithCoordinator();
     if (!authValidation.success) {
       return { success: false, error: authValidation.error || 'Falha na autenticação' };
     }
@@ -292,8 +311,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    // 🛡️ Validar token JWT antes da consulta
-    const authValidation = await validateAuthToken();
+    // 🛡️ Validar auth usando AuthCoordinator
+    const authValidation = await validateAuthWithCoordinator();
     if (!authValidation.success) {
       return { success: false, error: authValidation.error || 'Falha na autenticação' };
     }
@@ -319,8 +338,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   const addMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
-    // 🛡️ Validar token JWT antes da consulta
-    const authValidation = await validateAuthToken();
+    // 🛡️ Validar auth usando AuthCoordinator
+    const authValidation = await validateAuthWithCoordinator();
     if (!authValidation.success) {
       return { success: false, error: authValidation.error || 'Falha na autenticação' };
     }
@@ -353,8 +372,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   const removeMember = async (workspaceId: string, userId: string): Promise<{ success: boolean; error?: string }> => {
-    // 🛡️ Validar token JWT antes da consulta
-    const authValidation = await validateAuthToken();
+    // 🛡️ Validar auth usando AuthCoordinator
+    const authValidation = await validateAuthWithCoordinator();
     if (!authValidation.success) {
       return { success: false, error: authValidation.error || 'Falha na autenticação' };
     }

@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FadeIn } from "@/components/magic-ui";
 import { useAuth } from '@/hooks/use-auth';
+import { AuthErrorBoundary } from './auth-error-boundary';
+import { authLogger } from '@/lib/auth-logger';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -34,6 +36,16 @@ export function ForgotPasswordForm() {
       await resetPassword(email);
       setIsSuccess(true);
     } catch (err: any) {
+      // Log estruturado usando authLogger
+      authLogger.error('Password reset failed', err, {
+        context: 'forgot-password-form',
+        operation: 'password_reset_failure',
+        metadata: {
+          email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
+          errorCode: err.code || 'unknown',
+        },
+      });
+      
       // Tratar diferentes tipos de erro
       if (err.code === 'auth/user-not-found') {
         setError("Email não encontrado. Verifique se o email está correto.");
@@ -51,7 +63,8 @@ export function ForgotPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <AuthErrorBoundary context="forgot-password-success">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
         <FadeIn className="w-full max-w-md">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -110,12 +123,14 @@ export function ForgotPasswordForm() {
             </Card>
           </motion.div>
         </FadeIn>
-      </div>
+        </div>
+      </AuthErrorBoundary>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <AuthErrorBoundary context="forgot-password-form">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <FadeIn className="w-full max-w-md">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -208,6 +223,7 @@ export function ForgotPasswordForm() {
           </div>
         </motion.div>
       </FadeIn>
-    </div>
+      </div>
+    </AuthErrorBoundary>
   );
 }

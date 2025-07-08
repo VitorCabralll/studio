@@ -161,8 +161,23 @@ class StructuredLogger {
     const entry = this.createLogEntry('critical', message, context, error);
     this.outputLog(entry);
     
-    // Em produção, críticos poderiam ir para alerting
-    // TODO: Integrar com Sentry, Firebase Crashlytics, etc.
+    // Em produção, críticos vão para alerting via monitoring service
+    if (this.environment === 'production' && typeof window !== 'undefined') {
+      try {
+        // Integração com monitoring service será carregada dinamicamente
+        import('./monitoring').then(({ monitoring }) => {
+          monitoring.reportError({
+            message,
+            error: error || new Error(message),
+            severity: 'critical',
+            context,
+          });
+        });
+      } catch (err) {
+        // Fallback se monitoring falhar
+        console.error('Failed to report critical error to monitoring:', err);
+      }
+    }
   }
 
   // Métodos específicos para diferentes contextos

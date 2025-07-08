@@ -42,13 +42,35 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // Log do erro
-    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+    // Log estruturado
+    import('@/lib/logger').then(({ logger }) => {
+      logger.error('ErrorBoundary caught error', error, {
+        component: 'error-boundary',
+        metadata: {
+          componentStack: errorInfo.componentStack,
+          errorBoundary: true,
+        },
+      });
+    });
 
     // Callback customizado se fornecido
     this.props.onError?.(error, errorInfo);
 
-    // TODO: Enviar para serviço de monitoramento (ex: Sentry)
+    // Enviar para serviço de monitoramento
+    import('@/lib/monitoring').then(({ monitoring }) => {
+      monitoring.reportError({
+        message: 'React Error Boundary caught error',
+        error,
+        severity: 'high',
+        context: {
+          component: 'error-boundary',
+          metadata: {
+            componentStack: errorInfo.componentStack,
+            errorBoundary: true,
+          },
+        },
+      });
+    });
   }
 
   handleRetry = () => {
@@ -145,9 +167,26 @@ export function withErrorBoundary<T extends object>(
 // Hook para reportar erros programaticamente
 export function useErrorHandler() {
   const handleError = React.useCallback((error: Error, context?: string) => {
-    console.error(`[${context || 'UserError'}]`, error);
+    // Log estruturado
+    import('@/lib/logger').then(({ logger }) => {
+      logger.error(`User error: ${context || 'Unknown context'}`, error, {
+        component: 'user-error-handler',
+        metadata: { context },
+      });
+    });
     
-    // TODO: Enviar para serviço de monitoramento
+    // Enviar para serviço de monitoramento
+    import('@/lib/monitoring').then(({ monitoring }) => {
+      monitoring.reportError({
+        message: `User error: ${context || 'Unknown context'}`,
+        error,
+        severity: 'medium',
+        context: {
+          component: 'user-error-handler',
+          metadata: { context },
+        },
+      });
+    });
     
     // Re-throw para que seja capturado por error boundary se necessário
     throw error;

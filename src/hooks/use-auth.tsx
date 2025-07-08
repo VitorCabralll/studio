@@ -1,25 +1,28 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { 
   User, 
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-
 import { getFirebaseAuth, getGoogleAuthProvider } from '@/lib/firebase';
-import { getUserProfile, UserProfile } from '@/services/user-service';
-import { parseAuthError, AuthError } from '@/lib/auth-errors';
+import { getUserProfile, createUserProfile, UserProfile } from '@/services/user-service';
+
+interface AuthError {
+  code: string;
+  message: string;
+}
 
 interface AuthState {
   user: User | null;
-  userProfile: UserProfile | null;
+  profile: UserProfile | null;
+  userProfile: UserProfile | null; // Alias for compatibility
   loading: boolean;
   error: AuthError | null;
   isInitialized: boolean;
@@ -27,13 +30,12 @@ interface AuthState {
 
 interface AuthActions {
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, additionalData?: Partial<UserProfile>) => Promise<void>;
+  signup: (email: string, password: string, profileData?: Partial<UserProfile>) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
   updateUserProfileState: (data: Partial<UserProfile>) => void;
-  retryLoadProfile: () => Promise<void>;
 }
 
 type AuthContextType = AuthState & AuthActions;
@@ -44,9 +46,30 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Parse Firebase Auth errors into user-friendly messages
+function parseAuthError(error: any): AuthError {
+  const errorMessages: Record<string, string> = {
+    'auth/user-not-found': 'Usuário não encontrado. Verifique o email.',
+    'auth/wrong-password': 'Senha incorreta. Tente novamente.',
+    'auth/invalid-email': 'Email inválido.',
+    'auth/email-already-in-use': 'Este email já está em uso.',
+    'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
+    'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
+    'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
+    'auth/popup-closed-by-user': 'Login cancelado.',
+    'auth/popup-blocked': 'Pop-up bloqueado. Permita pop-ups para este site.',
+  };
+
+  return {
+    code: error.code || 'unknown',
+    message: errorMessages[error.code] || 'Erro de autenticação. Tente novamente.'
+  };
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, setState] = useState<AuthState>({
     user: null,
+    profile: null,
     userProfile: null,
     loading: true,
     error: null,
@@ -55,127 +78,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   const router = useRouter();
 
-  // Helper function to load user profile
-  const loadUserProfile = async (user: User): Promise<UserProfile | null> => {
-    try {
-      const result = await getUserProfile(user.uid);
-      
-      if (result.success && result.data) {
-        return result.data;
-      }
-      
-      // If profile loading fails, throw error for proper handling
-      throw new Error(result.error?.message || 'Failed to load user profile');
-    } catch (error) {
-      console.error('Profile loading error:', error);
-      throw error;
-    }
-  };
-
-  // Auth state listener
+  // Listen to auth state changes
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      setState(prev => ({ ...prev, loading: false, isInitialized: true }));
-      return;
-    }
-
     const auth = getFirebaseAuth();
-    let retryTimeoutRef: NodeJS.Timeout;
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔄 Auth state changed:', { 
-        hasUser: !!user, 
-        uid: user?.uid,
-        emailVerified: user?.emailVerified,
-        providerData: user?.providerData 
-      });
-      
-      // 🔧 Debug detalhado em desenvolvimento
-      if (process.env.NODE_ENV === 'development' && user) {
-        try {
-          const token = await user.getIdToken();
-          const tokenResult = await user.getIdTokenResult();
-          console.log('🔐 Auth debug:', {
-            uid: user.uid,
-            email: user.email,
-            emailVerified: user.emailVerified,
-            hasToken: !!token,
-            tokenClaims: {
-              uid: tokenResult.claims.user_id,
-              email: tokenResult.claims.email,
-              authTime: tokenResult.claims.auth_time ? new Date(Number(tokenResult.claims.auth_time) * 1000) : null,
-              issuedAt: tokenResult.claims.iat ? new Date(Number(tokenResult.claims.iat) * 1000) : null,
-              expires: tokenResult.claims.exp ? new Date(Number(tokenResult.claims.exp) * 1000) : null
-            }
-          });
-        } catch (tokenError) {
-          console.error('🚨 Token debug error:', tokenError);
-        }
-      }
-      
       if (user) {
-        // User is signed in
+        // User is signed in - load profile
         setState(prev => ({ ...prev, user, loading: true, error: null }));
         
         try {
-          const userProfile = await loadUserProfile(user);
+          const profile = await getUserProfile(user.uid);
           setState(prev => ({ 
             ...prev, 
-            userProfile,
+            profile, 
+            userProfile: profile,
             loading: false,
-            error: null, // Clear any previous errors
             isInitialized: true
           }));
         } catch (error) {
           console.error('Failed to load profile:', error);
           setState(prev => ({ 
             ...prev, 
+            profile: null,
             userProfile: null,
             loading: false,
             error: parseAuthError(error),
             isInitialized: true
           }));
-          
-          // Auto-retry after 3 seconds for network errors
-          if (error instanceof Error && (
-            error.message.includes('network') || 
-            error.message.includes('offline') ||
-            error.message.includes('unavailable') ||
-            error.message.includes('Failed to get document')
-          )) {
-            console.log('🔄 Tentando recarregar perfil em 3 segundos...');
-            retryTimeoutRef = setTimeout(async () => {
-              try {
-                const retryProfile = await loadUserProfile(user);
-                setState(prev => ({ 
-                  ...prev, 
-                  userProfile: retryProfile,
-                  error: null
-                }));
-              } catch (retryError) {
-                console.error('Retry failed, creating default profile:', retryError);
-                // Se falhar novamente, criar perfil padrão
-                const defaultProfile = {
-                  cargo: '',
-                  areas_atuacao: [],
-                  primeiro_acesso: true,
-                  initial_setup_complete: false,
-                  data_criacao: new Date(),
-                  workspaces: [],
-                };
-                setState(prev => ({ 
-                  ...prev, 
-                  userProfile: defaultProfile,
-                  error: null
-                }));
-              }
-            }, 3000);
-          }
         }
       } else {
         // User is signed out
         setState({
           user: null,
+          profile: null,
           userProfile: null,
           loading: false,
           error: null,
@@ -184,46 +120,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     });
 
-    return () => {
-      unsubscribe();
-      if (retryTimeoutRef) {
-        clearTimeout(retryTimeoutRef);
-      }
-    };
+    return unsubscribe;
   }, []);
 
-  // Retry loading profile
-  const retryLoadProfile = async (): Promise<void> => {
-    if (!state.user) return;
-    
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      const userProfile = await loadUserProfile(state.user);
-      setState(prev => ({ 
-        ...prev, 
-        userProfile,
-        loading: false,
-      }));
-    } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
-        userProfile: null,
-        loading: false,
-        error: parseAuthError(error)
-      }));
-    }
-  };
-
-  // Auth actions
   const login = async (email: string, password: string): Promise<void> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const auth = getFirebaseAuth();
       await signInWithEmailAndPassword(auth, email, password);
-      // Não fazer redirecionamento aqui - deixar o OnboardingGuard decidir
-      // O onAuthStateChanged irá detectar o login e carregar o perfil
+      // onAuthStateChanged will handle the rest
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -234,28 +140,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signup = async (email: string, password: string, additionalData?: Partial<UserProfile>): Promise<void> => {
+  const signup = async (email: string, password: string, profileData?: Partial<UserProfile>): Promise<void> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const auth = getFirebaseAuth();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Se temos dados adicionais, criar perfil inicial
-      if (additionalData && userCredential.user) {
-        const { createUserProfile } = await import('@/services/user-service');
-        await createUserProfile(userCredential.user.uid, {
-          ...additionalData,
-          cargo: additionalData.cargo || '',
-          areas_atuacao: additionalData.areas_atuacao || [],
-          primeiro_acesso: true,
-          initial_setup_complete: false,
-          data_criacao: new Date(),
-          workspaces: []
-        });
+      // Create user profile if data provided
+      if (profileData && userCredential.user) {
+        try {
+          await createUserProfile(userCredential.user.uid, {
+            ...profileData,
+            cargo: profileData.cargo || '',
+            areas_atuacao: profileData.areas_atuacao || [],
+            primeiro_acesso: true,
+            initial_setup_complete: false,
+            workspaces: []
+          });
+        } catch (profileError) {
+          console.error('Failed to create profile:', profileError);
+          // Don't throw - let auth succeed even if profile creation fails
+        }
       }
       
-      // Navigation will be handled by onAuthStateChanged
+      // onAuthStateChanged will handle the rest
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -272,24 +181,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const auth = getFirebaseAuth();
       const provider = getGoogleAuthProvider();
-      
-      try {
-        // Try popup first
-        await signInWithPopup(auth, provider);
-      } catch (popupError: unknown) {
-        const error = popupError as { code?: string };
-        
-        // If popup is blocked, use redirect
-        if (error.code === 'auth/popup-blocked') {
-          console.log('Popup blocked, using redirect method');
-          await signInWithRedirect(auth, provider);
-          return; // Redirect will handle the rest
-        }
-        throw popupError;
-      }
-      
-      // Não fazer redirecionamento aqui - deixar o OnboardingGuard decidir
-      // O onAuthStateChanged irá detectar o login e carregar o perfil
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged will handle the rest
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
@@ -329,7 +222,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loading: false,
         error: parseAuthError(error)
       }));
-      throw error; // Re-throw para o componente tratar
+      throw error;
     }
   };
 
@@ -340,7 +233,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateUserProfileState = (data: Partial<UserProfile>): void => {
     setState(prev => ({
       ...prev,
-      userProfile: prev.userProfile ? { ...prev.userProfile, ...data } : null
+      profile: prev.profile ? { ...prev.profile, ...data } : null,
+      userProfile: prev.userProfile ? { ...prev.userProfile, ...data } : null,
     }));
   };
 
@@ -353,7 +247,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     clearError,
     updateUserProfileState,
-    retryLoadProfile,
   };
 
   return (
@@ -371,5 +264,5 @@ export function useAuth(): AuthContextType {
   return context;
 }
 
-// Re-export types for convenience
+// Export types for convenience
 export type { UserProfile, AuthError };
