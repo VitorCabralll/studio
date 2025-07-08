@@ -86,99 +86,111 @@ export interface UserProfile {
   workspaces?: Workspace[];
 }
 
-export async function getUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
+// 🛡️ SOLUÇÃO: Retry com delay para problemas de timing
+async function getUserProfileWithRetry(uid: string, attempt: number = 1): Promise<ServiceResult<UserProfile>> {
+  const maxAttempts = 3;
+  
   try {
-    console.log('🔍 getUserProfile called with:', { uid });
+    console.log(`🔍 getUserProfile attempt ${attempt}/${maxAttempts} with:`, { uid });
     
-    // Validação de entrada
-    if (!uid || uid.trim() === '') {
-      return {
-        data: null,
-        error: {
-          code: 'invalid-argument',
-          message: 'ID do usuário é obrigatório.'
-        },
-        success: false
-      };
+    // Aguardar propagação progressiva
+    if (attempt > 1) {
+      const delay = attempt * 1000; // 1s, 2s, 3s
+      console.log(`⏳ Retry ${attempt}: aguardando ${delay}ms para propagação...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    const db = getFirebaseDb();
-    const namespace = addNamespace('usuarios');
-    const docRef = doc(db, namespace, uid);
+    return await executeGetUserProfile(uid);
+  } catch (error: any) {
+    console.error(`❌ Attempt ${attempt} failed:`, error?.code || error?.message);
     
-    // 🔧 Debug logs para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Firestore query debug:', { 
-        database: db.app.options.projectId,
-        collection: namespace, 
-        uid,
-        environment: process.env.NEXT_PUBLIC_APP_ENV,
-        namespace_prefix: process.env.NEXT_PUBLIC_APP_NAMESPACE,
-        final_path: `${namespace}/${uid}`
-      });
+    // Retry apenas para erros de permission denied
+    if (attempt < maxAttempts && error?.code === 'permission-denied') {
+      console.log(`🔄 Retrying... (${attempt + 1}/${maxAttempts})`);
+      return getUserProfileWithRetry(uid, attempt + 1);
     }
     
-    // Single attempt with reasonable timeout
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data() as UserProfile;
-      
-      // Garantir campos obrigatórios
-      const normalizedData: UserProfile = {
-        ...data,
-        workspaces: data.workspaces || [],
-        initial_setup_complete: data.initial_setup_complete ?? false
-      };
-      
-      return { data: normalizedData, error: null, success: true };
-    } else {
-      // Usuário não existe - criar perfil padrão
-      const defaultProfile: UserProfile = {
-        cargo: '',
-        areas_atuacao: [],
-        primeiro_acesso: true,
-        initial_setup_complete: false,
-        data_criacao: new Date(),
-        workspaces: [],
-      };
-      
-      const createResult = await createUserProfile(uid, {
-        ...defaultProfile,
-        data_criacao: new Date()
-      });
-      if (!createResult.success) {
-        return {
-          data: null,
-          error: createResult.error,
-          success: false
-        };
-      }
-      
-      // Retornar o perfil criado
-      return { data: createResult.data, error: null, success: true };
-    }
-  } catch (error) {
-    console.error('Erro em getUserProfile:', error);
-    
-    // 🔧 Debug detalhado para permission-denied em desenvolvimento
-    if (process.env.NODE_ENV === 'development' && error instanceof Error && 'code' in error && error.code === 'permission-denied') {
-      console.error('🚨 Permission Debug:', {
-        operation: 'getUserProfile',
-        collection: addNamespace('usuarios'),
-        uid,
-        error_code: error.code,
-        error_message: error.message,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
+    // Se não foi permission denied ou esgotaram tentativas, retornar erro
     return {
       data: null,
       error: createServiceError(error, 'buscar perfil do usuário'),
       success: false
     };
   }
+}
+
+async function executeGetUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
+  // Validação de entrada
+  if (!uid || uid.trim() === '') {
+    return {
+      data: null,
+      error: {
+        code: 'invalid-argument',
+        message: 'ID do usuário é obrigatório.'
+      },
+      success: false
+    };
+  }
+
+  const db = getFirebaseDb();
+  const namespace = addNamespace('usuarios');
+  const docRef = doc(db, namespace, uid);
+  
+  console.log('🔍 Firestore query debug:', { 
+    database: db.app.options.projectId,
+    collection: namespace, 
+    uid,
+    environment: process.env.NEXT_PUBLIC_APP_ENV,
+    namespace_prefix: process.env.NEXT_PUBLIC_APP_NAMESPACE,
+    final_path: `${namespace}/${uid}`,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Single attempt with reasonable timeout
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data() as UserProfile;
+    
+    // Garantir campos obrigatórios
+    const normalizedData: UserProfile = {
+      ...data,
+      workspaces: data.workspaces || [],
+      initial_setup_complete: data.initial_setup_complete ?? false
+    };
+    
+    return { data: normalizedData, error: null, success: true };
+  } else {
+    // Usuário não existe - criar perfil padrão
+    const defaultProfile: UserProfile = {
+      cargo: '',
+      areas_atuacao: [],
+      primeiro_acesso: true,
+      initial_setup_complete: false,
+      data_criacao: new Date(),
+      workspaces: [],
+    };
+    
+    const createResult = await createUserProfile(uid, {
+      ...defaultProfile,
+      data_criacao: new Date()
+    });
+    if (!createResult.success) {
+      return {
+        data: null,
+        error: createResult.error,
+        success: false
+      };
+    }
+    
+    // Retornar o perfil criado
+    return { data: createResult.data, error: null, success: true };
+  }
+}
+
+// Função principal exportada com retry
+export async function getUserProfile(uid: string): Promise<ServiceResult<UserProfile>> {
+  return getUserProfileWithRetry(uid);
 }
 
 export async function createUserProfile(
