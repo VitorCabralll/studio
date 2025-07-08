@@ -8,6 +8,14 @@ runConfig:
   concurrency: 1000
   cpu: 1
   memoryMiB: 512
+  # Runtime específico
+  runtime: nodejs20
+
+# Build configuration
+buildConfig:
+  commands:
+    - npm ci
+    - npm run build
 
 env:
   # Firebase Client Configuration (NEXT_PUBLIC para browser)
