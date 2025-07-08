@@ -162,6 +162,7 @@ async function executeGetUserProfile(uid: string): Promise<ServiceResult<UserPro
     return { data: normalizedData, error: null, success: true };
   } else {
     // Usuário não existe - criar perfil padrão
+    console.log('👤 Documento de usuário não encontrado, criando perfil padrão...');
     const defaultProfile: UserProfile = {
       cargo: '',
       areas_atuacao: [],
@@ -171,20 +172,31 @@ async function executeGetUserProfile(uid: string): Promise<ServiceResult<UserPro
       workspaces: [],
     };
     
-    const createResult = await createUserProfile(uid, {
-      ...defaultProfile,
-      data_criacao: new Date()
-    });
-    if (!createResult.success) {
+    try {
+      const createResult = await createUserProfile(uid, {
+        ...defaultProfile,
+        data_criacao: new Date()
+      });
+      
+      if (!createResult.success) {
+        console.error('❌ Falha ao criar perfil:', createResult.error);
+        return {
+          data: null,
+          error: createResult.error,
+          success: false
+        };
+      }
+      
+      console.log('✅ Perfil padrão criado com sucesso');
+      return { data: createResult.data, error: null, success: true };
+    } catch (error: any) {
+      console.error('❌ Erro ao criar perfil padrão:', error);
       return {
         data: null,
-        error: createResult.error,
+        error: createServiceError(error, 'criar perfil padrão'),
         success: false
       };
     }
-    
-    // Retornar o perfil criado
-    return { data: createResult.data, error: null, success: true };
   }
 }
 
