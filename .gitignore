@@ -65,7 +65,7 @@ firebase-export-*
 firestore_export/
 
 # Editor and IDE configs
-.vscode/
+# .vscode/  # Permitir configurações do projeto
 .idea/
 .claude/
 .idx/
