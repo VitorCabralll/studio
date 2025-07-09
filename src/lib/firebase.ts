@@ -51,7 +51,9 @@ export function getFirebaseAuth(): Auth {
 export function getFirebaseDb(): Firestore {
   if (!db) {
     const app = initializeFirebaseApp();
-    db = getFirestore(app);
+    // 🔧 FIX: Conectar na database 'lexai' (Brasil, free tier, com dados)
+    // ao invés da database '(default)' (EUA, pago, vazia)
+    db = getFirestore(app, 'lexai');
     
     // Enable network for production
     if (typeof window !== 'undefined') {

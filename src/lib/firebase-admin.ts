@@ -64,7 +64,8 @@ function getAdminApp() {
 // Lazy Firebase services
 export function getAdminFirestore() {
   const app = getAdminApp();
-  return app ? getFirestore(app) : null;
+  // 🔧 FIX: Conectar na database 'lexai' (Brasil, free tier, com dados)
+  return app ? getFirestore(app, 'lexai') : null;
 }
 
 export function getAdminAuth() {
@@ -81,6 +82,9 @@ export function getAdminStorage() {
 export const adminFirestore = null; // Deprecated: use getAdminFirestore()
 export const adminAuth = null; // Deprecated: use getAdminAuth()
 export const adminStorage = null; // Deprecated: use getAdminStorage()
+
+// Alias para compatibilidade
+export const getFirebaseAdminDb = getAdminFirestore;
 
 // Interface para resultado de operações admin
 export interface AdminResult<T> {
