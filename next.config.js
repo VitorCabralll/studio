@@ -73,6 +73,25 @@ const nextConfig = {
     return config;
   },
   
+  // Headers configuration to fix CORS/COOP issues
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups'
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy', 
+            value: 'unsafe-none'
+          }
+        ],
+      },
+    ]
+  },
+
   // Build optimizations
   compress: true,
   poweredByHeader: false,

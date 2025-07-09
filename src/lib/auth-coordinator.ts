@@ -149,12 +149,12 @@ export class AuthCoordinator {
    * Aguarda propagação do token (timing crítico)
    */
   private static async waitForTokenPropagation(): Promise<void> {
-    // Firebase token propagation pode levar até 1-2 segundos
-    // Este delay é necessário para evitar permission-denied
-    const propagationDelay = 1500; // 1.5 segundos
+    // Firebase tokens são válidos imediatamente após getIdToken()
+    // Removendo delay artificial que causa race conditions
+    console.log('✅ AuthCoordinator: Token ready immediately (no delay needed)');
     
-    console.log(`⏳ AuthCoordinator: Waiting ${propagationDelay}ms for token propagation`);
-    await new Promise(resolve => setTimeout(resolve, propagationDelay));
+    // Se ainda houver problemas, será tratado no retry logic
+    return Promise.resolve();
   }
 
   /**
@@ -165,22 +165,24 @@ export class AuthCoordinator {
       const db = getFirebaseDb();
       const namespace = addNamespace('usuarios');
       
-      // Test query que requer auth - tentar acessar o próprio perfil
+      // Test query mais simples - apenas verificar se o usuário tem acesso
       const testRef = doc(db, namespace, uid);
-      await getDoc(testRef);
+      const docSnap = await getDoc(testRef);
       
+      // Se não deu erro de permissão, o token está válido
+      // (mesmo que o documento não exista)
       console.log('✅ AuthCoordinator: Firestore access confirmed');
       return true;
 
     } catch (error: any) {
       if (error.code === 'permission-denied') {
-        console.warn('⚠️ AuthCoordinator: Firestore permission denied - token not propagated yet');
+        console.warn('⚠️ AuthCoordinator: Firestore permission denied - retrying');
         return false;
       }
       
-      // Outros erros não são problemas de token propagation
-      console.warn('⚠️ AuthCoordinator: Firestore access test error (not permission):', error.code);
-      return true; // Assume que token está ok, problema é outro
+      // Outros erros (not-found, etc.) não são problemas de token
+      console.log('✅ AuthCoordinator: Firestore access ok (non-permission error):', error.code);
+      return true; // Token está válido
     }
   }
 
@@ -277,7 +279,7 @@ export class AuthCoordinator {
           AuthCoordinator.tokenValidationPromise = null;
           AuthCoordinator.authState.tokenValidated = false;
           
-          const backoffDelay = attempt * 1000; // 1s, 2s, 3s
+          const backoffDelay = attempt * 500; // 500ms, 1s, 1.5s - mais rápido
           console.log(`⏳ AuthCoordinator: Backoff delay ${backoffDelay}ms before retry`);
           await new Promise(resolve => setTimeout(resolve, backoffDelay));
           

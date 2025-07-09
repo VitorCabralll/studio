@@ -11,6 +11,7 @@ import { type AuthError } from './auth-errors';
 interface AuthLogContext extends LogContext {
   operation?: string;
   context?: string;
+  attempt?: number;
   authState?: 'loading' | 'authenticated' | 'unauthenticated';
   userInfo?: {
     uid?: string;
@@ -29,6 +30,7 @@ interface AuthLogContext extends LogContext {
     message?: string;
     stack?: string;
   };
+  errorCode?: string;
   performance?: {
     duration?: number;
     timestamp?: number;
