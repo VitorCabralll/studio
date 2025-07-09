@@ -70,7 +70,7 @@ export function CriarAgenteClient() {
       if (createResult.success && createResult.agent) {
         // Marcar setup como completo no perfil do usuário
         const result = await updateUserProfile(user.uid, { initial_setup_complete: true });
-        if (result.success) {
+        if (result) {
           updateUserProfileState({ initial_setup_complete: true });
           
           console.log("Agente criado com sucesso!", { 
@@ -92,7 +92,7 @@ export function CriarAgenteClient() {
             router.push('/generate'); // Redirecionar para página de geração
           }, 1000);
         } else {
-          console.error("Erro ao atualizar perfil:", result.error);
+          console.error("Erro ao atualizar perfil:", result);
           setError('Erro ao finalizar configuração. Tente novamente.');
           setIsCreating(false);
         }

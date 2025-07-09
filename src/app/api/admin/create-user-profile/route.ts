@@ -10,6 +10,10 @@ export async function POST(request: NextRequest) {
     }
     
     const db = getFirebaseAdminDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Firebase Admin não configurado' }, { status: 500 });
+    }
+    
     const userRef = db.collection('usuarios').doc(uid);
     
     // Verificar se já existe

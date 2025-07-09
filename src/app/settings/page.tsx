@@ -48,7 +48,7 @@ function SettingsPageContent() {
         displayName: fullName.trim() 
       });
       
-      if (result.success) {
+      if (result) {
         // Atualizar estado local
         updateUserProfileState({ 
           name: fullName.trim(),
@@ -60,7 +60,7 @@ function SettingsPageContent() {
           description: "Suas informações foram salvas com sucesso.",
         });
       } else {
-        throw new Error(result.error?.message || 'Erro ao salvar perfil');
+        throw new Error('Erro ao salvar perfil');
       }
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
@@ -83,13 +83,13 @@ function SettingsPageContent() {
         name: workspaceName.trim()
       });
       
-      if (result.success) {
+      if (result) {
         toast({
           title: "Workspace atualizado",
           description: "O nome do workspace foi alterado com sucesso.",
         });
       } else {
-        throw new Error(result.error);
+        throw new Error('Erro ao salvar perfil');
       }
     } catch {
       toast({
@@ -115,14 +115,14 @@ function SettingsPageContent() {
     try {
       const result = await deleteWorkspace(currentWorkspace.id);
       
-      if (result.success) {
+      if (result) {
         toast({
           title: "Workspace excluído",
           description: "O workspace foi removido permanentemente.",
         });
         // Usuário será redirecionado automaticamente pelo WorkspaceContext
       } else {
-        throw new Error(result.error);
+        throw new Error('Erro ao salvar perfil');
       }
     } catch {
       toast({

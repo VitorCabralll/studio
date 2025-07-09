@@ -377,12 +377,12 @@ export default function OnboardingPage() {
       const result = await updateUserProfile(user.uid, profileData);
       console.log('📄 onSubmit: updateUserProfile result', result);
       
-      if (result.success) {
+      if (result) {
         console.log('✅ onSubmit: Profile updated successfully, updating state and redirecting');
         updateUserProfileState(profileData);
         router.push('/onboarding/success');
       } else {
-        console.error("❌ onSubmit: Erro ao salvar perfil:", result.error);
+        console.error("❌ onSubmit: Erro ao salvar perfil:", result);
         // TODO: Mostrar toast de erro para o usuário
         setIsSubmitting(false); // Reset loading state on error
       }

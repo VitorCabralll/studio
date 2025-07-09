@@ -8,13 +8,15 @@ service cloud.firestore {
     // ============================================================================
     
     // 1. USUÁRIOS - Perfis de usuário
+    // Permite que um usuário autenticado leia e escreva em seu próprio documento.
     match /usuarios/{userId} {
-      allow read, write, create: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
     // 2. WORKSPACES - Apenas membros podem acessar
+    // Unificado 'read' e 'list' em uma única regra 'read'.
+    // A segurança de listagem deve ser reforçada por queries no frontend.
     match /workspaces/{workspaceId} {
-      // Leitura/escrita: apenas membros
       allow read, write: if request.auth != null && 
         request.auth.uid in resource.data.members;
       
@@ -22,13 +24,10 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         request.auth.uid in request.resource.data.members &&
         request.auth.uid in request.resource.data.owners;
-      
-      // LISTAGEM SEGURA: apenas workspaces onde o usuário é membro
-      allow list: if request.auth != null && 
-        request.auth.uid in resource.data.members;
     }
     
     // 3. AGENTES - Subcoleção de workspaces
+    // Permite acesso a agentes se o usuário for membro do workspace pai.
     match /workspaces/{workspaceId}/agentes/{agentId} {
       allow read, write, create: if request.auth != null && 
         exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
@@ -91,13 +90,7 @@ service cloud.firestore {
       allow write: if false; // Apenas admin via Cloud Functions
     }
     
-    // ============================================================================
-    // FALLBACK - NEGAR TUDO O QUE NÃO ESTÁ EXPLICITAMENTE PERMITIDO
-    // ============================================================================
-    
-    // Esta regra deve vir POR ÚLTIMO para garantir segurança
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    // O fallback explícito foi removido. 
+    // O comportamento padrão do Firestore é negar todo o acesso que não é explicitamente permitido.
   }
 }
