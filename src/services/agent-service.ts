@@ -96,7 +96,8 @@ export const agentService = {
         }
       };
 
-      const docRef = await addDoc(collection(getFirebaseDb(), addNamespace('workspaces'), data.workspaceId, 'agentes'), agentData);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const docRef = await addDoc(collection(getFirebaseDb(), workspacesCollection, data.workspaceId, 'agentes'), agentData);
       
       const newAgent: Agent = {
         id: docRef.id,
@@ -121,7 +122,8 @@ export const agentService = {
     }
 
     try {
-      const agentsRef = collection(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes');
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const agentsRef = collection(getFirebaseDb(), workspacesCollection, workspaceId, 'agentes');
       const q = query(
         agentsRef, 
         where('isActive', '==', true),
@@ -166,7 +168,8 @@ export const agentService = {
     }
 
     try {
-      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const agentRef = doc(getFirebaseDb(), workspacesCollection, workspaceId, 'agentes', agentId);
       const agentDoc = await getDoc(agentRef);
       
       if (!agentDoc.exists()) {
@@ -210,7 +213,8 @@ export const agentService = {
     }
 
     try {
-      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const agentRef = doc(getFirebaseDb(), workspacesCollection, workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
         ...updates,
         updatedAt: new Date()
@@ -234,7 +238,8 @@ export const agentService = {
     }
 
     try {
-      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const agentRef = doc(getFirebaseDb(), workspacesCollection, workspaceId, 'agentes', agentId);
       await updateDoc(agentRef, {
         isActive: false,
         updatedAt: new Date()
@@ -258,7 +263,8 @@ export const agentService = {
     }
 
     try {
-      const agentRef = doc(getFirebaseDb(), addNamespace('workspaces'), workspaceId, 'agentes', agentId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const agentRef = doc(getFirebaseDb(), workspacesCollection, workspaceId, 'agentes', agentId);
       await deleteDoc(agentRef);
 
       return { success: true };

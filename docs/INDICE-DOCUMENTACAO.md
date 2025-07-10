@@ -12,6 +12,13 @@
 | **[README.md](./README.md)** | 📖 Visão geral | Entender o projeto completo |
 | **[ESTRUTURA-AMBIENTES.md](./ESTRUTURA-AMBIENTES.md)** | 🌍 Ambientes | Trocar entre dev/staging/prod |
 
+## 🔥 **Firebase Auth + Firestore - Documentação Crítica**
+
+| Documento | Uso | Quando Usar |
+|-----------|-----|-------------|
+| **[FIREBASE_AUTH_PRODUCTION_GUIDE.md](./FIREBASE_AUTH_PRODUCTION_GUIDE.md)** | 📚 Guia completo | Problemas de auth em produção |
+| **[FIREBASE_AUTH_CHECKLIST.md](./FIREBASE_AUTH_CHECKLIST.md)** | ✅ Checklist rápido | Antes/após deploy produção |
+
 ---
 
 ## 🌍 **Documentação por Ambiente**

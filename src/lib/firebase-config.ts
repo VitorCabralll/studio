@@ -37,13 +37,17 @@ export function getFirebaseConfig(): FirebaseConfig {
   
   // Detect environment and set appropriate authDomain
   const getAuthDomain = () => {
-    // Use env variable if set
+    // PRODUÇÃO: sempre usar domínio Firebase correto
+    if (process.env.NODE_ENV === 'production') {
+      return 'lexai-ef0ab.firebaseapp.com';
+    }
+    
+    // DESENVOLVIMENTO: permitir override via env var
     if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) {
       return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
     }
     
-    // Always use the firebaseapp.com domain for OAuth
-    // This is the correct domain for Firebase Auth redirects
+    // Default: usar domínio Firebase
     return 'lexai-ef0ab.firebaseapp.com';
   };
 

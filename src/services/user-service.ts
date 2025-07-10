@@ -83,12 +83,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
     // Step 3: Try to get existing profile
     const db = getFirebaseDb();
-    const namespace = addNamespace('usuarios');
-    const docRef = doc(db, namespace, uid);
+    // CORREÇÃO: usar 'usuarios' diretamente em produção
+    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
+    const docRef = doc(db, collection, uid);
     
     console.log('🔍 getUserProfile: Querying Firestore', {
       database: db.app.options.projectId,
-      collection: namespace,
+      collection: collection,
       uid,
       hasToken: !!token
     });

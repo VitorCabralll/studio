@@ -152,6 +152,33 @@ type Result<T, E = Error> =
 
 ---
 
+## 🔥 **Firebase Auth + Firestore - Referência Rápida**
+
+### **Para Claude Code: Problemas de Auth em Produção**
+```bash
+📚 CONSULTE PRIMEIRO: docs/FIREBASE_AUTH_PRODUCTION_GUIDE.md
+
+🚨 PROBLEMAS COMUNS:
+- "Permission denied" → Verificar timing + namespace + rules
+- "Domain not authorized" → Firebase Console authorized domains  
+- "Token ready immediately" em prod → Verificar NODE_ENV + delay
+- Collection não encontrada → Environment-aware naming
+
+✅ CONFIGURAÇÃO CORRETA:
+- AuthDomain: lexai-ef0ab.firebaseapp.com (sempre)
+- NODE_ENV: production (ativa correções específicas)
+- Delay: 2s em produção para token propagation
+- Collections: Direct naming em prod, namespace em dev
+- Rules: request.auth != null (padrão 2024)
+
+🔧 PADRÃO DE CÓDIGO:
+const collection = process.env.NODE_ENV === 'production' 
+  ? 'usuarios' 
+  : addNamespace('usuarios');
+```
+
+---
+
 ## 🎯 **Diretrizes de Desenvolvimento Claude**
 
 ### **Abordagem Profissional**

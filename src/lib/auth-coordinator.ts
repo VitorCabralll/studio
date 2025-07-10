@@ -149,11 +149,15 @@ export class AuthCoordinator {
    * Aguarda propagação do token (timing crítico)
    */
   private static async waitForTokenPropagation(): Promise<void> {
-    // Firebase tokens são válidos imediatamente após getIdToken()
-    // Removendo delay artificial que causa race conditions
-    console.log('✅ AuthCoordinator: Token ready immediately (no delay needed)');
+    // PRODUÇÃO: Aguardar propagação real devido à latência
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (2s)');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return;
+    }
     
-    // Se ainda houver problemas, será tratado no retry logic
+    // DESENVOLVIMENTO: Token válido imediatamente
+    console.log('✅ AuthCoordinator: Token ready immediately in development');
     return Promise.resolve();
   }
 
@@ -163,10 +167,11 @@ export class AuthCoordinator {
   private static async testFirestoreAccess(uid: string): Promise<boolean> {
     try {
       const db = getFirebaseDb();
-      const namespace = addNamespace('usuarios');
+      // CORREÇÃO: usar 'usuarios' diretamente em produção
+      const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
       
       // Test query mais simples - apenas verificar se o usuário tem acesso
-      const testRef = doc(db, namespace, uid);
+      const testRef = doc(db, collection, uid);
       const docSnap = await getDoc(testRef);
       
       // Se não deu erro de permissão, o token está válido

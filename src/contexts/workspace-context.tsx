@@ -110,7 +110,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }
 
         const db = getFirebaseDb();
-        const workspacesCollection = addNamespace('workspaces');
+        const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
         const workspacesRef = collection(db, workspacesCollection);
         const q = query(
           workspacesRef, 
@@ -247,7 +247,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       };
 
       const db = getFirebaseDb();
-      const docRef = await addDoc(collection(db, addNamespace('workspaces')), workspaceData);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const docRef = await addDoc(collection(db, workspacesCollection), workspaceData);
       
       const newWorkspace: Workspace = {
         id: docRef.id,
@@ -281,7 +282,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const workspaceRef = doc(db, workspacesCollection, workspaceId);
       await updateDoc(workspaceRef, {
         ...updates,
         updatedAt: new Date()
@@ -319,7 +321,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      await deleteDoc(doc(db, addNamespace('workspaces'), workspaceId));
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      await deleteDoc(doc(db, workspacesCollection, workspaceId));
 
       // Remover do estado local
       setWorkspaces(prev => prev.filter(ws => ws.id !== workspaceId));
@@ -346,7 +349,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const workspaceRef = doc(db, workspacesCollection, workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       
       if (!workspaceDoc.exists()) {
@@ -380,7 +384,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = getFirebaseDb();
-      const workspaceRef = doc(db, addNamespace('workspaces'), workspaceId);
+      const workspacesCollection = process.env.NODE_ENV === 'production' ? 'workspaces' : addNamespace('workspaces');
+      const workspaceRef = doc(db, workspacesCollection, workspaceId);
       const workspaceDoc = await getDoc(workspaceRef);
       
       if (!workspaceDoc.exists()) {
