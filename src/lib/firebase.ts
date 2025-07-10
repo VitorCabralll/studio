@@ -51,9 +51,18 @@ export function getFirebaseAuth(): Auth {
 export function getFirebaseDb(): Firestore {
   if (!db) {
     const app = initializeFirebaseApp();
-    // 🔧 FIX: Conectar na database 'lexai' (Brasil, free tier, com dados)
-    // ao invés da database '(default)' (EUA, pago, vazia)
-    db = getFirestore(app, 'lexai');
+    // 🔧 TEMPORARY FIX: Usar database (default) que tem rules deployadas
+    // TODO: Deploy rules para database 'lexai' e voltar para 'lexai'
+    db = getFirestore(app); // usa database (default)
+    
+    // 📊 Log database configuration for debugging
+    console.log('🔧 Firebase Database Configuration:', {
+      projectId: app.options.projectId,
+      databaseId: '(default)',
+      environment: process.env.NODE_ENV,
+      authDomain: app.options.authDomain,
+      timestamp: new Date().toISOString()
+    });
     
     // Enable network for production
     if (typeof window !== 'undefined') {

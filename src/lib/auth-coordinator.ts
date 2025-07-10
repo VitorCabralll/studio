@@ -170,6 +170,13 @@ export class AuthCoordinator {
       // CORREÇÃO: usar 'usuarios' diretamente em produção
       const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
       
+      console.log('🔍 AuthCoordinator: Testing Firestore access', {
+        uid,
+        collection,
+        databaseId: 'lexai',
+        environment: process.env.NODE_ENV
+      });
+      
       // Test query mais simples - apenas verificar se o usuário tem acesso
       const testRef = doc(db, collection, uid);
       const docSnap = await getDoc(testRef);
@@ -182,6 +189,13 @@ export class AuthCoordinator {
     } catch (error: any) {
       if (error.code === 'permission-denied') {
         console.warn('⚠️ AuthCoordinator: Firestore permission denied - retrying');
+        console.error('🔍 Permission denied details:', {
+          code: error.code,
+          message: error.message,
+          uid,
+          databaseId: 'lexai',
+          timestamp: new Date().toISOString()
+        });
         return false;
       }
       
