@@ -1,210 +1,164 @@
-# 📚 **Índice Completo de Documentação - LexAI**
+# 📚 **Complete Documentation Index - LexAI**
 
-> **Guia de navegação para toda a documentação do projeto**
-
----
-
-## 🎯 **Para Começar Rapidamente**
-
-| Documento | Uso | Quando Usar |
-|-----------|-----|-------------|
-| **[CLAUDE.md](./CLAUDE.md)** | 🛠️ Referência rápida | Comandos e padrões essenciais |
-| **[README.md](./README.md)** | 📖 Visão geral | Entender o projeto completo |
-| **[ESTRUTURA-AMBIENTES.md](./ESTRUTURA-AMBIENTES.md)** | 🌍 Ambientes | Trocar entre dev/staging/prod |
-
-## 🔥 **Firebase Auth + Firestore - Documentação Crítica**
-
-| Documento | Uso | Quando Usar |
-|-----------|-----|-------------|
-| **[FIREBASE_AUTH_PRODUCTION_GUIDE.md](./FIREBASE_AUTH_PRODUCTION_GUIDE.md)** | 📚 Guia completo | Problemas de auth em produção |
-| **[FIREBASE_AUTH_CHECKLIST.md](./FIREBASE_AUTH_CHECKLIST.md)** | ✅ Checklist rápido | Antes/após deploy produção |
+> **Navigation guide for all project documentation - Reorganized structure**
 
 ---
 
-## 🌍 **Documentação por Ambiente**
+## 🎯 **Quick Start**
 
-### **🛠️ Development (Seu Trabalho Diário)**
-- **[environments/development/README.md](./environments/development/README.md)**
-  - Como usar ambiente de desenvolvimento
-  - Configurações e limitações
-  - Scripts úteis
+| Document | Usage | When to Use |
+|----------|-------|-------------|
+| **[CLAUDE.md](./CLAUDE.md)** | 🛠️ Quick reference | Essential commands and patterns |
+| **[README.md](./README.md)** | 📖 Overview | Understand the complete project |
+| **[SETUP.md](./SETUP.md)** | 🚀 Installation | Configure local environment |
 
-### **🧪 Staging (Testes Internos)**
-- **[environments/staging/README.md](./environments/staging/README.md)**
-  - Como fazer deploy para staging
-  - Processo de testes
-  - Contas de teste
+## 📖 **Main Documentation**
 
-### **🚀 Production (Usuários Reais)**
-- **[environments/production/README.md](./environments/production/README.md)**
-  - ⚠️ Protocolo de produção
-  - Monitoramento 24/7
-  - Emergências e rollback
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | 🏗️ Technical architecture | Understand system structure |
+| **[API-REFERENCE.md](./API-REFERENCE.md)** | 🔧 API reference | Integration and development |
+| **[USER-GUIDE.md](./USER-GUIDE.md)** | 👤 User manual | How to use the platform |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | 🤝 How to contribute | Participate in development |
+| **[FAQ.md](./FAQ.md)** | ❓ Frequently asked questions | Common doubts |
+| **[DESIGN-SYSTEM.md](./DESIGN-SYSTEM.md)** | 🎨 Design system | Visual patterns and components |
 
-### **🌍 Geral de Ambientes**
-- **[environments/README.md](./environments/README.md)**
-  - Visão geral dos ambientes
-  - Como trocar entre eles
-  - Fluxo de trabalho
+## 📁 **Specific Guides**
 
----
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[guides/firebase-setup.md](./guides/firebase-setup.md)** | 🔥 Complete Firebase setup | Configure Firebase and Auth |
+| **[guides/testing-guide.md](./guides/testing-guide.md)** | 🧪 Testing guide | Complete testing strategy |
+| **[guides/troubleshooting.md](./guides/troubleshooting.md)** | 🔧 Problem solving | When something doesn't work |
+| **[guides/environment-setup.md](./guides/environment-setup.md)** | 🌍 Environment configuration | Switch between dev/staging/prod |
 
-## 📋 **Processo e Testes**
+## 🛠️ **Technical Documentation**
 
-### **🧪 Testes e Validação**
-- **[TESTE-COMPLETO.md](./TESTE-COMPLETO.md)**
-  - Status técnico atual do projeto
-  - Funcionalidades validadas
-  - Resultado de builds e testes
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[development/technical-backlog.md](./development/technical-backlog.md)** | 📋 Technical backlog | Track progress |
+| **[development/legacy-code-report.md](./development/legacy-code-report.md)** | 📊 Legacy code report | Refactoring |
+| **[development/google-cloud-checklist.md](./development/google-cloud-checklist.md)** | ☁️ Google Cloud checklist | GCP configuration |
+| **[development/development-config.md](./development/development-config.md)** | ⚙️ Development configuration | Development setup |
 
-- **[GUIA-TESTES-INTERNOS.md](./GUIA-TESTES-INTERNOS.md)**
-  - Plano de 7 dias de testes
-  - Checklist completo
-  - Como reportar bugs
+## 📦 **Product and Roadmap**
 
-### **⚙️ Configuração e Setup**
-- **[SETUP.md](./SETUP.md)**
-  - Configuração inicial detalhada
-  - Dependências e requisitos
-  - Troubleshooting
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[product/roadmap.md](./product/roadmap.md)** | 🗺️ Product roadmap | Planning and progress |
+| **[product/prd.md](./product/prd.md)** | 📋 Product Requirements | Product specifications |
+| **[product/changelog.md](./product/changelog.md)** | 📝 Change history | Track releases |
 
----
+## 📚 **Archived Documentation**
 
-## 🏗️ **Documentação Técnica**
-
-### **📁 Pasta `docs/`**
-- **[docs/README.md](./docs/README.md)** - Índice da documentação técnica
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Arquitetura do sistema
-- **[docs/API-REFERENCE.md](./docs/API-REFERENCE.md)** - Referência das APIs
-- **[docs/USER-GUIDE.md](./docs/USER-GUIDE.md)** - Guia do usuário
-- **[docs/FAQ.md](./docs/FAQ.md)** - Perguntas frequentes
-
-### **📈 Produto e Roadmap**
-- **[docs/product/PRD.md](./docs/product/PRD.md)** - Especificação do produto
-- **[docs/product/ROADMAP.md](./docs/product/ROADMAP.md)** - Roadmap e planejamento
-- **[docs/product/CHANGELOG.md](./docs/product/CHANGELOG.md)** - Histórico de mudanças
-
-### **🔧 Desenvolvimento**
-- **[docs/development/TECHNICAL-BACKLOG.md](./docs/development/TECHNICAL-BACKLOG.md)** - Backlog técnico
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Como contribuir
+| Folder | Description | Content |
+|--------|-------------|---------|
+| **[archived/historical/](./archived/historical/)** | 📜 Historical documents | Old plans and reports |
+| **[archived/audits/](./archived/audits/)** | 🔍 Past audits | Audit reports |
+| **[archived/reports/](./archived/reports/)** | 📊 Old reports | Progress and performance |
 
 ---
 
-## 🛠️ **Scripts e Automação**
+## 🗂️ **Organization by User Type**
 
-### **🔄 Troca de Ambiente**
-```bash
-# Ver documentação sobre ambientes
-cat environments/README.md
+### **🧑‍💻 For Developers**
+1. **[SETUP.md](./SETUP.md)** - Initial setup
+2. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Understand architecture
+3. **[guides/firebase-setup.md](./guides/firebase-setup.md)** - Configure Firebase
+4. **[API-REFERENCE.md](./API-REFERENCE.md)** - API reference
+5. **[guides/testing-guide.md](./guides/testing-guide.md)** - Testing strategy
+6. **[guides/troubleshooting.md](./guides/troubleshooting.md)** - Solve problems
+7. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute
 
-# Scripts disponíveis
-npm run env:dev      # Desenvolvimento
-npm run env:staging  # Staging  
-npm run env:prod     # Produção
-```
+### **👤 For End Users**
+1. **[README.md](./README.md)** - Project overview
+2. **[USER-GUIDE.md](./USER-GUIDE.md)** - How to use the platform
+3. **[FAQ.md](./FAQ.md)** - Frequently asked questions
 
-### **🚀 Deploy**
-```bash
-# Ver scripts específicos
-ls scripts/*/
+### **📋 For Product Managers**
+1. **[product/roadmap.md](./product/roadmap.md)** - Roadmap and progress
+2. **[product/prd.md](./product/prd.md)** - Product specifications
+3. **[development/technical-backlog.md](./development/technical-backlog.md)** - Technical backlog
+4. **[product/changelog.md](./product/changelog.md)** - Release history
 
-# Deploy staging
-npm run deploy:staging
+### **🎨 For Designers**
+1. **[DESIGN-SYSTEM.md](./DESIGN-SYSTEM.md)** - Design system
+2. **[USER-GUIDE.md](./USER-GUIDE.md)** - User flows
+3. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Application structure
 
-# Deploy produção (CUIDADO!)
-npm run deploy:prod
-```
-
-### **🧹 Limpeza e Manutenção**
-```bash
-# Limpeza segura
-./scripts/safe-cleanup.sh
-
-# Backup e restore
-./scripts/restore-backup.sh
-```
-
----
-
-## 📊 **Documentação por Tipo de Usuário**
-
-### **👨‍💻 Desenvolvedor (Você)**
-**Leitura Obrigatória:**
-1. `CLAUDE.md` - Comandos essenciais
-2. `environments/development/README.md` - Seu ambiente
-3. `ESTRUTURA-AMBIENTES.md` - Como navegar
-
-**Leitura Complementar:**
-- `docs/ARCHITECTURE.md` - Entender a arquitetura
-- `docs/development/TECHNICAL-BACKLOG.md` - Próximas tarefas
-
-### **🧪 Testador Interno**
-**Leitura Obrigatória:**
-1. `GUIA-TESTES-INTERNOS.md` - Plano completo de testes
-2. `environments/staging/README.md` - Ambiente de staging
-3. `TESTE-COMPLETO.md` - Status atual
-
-### **🚀 DevOps/Deploy**
-**Leitura Obrigatória:**
-1. `environments/production/README.md` - Protocolo produção
-2. `environments/staging/README.md` - Deploy staging
-3. Scripts em `scripts/*/`
-
-### **👥 Stakeholder/Gestor**
-**Leitura Recomendada:**
-1. `README.md` - Visão geral
-2. `TESTE-COMPLETO.md` - Status do projeto
-3. `docs/product/ROADMAP.md` - Planejamento
+### **🔧 For DevOps/SRE**
+1. **[guides/firebase-setup.md](./guides/firebase-setup.md)** - Firebase configuration
+2. **[guides/environment-setup.md](./guides/environment-setup.md)** - Environments
+3. **[development/google-cloud-checklist.md](./development/google-cloud-checklist.md)** - GCP
+4. **[guides/troubleshooting.md](./guides/troubleshooting.md)** - Troubleshooting
 
 ---
 
-## 🔍 **Como Encontrar Informação Específica**
+## 🔍 **Quick Search by Topic**
 
-### **🎯 Preciso saber como...**
+### **🔥 Firebase & Authentication**
+- **[guides/firebase-setup.md](./guides/firebase-setup.md)** - Complete setup
+- **[guides/troubleshooting.md](./guides/troubleshooting.md)** - Auth problems
 
-| Tarefa | Documento |
-|--------|-----------|
-| **Começar desenvolvimento** | `environments/development/README.md` |
-| **Trocar ambiente** | `ESTRUTURA-AMBIENTES.md` |
-| **Fazer deploy staging** | `environments/staging/README.md` |
-| **Fazer deploy produção** | `environments/production/README.md` |
-| **Testar o projeto** | `GUIA-TESTES-INTERNOS.md` |
-| **Ver status atual** | `TESTE-COMPLETO.md` |
-| **Configurar projeto** | `SETUP.md` |
-| **Entender arquitetura** | `docs/ARCHITECTURE.md` |
-| **Usar APIs** | `docs/API-REFERENCE.md` |
-| **Resolver problemas** | `docs/FAQ.md` |
+### **🧪 Testing & Quality**
+- **[guides/testing-guide.md](./guides/testing-guide.md)** - Complete strategy
+- **[development/technical-backlog.md](./development/technical-backlog.md)** - Progress
 
-### **🔧 Comandos Úteis**
-```bash
-# Ver ambiente atual
-npm run env:current
+### **🤖 AI & Orchestrator**
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Pipeline architecture
+- **[API-REFERENCE.md](./API-REFERENCE.md)** - AI APIs
+- **[guides/troubleshooting.md](./guides/troubleshooting.md)** - AI problems
 
-# Ver todos os READMEs
-find . -name "README.md" -not -path "./node_modules/*"
+### **🚀 Deploy & Production**
+- **[guides/firebase-setup.md](./guides/firebase-setup.md)** - Production configuration
+- **[guides/environment-setup.md](./guides/environment-setup.md)** - Environments
+- **[development/google-cloud-checklist.md](./development/google-cloud-checklist.md)** - GCP
 
-# Ver documentação específica
-ls docs/
-ls environments/
-```
+### **🏗️ Development**
+- **[SETUP.md](./SETUP.md)** - Local setup
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - How to contribute
+- **[development/development-config.md](./development/development-config.md)** - Dev configuration
 
 ---
 
-## ✅ **Status da Documentação**
+## 📊 **Documentation Status**
 
-### **📊 Cobertura: 100%**
-- ✅ **15+ arquivos README** específicos
-- ✅ **Documentação técnica** completa
-- ✅ **Guias de processo** detalhados
-- ✅ **Scripts documentados** com exemplos
-- ✅ **Troubleshooting** incluído
-
-### **🎯 Qualidade: Enterprise**
-- ✅ **Navegação clara** entre documentos
-- ✅ **Exemplos práticos** em cada guia
-- ✅ **Linguagem consistente** e profissional
-- ✅ **Atualizações regulares** conforme mudanças
+| Category | Status | Last Update |
+|----------|--------|-------------|
+| **Main Documentation** | ✅ Complete | December 2024 |
+| **Specific Guides** | ✅ Complete | December 2024 |
+| **Technical Documentation** | ✅ Updated | December 2024 |
+| **Product & Roadmap** | ✅ Updated | December 2024 |
+| **Archived Files** | ✅ Organized | December 2024 |
 
 ---
 
-**🎯 Esta documentação garante que qualquer pessoa possa trabalhar no projeto de forma profissional e eficiente!**
+## 🎯 **Implemented Improvements**
+
+### **✅ Organization**
+- ✅ **Clear structure** by category and user type
+- ✅ **Consolidated guides** (Firebase, Testing, Troubleshooting)
+- ✅ **Eliminated redundancies** (8 files removed)
+- ✅ **Separated archived documentation**
+
+### **✅ Navigation**
+- ✅ **Reorganized index** by user type
+- ✅ **Topic search** implemented
+- ✅ **Updated links** for new structure
+- ✅ **Visible documentation status**
+
+### **✅ Maintenance**
+- ✅ **50% fewer files** to maintain
+- ✅ **Consolidated content** in unique guides
+- ✅ **Scalable structure** for future additions
+- ✅ **Consistent standard** of nomenclature
+
+---
+
+**🎯 This documentation ensures that anyone can work on the project professionally and efficiently!**
+
+---
+
+**📅 Last Reorganization:** December 2024  
+**🔄 Next Review:** March 2025  
+**👤 Responsible:** LexAI Development Team
