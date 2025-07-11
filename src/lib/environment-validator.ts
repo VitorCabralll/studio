@@ -73,7 +73,7 @@ async function validateDatabaseConfig(issues: EnvironmentIssue[]): Promise<void>
     // Log database configuration
     console.log('🔍 Environment Validator: Database config', {
       projectId,
-      databaseId: 'lexai',
+      databaseId: '(default)',
       environment: process.env.NODE_ENV
     });
 
@@ -83,7 +83,7 @@ async function validateDatabaseConfig(issues: EnvironmentIssue[]): Promise<void>
       message: 'Database configuration detected',
       details: {
         projectId,
-        databaseId: 'lexai',
+        databaseId: '(default)',
         environment: process.env.NODE_ENV
       }
     });

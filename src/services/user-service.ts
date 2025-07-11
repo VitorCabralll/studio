@@ -176,8 +176,9 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
     await currentUser.getIdToken(true);
 
     const db = getFirebaseDb();
-    const namespace = addNamespace('usuarios');
-    const docRef = doc(db, namespace, uid);
+    // CORREÇÃO: usar 'usuarios' diretamente em produção
+    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
+    const docRef = doc(db, collection, uid);
 
     const completeProfile: UserProfile = {
       ...createDefaultProfile(),
@@ -237,8 +238,9 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
     await currentUser.getIdToken(true);
 
     const db = getFirebaseDb();
-    const namespace = addNamespace('usuarios');
-    const docRef = doc(db, namespace, uid);
+    // CORREÇÃO: usar 'usuarios' diretamente em produção
+    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
+    const docRef = doc(db, collection, uid);
 
     // Get current profile first
     const docSnap = await getDoc(docRef);

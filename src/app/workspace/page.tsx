@@ -27,16 +27,16 @@ function WorkspacePageContent() {
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
   const { user, updateUserProfileState } = useAuth();
-  const { workspaces, createWorkspace, setCurrentWorkspace } = useWorkspace();
+  const { workspaces, createWorkspace, selectWorkspace } = useWorkspace();
 
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim() || !user) return;
     setIsCreating(true);
     try {
       // Criar workspace usando o novo sistema
-      const result = await createWorkspace(newWorkspaceName.trim());
+      const workspaceId = await createWorkspace(newWorkspaceName.trim());
       
-      if (result.success && result.workspace) {
+      if (workspaceId) {
         // Marcar setup como completo no perfil do usuário
         await updateUserProfile(user.uid, { 
           initial_setup_complete: true
@@ -46,11 +46,11 @@ function WorkspacePageContent() {
         });
         
         // Definir como workspace ativo
-        setCurrentWorkspace(result.workspace);
+        selectWorkspace(workspaceId);
         
         router.push('/workspace/success');
       } else {
-        console.error("Erro ao criar workspace:", result.error);
+        console.error("Erro ao criar workspace");
       }
     } catch (error) {
         console.error("Erro não tratado ao criar workspace:", error);
@@ -60,7 +60,7 @@ function WorkspacePageContent() {
   };
   
   const handleOpenWorkspace = (workspace: { id: string; name: string; members: string[]; owners: string[]; createdAt: Date; updatedAt: Date }) => {
-    setCurrentWorkspace(workspace);
+    selectWorkspace(workspace.id);
     router.push('/generate'); // ou '/dashboard' se preferir
   };
   
@@ -297,7 +297,7 @@ function WorkspacePageContent() {
           ) : (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               <AnimatePresence>
-                {workspaces.map((ws, index) => (
+                {workspaces.map((ws: any, index: number) => (
               <motion.div
                 key={ws.id}
                 initial={{ opacity: 0, y: 30 }}
