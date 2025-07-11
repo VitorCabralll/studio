@@ -165,44 +165,60 @@ export class AuthCoordinator {
    * Testa acesso ao Firestore com query que requer auth
    */
   private static async testFirestoreAccess(uid: string): Promise<boolean> {
-    try {
-      const db = getFirebaseDb();
-      // CORREÇÃO: usar 'usuarios' diretamente em produção
-      const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-      
-      console.log('🔍 AuthCoordinator: Testing Firestore access', {
-        uid,
-        collection,
-        database: '(default)',
-        environment: process.env.NODE_ENV
-      });
-      
-      // Test query mais simples - apenas verificar se o usuário tem acesso
-      const testRef = doc(db, collection, uid);
-      const docSnap = await getDoc(testRef);
-      
-      // Se não deu erro de permissão, o token está válido
-      // (mesmo que o documento não exista)
-      console.log('✅ AuthCoordinator: Firestore access confirmed');
-      return true;
+    const MAX_RETRIES = 3;
+    const INITIAL_BACKOFF = 500; // 500ms
 
-    } catch (error: any) {
-      if (error.code === 'permission-denied') {
-        console.warn('⚠️ AuthCoordinator: Firestore permission denied - retrying');
-        console.error('🔍 Permission denied details:', {
-          code: error.code,
-          message: error.message,
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const db = getFirebaseDb();
+        const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
+        
+        console.log(`[Attempt ${attempt}/${MAX_RETRIES}] 🔍 AuthCoordinator: Testing Firestore access`, {
           uid,
+          collection,
           database: '(default)',
-          timestamp: new Date().toISOString()
+          environment: process.env.NODE_ENV
         });
-        return false;
+        
+        const testRef = doc(db, collection, uid);
+        // A simples chamada a getDoc é suficiente para testar a permissão.
+        // Não precisamos do snapshot (docSnap).
+        await getDoc(testRef);
+        
+        console.log(`✅ AuthCoordinator: Firestore access confirmed on attempt ${attempt}.`);
+        return true;
+
+      } catch (error: any) {
+        // Apenas tentar novamente no erro específico de 'permission-denied'
+        if (error.code === 'permission-denied') {
+          console.warn(`[Attempt ${attempt}/${MAX_RETRIES}] ⚠️ AuthCoordinator: Firestore permission denied.`);
+          
+          // Se for a última tentativa, falhar permanentemente
+          if (attempt === MAX_RETRIES) {
+            console.error('❌ AuthCoordinator: Max retries reached. Firestore access failed.', {
+              code: error.code,
+              message: error.message,
+              uid,
+            });
+            return false;
+          }
+
+          // Calcular o atraso exponencial e esperar
+          const backoffDelay = INITIAL_BACKOFF * Math.pow(2, attempt - 1); // 500ms, 1000ms, 2000ms
+          console.log(`⏳ AuthCoordinator: Waiting ${backoffDelay}ms before next retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+
+        } else {
+          // Para qualquer outro erro (ex: 'not-found', 'unavailable'), não é um problema de permissão.
+          // O token é considerado válido para acesso, mesmo que o recurso não exista.
+          console.log('✅ AuthCoordinator: Firestore access ok (non-permission error):', error.code);
+          return true;
+        }
       }
-      
-      // Outros erros (not-found, etc.) não são problemas de token
-      console.log('✅ AuthCoordinator: Firestore access ok (non-permission error):', error.code);
-      return true; // Token está válido
     }
+    
+    // Este ponto só seria alcançado se o loop terminasse sem um retorno, o que não deve acontecer.
+    return false;
   }
 
   /**
