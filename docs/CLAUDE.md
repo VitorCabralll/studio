@@ -167,7 +167,7 @@ type Result<T, E = Error> =
 ✅ CONFIGURAÇÃO CORRETA:
 - AuthDomain: lexai-ef0ab.firebaseapp.com (sempre)
 - NODE_ENV: production (ativa correções específicas)
-- Delay: 2s em produção para token propagation
+- Delay: 3s em produção para token propagation
 - Collections: Direct naming em prod, namespace em dev
 - Rules: request.auth != null (padrão 2024)
 

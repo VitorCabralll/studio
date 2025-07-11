@@ -188,7 +188,7 @@ export function useStorage(): UseStorageReturn {
       });
       return false;
     }
-  }, []);
+  }, [user]);
 
   // Obter URL de download
   const getDownloadURL = useCallback(async (fullPath: string): Promise<string | null> => {
@@ -213,7 +213,7 @@ export function useStorage(): UseStorageReturn {
       });
       return null;
     }
-  }, []);
+  }, [user]);
 
   return {
     // Estado

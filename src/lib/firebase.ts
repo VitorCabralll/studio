@@ -9,6 +9,7 @@ import { getFirestore, Firestore, enableNetwork } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getFirebaseConfig } from './firebase-config';
+import { logger } from './production-logger';
 
 // Lazy-initialized services
 let firebaseApp: FirebaseApp | null = null;
@@ -51,12 +52,12 @@ export function getFirebaseAuth(): Auth {
 export function getFirebaseDb(): Firestore {
   if (!db) {
     const app = initializeFirebaseApp();
-    // 🔧 TEMPORARY FIX: Usar database (default) que tem rules deployadas
-    // TODO: Deploy rules para database 'lexai' e voltar para 'lexai'
+    // FIXED: Usar database (default) que tem rules deployadas
+    // Database (default) tem rules deployadas e está funcionando corretamente
     db = getFirestore(app); // usa database (default)
     
-    // 📊 Log database configuration for debugging
-    console.log('🔧 Firebase Database Configuration:', {
+    // Log database configuration for debugging - AGORA COM LOGGER SEGURO
+    logger.log('Firebase Database Configuration:', {
       projectId: app.options.projectId,
       databaseId: '(default)',
       environment: process.env.NODE_ENV,
@@ -67,7 +68,7 @@ export function getFirebaseDb(): Firestore {
     // Enable network for production
     if (typeof window !== 'undefined') {
       enableNetwork(db).catch(error => {
-        console.warn('Failed to enable Firestore network:', error);
+        logger.warn('Failed to enable Firestore network:', { error });
       });
     }
   }
@@ -96,7 +97,7 @@ export function getFirebaseAnalytics(): Analytics | null {
       const app = initializeFirebaseApp();
       analytics = getAnalytics(app);
     } catch (error) {
-      console.warn('Failed to initialize Analytics:', error);
+      logger.warn('Failed to initialize Analytics:', { error });
       return null;
     }
   }
@@ -130,7 +131,7 @@ export async function testFirestoreConnection(): Promise<boolean> {
     await enableNetwork(firestore);
     return true;
   } catch (error) {
-    console.error('Firestore connection failed:', error);
+    logger.error('Firestore connection failed:', error);
     return false;
   }
 }

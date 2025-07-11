@@ -1,4 +1,5 @@
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
+import { logger } from '@/lib/production-logger';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
 import { addNamespace } from '@/lib/staging-config';
 import { AuthCoordinator } from '@/lib/auth-coordinator';
@@ -60,13 +61,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     throw new Error('User ID is required');
   }
 
-  console.log(`🔍 getUserProfile: Loading profile for UID: ${uid}`);
+  logger.log(`getUserProfile: Loading profile for UID: ${uid}`);
 
   const auth = getFirebaseAuth();
   const currentUser = auth.currentUser;
 
   if (!currentUser || currentUser.uid !== uid) {
-    console.error('❌ getUserProfile: User not authenticated or UID mismatch');
+    logger.error('getUserProfile: User not authenticated or UID mismatch');
     throw new Error('User not authenticated or UID mismatch');
   }
 
@@ -79,7 +80,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
     // Step 2: Get fresh token
     const token = await currentUser.getIdToken(true);
-    console.log('✅ getUserProfile: Fresh JWT token obtained');
+    logger.log('getUserProfile: Fresh JWT token obtained');
 
     // Step 3: Try to get existing profile
     const db = getFirebaseDb();
@@ -87,7 +88,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
     const docRef = doc(db, collection, uid);
     
-    console.log('🔍 getUserProfile: Querying Firestore', {
+    logger.log('getUserProfile: Querying Firestore', {
       database: db.app.options.projectId,
       collection: collection,
       uid,
@@ -98,7 +99,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     
     if (docSnap.exists()) {
       const data = docSnap.data() as UserProfile;
-      console.log('✅ getUserProfile: Profile found and loaded');
+      logger.log('getUserProfile: Profile found and loaded');
       
       authLogger.info('Profile loaded successfully', {
         context: 'user-service',
@@ -112,14 +113,14 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       };
     } else {
       // Step 4: Profile doesn't exist - create it
-      console.log('⚠️ getUserProfile: Profile not found, creating default profile');
+      logger.log('getUserProfile: Profile not found, creating default profile');
       
       const defaultProfile = createDefaultProfile();
       
       // Try to create the profile
       await setDoc(docRef, defaultProfile);
       
-      console.log('✅ getUserProfile: Default profile created successfully');
+      logger.log('getUserProfile: Default profile created successfully');
       
       authLogger.info('Default profile created for new user', {
         context: 'user-service',
@@ -131,7 +132,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     }
 
   } catch (error: any) {
-    console.error('❌ getUserProfile: Failed to load/create profile:', error);
+    logger.error('getUserProfile: Failed to load/create profile:', error);
     
     authLogger.error('getUserProfile failed', error, {
       context: 'user-service',
@@ -155,7 +156,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
     throw new Error('User ID is required');
   }
 
-  console.log(`🔧 createUserProfile: Creating profile for UID: ${uid}`);
+  logger.log(`createUserProfile: Creating profile for UID: ${uid}`);
 
   const auth = getFirebaseAuth();
   const currentUser = auth.currentUser;
@@ -186,7 +187,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
 
     await setDoc(docRef, completeProfile);
 
-    console.log('✅ createUserProfile: Profile created successfully');
+    logger.log('createUserProfile: Profile created successfully');
     
     authLogger.info('User profile created', {
       context: 'user-service',
@@ -197,7 +198,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
     return completeProfile;
 
   } catch (error: any) {
-    console.error('❌ createUserProfile: Failed to create profile:', error);
+    logger.error('createUserProfile: Failed to create profile:', error);
     
     authLogger.error('createUserProfile failed', error, {
       context: 'user-service',
@@ -264,7 +265,7 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
     return updatedProfile;
 
   } catch (error: any) {
-    console.error('Error updating user profile:', error);
+    logger.error('Error updating user profile:', error);
     
     authLogger.error('updateUserProfile failed', error, {
       context: 'user-service',

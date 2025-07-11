@@ -64,8 +64,9 @@ function getAdminApp() {
 // Lazy Firebase services
 export function getAdminFirestore() {
   const app = getAdminApp();
-  // 🔧 FIX: Conectar na database 'lexai' (Brasil, free tier, com dados)
-  return app ? getFirestore(app, 'lexai') : null;
+  // 🔧 FIXED: Usar database (default) que tem rules deployadas
+  // Alinhado com client-side que usa getFirestore(app) - database (default)
+  return app ? getFirestore(app) : null;
 }
 
 export function getAdminAuth() {

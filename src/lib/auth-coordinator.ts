@@ -151,8 +151,8 @@ export class AuthCoordinator {
   private static async waitForTokenPropagation(): Promise<void> {
     // PRODUÇÃO: Aguardar propagação real devido à latência
     if (process.env.NODE_ENV === 'production') {
-      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (2s)');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (3s)');
+      await new Promise(resolve => setTimeout(resolve, 3000));
       return;
     }
     
@@ -173,7 +173,7 @@ export class AuthCoordinator {
       console.log('🔍 AuthCoordinator: Testing Firestore access', {
         uid,
         collection,
-        databaseId: 'lexai',
+        database: '(default)',
         environment: process.env.NODE_ENV
       });
       
@@ -193,7 +193,7 @@ export class AuthCoordinator {
           code: error.code,
           message: error.message,
           uid,
-          databaseId: 'lexai',
+          database: '(default)',
           timestamp: new Date().toISOString()
         });
         return false;
