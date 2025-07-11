@@ -149,10 +149,10 @@ export class AuthCoordinator {
    * Aguarda propagação do token (timing crítico)
    */
   private static async waitForTokenPropagation(): Promise<void> {
-    // PRODUÇÃO: Aguardar propagação real devido à latência
+    // PRODUÇÃO: Aguardar propagação mínima (Cloud Function cria perfil automaticamente)
     if (process.env.NODE_ENV === 'production') {
-      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (3s)');
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (1s)');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Reduzido de 3s para 1s
       return;
     }
     

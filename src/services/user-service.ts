@@ -112,23 +112,18 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         workspaces: data.workspaces || []
       };
     } else {
-      // Step 4: Profile doesn't exist - create it
-      logger.log('getUserProfile: Profile not found, creating default profile');
+      // Profile doesn't exist - this should NOT happen since Cloud Function creates it
+      logger.error('getUserProfile: Profile not found - Cloud Function may have failed');
       
-      const defaultProfile = createDefaultProfile();
-      
-      // Try to create the profile
-      await setDoc(docRef, defaultProfile);
-      
-      logger.log('getUserProfile: Default profile created successfully');
-      
-      authLogger.info('Default profile created for new user', {
+      authLogger.error('Profile not found - possible Cloud Function failure', new Error('Profile not found'), {
         context: 'user-service',
         operation: 'getUserProfile',
         userId: uid
       });
       
-      return defaultProfile;
+      // Don't create profile here - let the Cloud Function handle it
+      // Return null to indicate profile doesn't exist yet
+      return null;
     }
 
   } catch (error: any) {

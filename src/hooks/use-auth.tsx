@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { getFirebaseAuth, getGoogleAuthProvider } from '@/lib/firebase';
-import { getUserProfile, createUserProfile, UserProfile } from '@/services/user-service';
+import { getUserProfile, UserProfile } from '@/services/user-service';
 
 interface AuthError {
   code: string;
@@ -89,13 +89,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         try {
           const profile = await getUserProfile(user.uid);
-          setState(prev => ({ 
-            ...prev, 
-            profile, 
-            userProfile: profile,
-            loading: false,
-            isInitialized: true
-          }));
+          
+          if (profile) {
+            setState(prev => ({ 
+              ...prev, 
+              profile, 
+              userProfile: profile,
+              loading: false,
+              isInitialized: true
+            }));
+          } else {
+            // Profile não existe ainda - Cloud Function pode estar processando
+            console.log('Profile not found yet - Cloud Function may still be creating it');
+            setState(prev => ({ 
+              ...prev, 
+              profile: null,
+              userProfile: null,
+              loading: false,
+              isInitialized: true
+            }));
+            
+            // Retry após delay para aguardar Cloud Function
+            setTimeout(async () => {
+              try {
+                const retryProfile = await getUserProfile(user.uid);
+                if (retryProfile) {
+                  setState(prev => ({ 
+                    ...prev, 
+                    profile: retryProfile, 
+                    userProfile: retryProfile
+                  }));
+                }
+              } catch (retryError) {
+                console.error('Retry failed to load profile:', retryError);
+              }
+            }, 2000);
+          }
         } catch (error) {
           console.error('Failed to load profile:', error);
           setState(prev => ({ 
@@ -140,31 +169,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signup = async (email: string, password: string, profileData?: Partial<UserProfile>): Promise<void> => {
+  const signup = async (email: string, password: string, _profileData?: Partial<UserProfile>): Promise<void> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const auth = getFirebaseAuth();
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create user profile if data provided
-      if (profileData && userCredential.user) {
-        try {
-          await createUserProfile(userCredential.user.uid, {
-            ...profileData,
-            cargo: profileData.cargo || '',
-            areas_atuacao: profileData.areas_atuacao || [],
-            primeiro_acesso: true,
-            initial_setup_complete: false,
-            workspaces: []
-          });
-        } catch (profileError) {
-          console.error('Failed to create profile:', profileError);
-          // Don't throw - let auth succeed even if profile creation fails
-        }
-      }
+      // REMOVIDO: Não criar perfil aqui - a Cloud Function fará isso automaticamente
+      // O perfil será criado pela Cloud Function createUserProfile quando o usuário for criado
+      // profileData será aplicado posteriormente através de updateUserProfile se necessário
       
-      // onAuthStateChanged will handle the rest
+      // onAuthStateChanged will handle loading the profile created by Cloud Function
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
