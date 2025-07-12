@@ -74,8 +74,11 @@ export class AuthCoordinator {
       // Step 1: Validar token JWT
       const tokenResult = await AuthCoordinator.validateTokenPropagation(currentUser);
       
+      // CORREÇÃO DEFINITIVA: Verificar se o acesso ao Firestore foi validado
       if (!tokenResult.canAccessFirestore) {
         console.error('❌ AuthCoordinator: Firestore access validation failed', tokenResult.error);
+        AuthCoordinator.authState.authReady = false;
+        AuthCoordinator.authState.tokenValidated = false;
         return false;
       }
 
@@ -129,9 +132,9 @@ export class AuthCoordinator {
       const firestoreAccess = await AuthCoordinator.testFirestoreAccess(user.uid);
       
       return {
-        isValid: true,
+        isValid: firestoreAccess, // CORREÇÃO: isValid agora reflete resultado real
         canAccessFirestore: firestoreAccess,
-        error: firestoreAccess ? undefined : 'Firestore access denied'
+        error: firestoreAccess ? undefined : 'Firestore access denied after intelligent retries'
       };
 
     } catch (error: any) {
@@ -149,15 +152,20 @@ export class AuthCoordinator {
    * Aguarda propagação do token (timing crítico)
    */
   private static async waitForTokenPropagation(): Promise<void> {
-    // PRODUÇÃO: Aguardar propagação mínima (Cloud Function cria perfil automaticamente)
+    // PRODUÇÃO: Timing inteligente baseado na análise dos logs da Cloud Function
     if (process.env.NODE_ENV === 'production') {
-      console.log('⏳ AuthCoordinator: Waiting for token propagation in production (1s)');
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Reduzido de 3s para 1s
+      // Cloud Function leva ~700ms + margem de segurança + jitter anti-thundering herd
+      const baseDelay = 1200; // 1.2s base (otimizado baseado nos logs reais)
+      const jitter = Math.random() * 300; // 0-300ms jitter
+      const totalDelay = baseDelay + jitter;
+      
+      console.log(`⏳ AuthCoordinator: Smart token propagation wait (${Math.round(totalDelay)}ms)`);
+      await new Promise(resolve => setTimeout(resolve, totalDelay));
       return;
     }
     
     // DESENVOLVIMENTO: Token válido imediatamente
-    console.log('✅ AuthCoordinator: Token ready immediately in development');
+    console.log('✅ AuthCoordinator: Development mode - immediate validation');
     return Promise.resolve();
   }
 
