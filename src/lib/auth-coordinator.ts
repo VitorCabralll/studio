@@ -74,8 +74,8 @@ export class AuthCoordinator {
       // Step 1: Validar token JWT
       const tokenResult = await AuthCoordinator.validateTokenPropagation(currentUser);
       
-      if (!tokenResult.isValid) {
-        console.error('❌ AuthCoordinator: Token validation failed', tokenResult.error);
+      if (!tokenResult.canAccessFirestore) {
+        console.error('❌ AuthCoordinator: Firestore access validation failed', tokenResult.error);
         return false;
       }
 
