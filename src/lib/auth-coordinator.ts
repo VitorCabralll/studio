@@ -189,9 +189,9 @@ export class AuthCoordinator {
         });
         
         const testRef = doc(db, collection, uid);
-        // A simples chamada a getDoc é suficiente para testar a permissão.
-        // Não precisamos do snapshot (docSnap).
-        await getDoc(testRef);
+        // Testar apenas leitura (sem precisar que documento exista)
+        const docSnap = await getDoc(testRef);
+        // Se chegou até aqui, permissão está OK (mesmo que documento não exista)
         
         console.log(`✅ AuthCoordinator: Firestore access confirmed on attempt ${attempt}.`);
         return true;

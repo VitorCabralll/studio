@@ -11,8 +11,7 @@ service cloud.firestore {
     // Permite que um usuário autenticado leia e escreva em seu próprio documento.
     // CRÍTICO: Permitir criação inicial mesmo sem documento existente
     match /usuarios/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, write, create: if request.auth != null && request.auth.uid == userId;
     }
     
     // 2. WORKSPACES - Apenas membros podem acessar
