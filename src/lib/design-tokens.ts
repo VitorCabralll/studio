@@ -25,10 +25,27 @@ export const premiumDurations = {
 export const premiumColors = {
   // Primary gradients for buttons and CTAs
   gradients: {
-    primary: "linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241), rgb(139, 92, 246))",
+    // Gradientes otimizados para performance
+    primary: "linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241))",
     secondary: "linear-gradient(135deg, rgb(16, 185, 129), rgb(34, 197, 94))",
     accent: "linear-gradient(135deg, rgb(245, 158, 11), rgb(251, 191, 36))",
     danger: "linear-gradient(135deg, rgb(239, 68, 68), rgb(248, 113, 113))",
+    
+    // Versões mobile-optimized (só 2 cores)
+    mobile: {
+      primary: "linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241))",
+      secondary: "linear-gradient(135deg, rgb(16, 185, 129), rgb(34, 197, 94))",
+      accent: "linear-gradient(135deg, rgb(245, 158, 11), rgb(251, 191, 36))",
+      danger: "linear-gradient(135deg, rgb(239, 68, 68), rgb(248, 113, 113))",
+    },
+    
+    // Fallbacks sólidos para dispositivos lentos
+    solid: {
+      primary: "rgb(99, 102, 241)",
+      secondary: "rgb(34, 197, 94)",
+      accent: "rgb(251, 191, 36)",
+      danger: "rgb(248, 113, 113)",
+    },
   },
   
   // Shadows with premium feel

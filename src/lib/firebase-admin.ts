@@ -79,10 +79,6 @@ export function getAdminStorage() {
   return app ? getStorage(app) : null;
 }
 
-// Legacy exports (deprecated - use getters instead)
-export const adminFirestore = null; // Deprecated: use getAdminFirestore()
-export const adminAuth = null; // Deprecated: use getAdminAuth()
-export const adminStorage = null; // Deprecated: use getAdminStorage()
 
 // Alias para compatibilidade
 export const getFirebaseAdminDb = getAdminFirestore;

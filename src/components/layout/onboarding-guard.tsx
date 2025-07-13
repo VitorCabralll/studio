@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
@@ -10,6 +10,61 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
+  
+  // Redirect loop prevention
+  const redirectCountRef = useRef(0);
+  const lastRedirectRef = useRef<string | null>(null);
+  const MAX_REDIRECTS = 3;
+  const REDIRECT_RESET_TIME = 5000; // 5 seconds
+  
+  // Safe redirect function with loop prevention
+  const safeRedirect = useCallback((to: string, reason: string) => {
+    // Check if we're trying to redirect to the same place too many times
+    if (lastRedirectRef.current === to) {
+      redirectCountRef.current++;
+    } else {
+      redirectCountRef.current = 1;
+      lastRedirectRef.current = to;
+    }
+
+    if (redirectCountRef.current > MAX_REDIRECTS) {
+      console.error(`OnboardingGuard: Max redirects reached (${MAX_REDIRECTS}) to ${to}. Breaking loop.`, {
+        reason,
+        pathname,
+        user: user?.uid,
+        userProfile: userProfile ? 'exists' : 'none',
+        redirectCount: redirectCountRef.current
+      });
+
+      // Break the loop by going to a safe fallback route
+      const fallbackRoute = user ? '/workspace' : '/login';
+      console.log(`OnboardingGuard: Using fallback route: ${fallbackRoute}`);
+      
+      // Reset counter and redirect to fallback
+      redirectCountRef.current = 0;
+      lastRedirectRef.current = null;
+      router.replace(fallbackRoute);
+      
+      // Allow access to current page as emergency fallback
+      setIsVerified(true);
+      return;
+    }
+
+    console.log(`OnboardingGuard: Safe redirect to ${to} (attempt ${redirectCountRef.current}/${MAX_REDIRECTS})`, {
+      reason,
+      from: pathname
+    });
+
+    router.replace(to);
+
+    // Reset counter after successful redirect (with delay)
+    setTimeout(() => {
+      if (redirectCountRef.current > 0) {
+        redirectCountRef.current = 0;
+        lastRedirectRef.current = null;
+      }
+    }, REDIRECT_RESET_TIME);
+  }, [router, pathname, user, userProfile, MAX_REDIRECTS, REDIRECT_RESET_TIME]);
   
   // Definir páginas públicas (acessíveis sem autenticação)
   const publicPaths = ['/', '/legal', '/about', '/privacy', '/terms', '/contact', '/seguranca', '/forgot-password'];
@@ -32,7 +87,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
     // 1. Usuário não autenticado tentando acessar página protegida
     if (!user) {
-      router.replace('/login');
+      safeRedirect('/login', 'User not authenticated');
       return;
     }
 
@@ -44,7 +99,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     // 3. Usuário autenticado mas sem perfil (precisa onboarding)
     if (user && !userProfile) {
       if (pathname !== '/onboarding') {
-        router.replace('/onboarding');
+        safeRedirect('/onboarding', 'User needs profile creation');
         return;
       }
       setIsVerified(true);
@@ -54,7 +109,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     // 4. Usuário com perfil válido - verificar fluxo de onboarding
     if (userProfile && userProfile.primeiro_acesso) {
       if (pathname !== '/onboarding') {
-        router.replace('/onboarding');
+        safeRedirect('/onboarding', 'User first access - needs onboarding');
         return;
       }
       setIsVerified(true);
@@ -67,7 +122,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
       const isAllowed = allowedPaths.some(p => pathname.startsWith(p));
       
       if (!isAllowed) {
-        router.replace('/workspace');
+        safeRedirect('/workspace', 'Setup incomplete - needs workspace access');
         return;
       }
       setIsVerified(true);
@@ -77,13 +132,13 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     // 6. Usuário completamente configurado
     const setupPages = ['/login', '/signup', '/onboarding'];
     if (setupPages.some(p => pathname.startsWith(p))) {
-      router.replace('/workspace');
+      safeRedirect('/workspace', 'User fully configured - redirect to workspace');
       return;
     }
     
     setIsVerified(true);
 
-  }, [user, userProfile, loading, pathname, router, isInitialized, isPublicPage, isAuthPage]);
+  }, [user, userProfile, loading, pathname, isInitialized, isPublicPage, isAuthPage, safeRedirect]);
 
   if (!isVerified) {
     return (

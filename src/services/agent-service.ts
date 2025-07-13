@@ -11,7 +11,7 @@ import {
   orderBy 
 } from 'firebase/firestore';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { addNamespace } from '@/lib/staging-config';
+import { addNamespace } from '@/lib/app-config';
 
 // 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
 async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {

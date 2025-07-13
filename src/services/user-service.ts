@@ -1,9 +1,139 @@
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
-import { logger } from '@/lib/production-logger';
+import { log } from '@/lib/logger';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { addNamespace } from '@/lib/staging-config';
-import { AuthCoordinator } from '@/lib/auth-coordinator';
+import { addNamespace } from '@/lib/app-config';
+import { authCoordinator, waitForAuthReady } from '@/lib/auth-coordinator';
 import { authLogger } from '@/lib/auth-logger';
+
+/**
+ * AuthError class com contexto inteligente
+ */
+interface AuthErrorContext {
+  operation: string;
+  timing: number;
+  retryCount: number;
+  userState: 'authenticated' | 'pending' | 'anonymous';
+  uid?: string;
+  stage?: string;
+  metadata?: Record<string, unknown>;
+}
+
+class AuthError extends Error {
+  public readonly code: string;
+  public readonly context: AuthErrorContext;
+  public readonly timestamp: number;
+  public readonly recoverable: boolean;
+
+  constructor(
+    message: string,
+    code: string,
+    context: AuthErrorContext,
+    recoverable: boolean = false
+  ) {
+    super(message);
+    this.name = 'AuthError';
+    this.code = code;
+    this.context = context;
+    this.timestamp = Date.now();
+    this.recoverable = recoverable;
+  }
+
+  /**
+   * Criar error específico para permission denied
+   */
+  static permissionDenied(context: Omit<AuthErrorContext, 'userState'>, uid?: string): AuthError {
+    return new AuthError(
+      'Permission denied during authentication operation',
+      'permission-denied',
+      {
+        ...context,
+        userState: uid ? 'authenticated' : 'anonymous',
+        uid
+      },
+      false // Permission denied não é recuperável
+    );
+  }
+
+  /**
+   * Criar error para timeout/retry
+   */
+  static timeout(context: Omit<AuthErrorContext, 'userState'>, uid?: string): AuthError {
+    return new AuthError(
+      'Operation timed out after maximum retries',
+      'timeout',
+      {
+        ...context,
+        userState: uid ? 'authenticated' : 'pending',
+        uid
+      },
+      true // Timeout pode ser recuperável
+    );
+  }
+
+  /**
+   * Criar error para profile não encontrado
+   */
+  static profileNotFound(context: Omit<AuthErrorContext, 'userState'>, uid: string): AuthError {
+    return new AuthError(
+      'User profile not found after Cloud Function processing',
+      'profile-not-found',
+      {
+        ...context,
+        userState: 'authenticated',
+        uid
+      },
+      true // Profile might be created later
+    );
+  }
+
+  /**
+   * Obter mensagem user-friendly
+   */
+  getUserMessage(): string {
+    const messages: Record<string, string> = {
+      'permission-denied': 'Erro de autenticação. Faça login novamente.',
+      'timeout': 'Operação demorou mais que o esperado. Tente novamente.',
+      'profile-not-found': 'Perfil ainda sendo criado. Aguarde um momento.',
+      'network-error': 'Erro de conexão. Verifique sua internet.',
+      'firestore-unavailable': 'Serviço temporariamente indisponível. Tente novamente.'
+    };
+
+    return messages[this.code] || 'Erro inesperado. Tente novamente.';
+  }
+
+  /**
+   * Obter estratégia de recovery
+   */
+  getRecoveryStrategy(): { action: string; delay?: number; maxAttempts?: number } {
+    const strategies: Record<string, { action: string; delay?: number; maxAttempts?: number }> = {
+      'permission-denied': { action: 'redirect_login' },
+      'timeout': { action: 'retry', delay: 5000, maxAttempts: 3 },
+      'profile-not-found': { action: 'wait_retry', delay: 2000, maxAttempts: 5 },
+      'network-error': { action: 'retry', delay: 3000, maxAttempts: 3 }
+    };
+
+    return strategies[this.code] || { action: 'manual_intervention' };
+  }
+
+  /**
+   * Log estruturado do erro
+   */
+  logError(): void {
+    log.error(this.message, this, {
+      component: 'auth-error',
+      metadata: {
+        code: this.code,
+        context: this.context,
+        recoverable: this.recoverable,
+        userMessage: this.getUserMessage(),
+        recoveryStrategy: this.getRecoveryStrategy()
+      }
+    });
+  }
+}
+
+// Export AuthError for use in other modules
+export { AuthError, type AuthErrorContext };
 
 // Service result types
 export interface ServiceResult<T> {
@@ -54,52 +184,48 @@ function createDefaultProfile(): UserProfile {
 }
 
 /**
- * Get user profile with automatic creation for new users
+ * Get user profile with intelligent Cloud Function wait
  */
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   if (!uid?.trim()) {
     throw new Error('User ID is required');
   }
 
-  logger.log(`getUserProfile: Loading profile for UID: ${uid}`);
+  log.info(`getUserProfile: Loading profile for UID: ${uid}`);
 
   const auth = getFirebaseAuth();
   const currentUser = auth.currentUser;
 
   if (!currentUser || currentUser.uid !== uid) {
-    logger.error('getUserProfile: User not authenticated or UID mismatch');
+    log.error('getUserProfile: User not authenticated or UID mismatch');
     throw new Error('User not authenticated or UID mismatch');
   }
 
-  try {
-    // Step 1: Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
-    if (!isAuthReady) {
-      throw new Error('Auth coordination failed');
-    }
+  // Use AuthCoordinator deduplication for profile loading with specific operation type
+  return authCoordinator.getProfileLoadingPromise(uid, async () => {
+    try {
+      // Step 1: Ensure auth is ready (JWT token validation only)
+      const isAuthReady = await waitForAuthReady(currentUser);
+      if (!isAuthReady) {
+        throw new Error('Auth coordination failed');
+      }
 
-    // Step 2: Get fresh token
-    const token = await currentUser.getIdToken(true);
-    logger.log('getUserProfile: Fresh JWT token obtained');
+      // Step 2: Wait for Cloud Function to create profile
+      const profile = await waitForCloudFunctionProfile(uid);
+      
+      if (!profile) {
+        log.error('getUserProfile: Profile not found after Cloud Function wait');
+        
+        authLogger.error('Profile not found after Cloud Function timeout', new Error('Profile not found'), {
+          context: 'user-service',
+          operation: 'getUserProfile',
+          userId: uid
+        });
+        
+        return null;
+      }
 
-    // Step 3: Try to get existing profile
-    const db = getFirebaseDb();
-    // CORREÇÃO: usar 'usuarios' diretamente em produção
-    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-    const docRef = doc(db, collection, uid);
-    
-    logger.log('getUserProfile: Querying Firestore', {
-      database: db.app.options.projectId,
-      collection: collection,
-      uid,
-      hasToken: !!token
-    });
-
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const data = docSnap.data() as UserProfile;
-      logger.log('getUserProfile: Profile found and loaded');
+      log.info('getUserProfile: Profile loaded successfully');
       
       authLogger.info('Profile loaded successfully', {
         context: 'user-service',
@@ -108,39 +234,124 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       });
       
       return {
-        ...data,
-        workspaces: data.workspaces || []
+        ...profile,
+        workspaces: profile.workspaces || []
       };
-    } else {
-      // Profile doesn't exist - this should NOT happen since Cloud Function creates it
-      logger.error('getUserProfile: Profile not found - Cloud Function may have failed');
+
+    } catch (error: unknown) {
+      const authError = error instanceof Error ? error : new Error(String(error));
+      log.error('getUserProfile: Failed to load profile:', authError);
       
-      authLogger.error('Profile not found - possible Cloud Function failure', new Error('Profile not found'), {
+      const firebaseError = error as { code?: string };
+      authLogger.error('getUserProfile failed', authError, {
         context: 'user-service',
         operation: 'getUserProfile',
-        userId: uid
+        userId: uid,
+        errorCode: firebaseError?.code
+      });
+
+      // Re-throw with user-friendly message
+      const friendlyError = new Error(getFirestoreErrorMessage(error));
+      friendlyError.name = 'ProfileLoadError';
+      throw friendlyError;
+    }
+  });
+}
+
+/**
+ * Wait for Cloud Function to create user profile
+ */
+async function waitForCloudFunctionProfile(uid: string): Promise<UserProfile | null> {
+  const MAX_ATTEMPTS = 3;   // Otimizado: 3 tentativas máximo
+  const INTERVAL = 500;     // 500ms entre tentativas para total de ~1.5s
+  const startTime = Date.now();
+  
+  log.info(`waitForCloudFunctionProfile: Starting wait for UID: ${uid}`);
+  
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const db = getFirebaseDb();
+      const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
+      const docRef = doc(db, collection, uid);
+      
+      log.info(`waitForCloudFunctionProfile: Attempt ${attempt}/${MAX_ATTEMPTS}`, {
+        metadata: {
+          uid,
+          collection,
+          database: db.app.options.projectId
+        }
       });
       
-      // Don't create profile here - let the Cloud Function handle it
-      // Return null to indicate profile doesn't exist yet
-      return null;
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const profile = docSnap.data() as UserProfile;
+        log.info(`✅ waitForCloudFunctionProfile: Profile found on attempt ${attempt}`);
+        return profile;
+      }
+      
+      // Profile not ready yet, wait more
+      log.info(`⏳ waitForCloudFunctionProfile: Profile not ready, attempt ${attempt}/${MAX_ATTEMPTS}`);
+      
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(resolve => setTimeout(resolve, INTERVAL));
+      }
+      
+    } catch (error: unknown) {
+      const timing = Date.now() - startTime;
+      const firebaseError = error as { code?: string; message?: string };
+      
+      if (firebaseError.code === 'permission-denied') {
+        // Auth problem - fail fast with intelligent context
+        const authError = AuthError.permissionDenied({
+          operation: 'waitForCloudFunctionProfile',
+          timing,
+          retryCount: attempt,
+          stage: 'profile_wait',
+          metadata: {
+            collection: process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios'),
+            maxAttempts: MAX_ATTEMPTS,
+            interval: INTERVAL
+          }
+        }, uid);
+        
+        authError.logError();
+        throw authError;
+      }
+      
+      // Other errors - continue waiting (might be temporary)
+      log.warn(`waitForCloudFunctionProfile: Error on attempt ${attempt}: ${firebaseError.code}`, {
+        metadata: {
+          uid,
+          code: firebaseError.code,
+          attempt,
+          timing,
+          isRecoverable: true
+        }
+      });
+      
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(resolve => setTimeout(resolve, INTERVAL));
+      }
     }
-
-  } catch (error: any) {
-    logger.error('getUserProfile: Failed to load/create profile:', error);
-    
-    authLogger.error('getUserProfile failed', error, {
-      context: 'user-service',
-      operation: 'getUserProfile',
-      userId: uid,
-      errorCode: error?.code
-    });
-
-    // Re-throw with user-friendly message
-    const friendlyError = new Error(getFirestoreErrorMessage(error));
-    friendlyError.name = 'ProfileLoadError';
-    throw friendlyError;
   }
+  
+  // Timeout - create intelligent timeout error
+  const timing = Date.now() - startTime;
+  const timeoutError = AuthError.timeout({
+    operation: 'waitForCloudFunctionProfile',
+    timing,
+    retryCount: MAX_ATTEMPTS,
+    stage: 'profile_wait_timeout',
+    metadata: {
+      maxAttempts: MAX_ATTEMPTS,
+      totalWaitTime: timing,
+      expectedTime: MAX_ATTEMPTS * INTERVAL
+    }
+  }, uid);
+  
+  timeoutError.logError();
+  throw timeoutError;
 }
 
 /**
@@ -151,7 +362,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
     throw new Error('User ID is required');
   }
 
-  logger.log(`createUserProfile: Creating profile for UID: ${uid}`);
+  log.info(`createUserProfile: Creating profile for UID: ${uid}`);
 
   const auth = getFirebaseAuth();
   const currentUser = auth.currentUser;
@@ -162,7 +373,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
 
   try {
     // Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
+    const isAuthReady = await waitForAuthReady(currentUser);
     if (!isAuthReady) {
       throw new Error('Auth coordination failed');
     }
@@ -183,7 +394,7 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
 
     await setDoc(docRef, completeProfile);
 
-    logger.log('createUserProfile: Profile created successfully');
+    log.info('createUserProfile: Profile created successfully');
     
     authLogger.info('User profile created', {
       context: 'user-service',
@@ -193,14 +404,16 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
 
     return completeProfile;
 
-  } catch (error: any) {
-    logger.error('createUserProfile: Failed to create profile:', error);
+  } catch (error: unknown) {
+    const authError = error instanceof Error ? error : new Error(String(error));
+    log.error('createUserProfile: Failed to create profile:', authError);
     
-    authLogger.error('createUserProfile failed', error, {
+    const firebaseError = error as { code?: string };
+    authLogger.error('createUserProfile failed', authError, {
       context: 'user-service',
       operation: 'createUserProfile',
       userId: uid,
-      errorCode: error?.code
+      errorCode: firebaseError?.code
     });
 
     throw error;
@@ -224,7 +437,7 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
 
   try {
     // Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
+    const isAuthReady = await waitForAuthReady(currentUser);
     if (!isAuthReady) {
       throw new Error('Auth coordination failed');
     }
@@ -261,45 +474,33 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
 
     return updatedProfile;
 
-  } catch (error: any) {
-    logger.error('Error updating user profile:', error);
+  } catch (error: unknown) {
+    const authError = error instanceof Error ? error : new Error(String(error));
+    log.error('Error updating user profile:', authError);
     
-    authLogger.error('updateUserProfile failed', error, {
+    const firebaseError = error as { code?: string };
+    authLogger.error('updateUserProfile failed', authError, {
       context: 'user-service',
       operation: 'updateUserProfile',
       userId: uid,
-      errorCode: error?.code
+      errorCode: firebaseError?.code
     });
 
     throw error;
   }
 }
 
-/**
- * Check if error should trigger a retry
- */
-function shouldRetryError(error: any): boolean {
-  if (!error?.code) return false;
-  
-  const retryableCodes = [
-    'unavailable',
-    'deadline-exceeded',
-    'internal',
-    'resource-exhausted'
-  ];
-  
-  return retryableCodes.includes(error.code);
-}
 
 /**
  * Convert Firestore errors to user-friendly messages
  */
-function getFirestoreErrorMessage(error: any): string {
-  if (!error?.code) {
-    return error?.message || 'Erro desconhecido ao carregar perfil';
+function getFirestoreErrorMessage(error: unknown): string {
+  const firebaseError = error as { code?: string; message?: string };
+  if (!firebaseError?.code) {
+    return firebaseError?.message || 'Erro desconhecido ao carregar perfil';
   }
 
-  switch (error.code) {
+  switch (firebaseError.code) {
     case 'permission-denied':
       return 'Acesso negado. Verifique suas permissões e tente novamente.';
     case 'not-found':
@@ -313,6 +514,6 @@ function getFirestoreErrorMessage(error: any): string {
     case 'unauthenticated':
       return 'Usuário não autenticado. Faça login novamente.';
     default:
-      return `Erro: ${error.code}`;
+      return `Erro: ${firebaseError.code}`;
   }
 }

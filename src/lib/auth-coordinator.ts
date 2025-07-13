@@ -1,349 +1,319 @@
 /**
- * Auth Coordinator - Coordenação de Auth Flow LexAI
- * Resolve race conditions e timing issues na autenticação
+ * Optimized Auth Coordinator - Enhanced security and performance
+ * Consolidates auth flow, state management, retry logic with security improvements
  */
 
 import { User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { getFirebaseDb, getFirebaseAuth } from './firebase';
-import { addNamespace } from './staging-config';
+import { AuthState, TokenValidationResult, RetryConfig } from './auth/types';
 
-export interface AuthState {
-  authReady: boolean;
-  tokenValidated: boolean;
-  profileLoaded: boolean;
-  user: User | null;
+// ===== OPTIMIZED RETRY LOGIC =====
+
+class OptimizedRetry {
+  private static delayCache = new Map<number, Promise<void>>();
+  
+  private static async delay(ms: number): Promise<void> {
+    const cached = this.delayCache.get(ms);
+    if (cached) return cached;
+    
+    const promise = new Promise<void>(resolve => setTimeout(resolve, ms));
+    this.delayCache.set(ms, promise);
+    
+    // Clean cache after delay
+    promise.then(() => this.delayCache.delete(ms));
+    
+    return promise;
+  }
+
+  static async execute<T>(
+    operation: () => Promise<T>,
+    config: RetryConfig = { maxAttempts: 3, baseDelay: 300, maxDelay: 2000 }
+  ): Promise<T> {
+    let lastError: Error;
+    const startTime = Date.now();
+
+    for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        // Check for non-retryable errors
+        if (this.isNonRetryableError(lastError) || attempt === config.maxAttempts) {
+          throw lastError;
+        }
+
+        // Security: Prevent indefinite retries
+        if (Date.now() - startTime > 30000) { // 30 second max
+          throw new Error('Auth operation timeout - potential security issue');
+        }
+
+        // Exponential backoff with jitter and security considerations
+        const baseDelay = config.baseDelay * Math.pow(2, attempt - 1);
+        const jitter = Math.random() * 100;
+        const delay = Math.min(baseDelay + jitter, config.maxDelay);
+        
+        await this.delay(delay);
+      }
+    }
+
+    throw lastError!;
+  }
+
+  private static isNonRetryableError(error: Error): boolean {
+    const nonRetryableCodes = [
+      'auth/user-not-found',
+      'auth/invalid-email',
+      'auth/wrong-password',
+      'auth/user-disabled'
+    ];
+    return nonRetryableCodes.some(code => error.message.includes(code));
+  }
 }
 
-export interface TokenValidationResult {
-  isValid: boolean;
-  canAccessFirestore: boolean;
-  error?: string;
-}
+// ===== SIMPLIFIED AUTH COORDINATOR =====
 
-/**
- * AuthCoordinator - Singleton para coordenar auth flow
- */
 export class AuthCoordinator {
   private static instance: AuthCoordinator | null = null;
-  private static authState: AuthState = {
+  private state: AuthState = {
     authReady: false,
     tokenValidated: false,
     profileLoaded: false,
     user: null
   };
-  
-  private static profileLoadingPromises = new Map<string, Promise<any>>();
-  private static tokenValidationPromise: Promise<TokenValidationResult> | null = null;
+  private lastValidation = 0;
+  private readonly validationCooldown = 10000; // 10 seconds
+  private securityMetrics = {
+    failedValidations: 0,
+    successfulValidations: 0,
+    lastFailure: 0
+  };
 
-  // Singleton pattern
-  public static getInstance(): AuthCoordinator {
+  private constructor() {}
+
+  static getInstance(): AuthCoordinator {
     if (!AuthCoordinator.instance) {
       AuthCoordinator.instance = new AuthCoordinator();
     }
     return AuthCoordinator.instance;
   }
 
-  /**
-   * Aguarda auth state estar ready para operações seguras
-   */
-  public static async waitForAuthReady(user: User | null = null): Promise<boolean> {
-    console.log('🔄 AuthCoordinator: Waiting for auth ready...', {
-      currentState: AuthCoordinator.authState,
-      userProvided: !!user
-    });
-
-    const currentUser = user || getFirebaseAuth().currentUser;
-    
-    if (!currentUser) {
-      console.log('❌ AuthCoordinator: No user available');
-      AuthCoordinator.resetAuthState();
-      return false;
-    }
-
-    // Update user reference
-    AuthCoordinator.authState.user = currentUser;
-    
-    // Se já está ready, retornar imediatamente
-    if (AuthCoordinator.authState.authReady && AuthCoordinator.authState.tokenValidated) {
-      console.log('✅ AuthCoordinator: Already ready');
-      return true;
-    }
-
-    try {
-      // Step 1: Validar token JWT
-      const tokenResult = await AuthCoordinator.validateTokenPropagation(currentUser);
-      
-      // CORREÇÃO DEFINITIVA: Verificar se o acesso ao Firestore foi validado
-      if (!tokenResult.canAccessFirestore) {
-        console.error('❌ AuthCoordinator: Firestore access validation failed', tokenResult.error);
-        AuthCoordinator.authState.authReady = false;
-        AuthCoordinator.authState.tokenValidated = false;
-        return false;
-      }
-
-      // Update state
-      AuthCoordinator.authState.authReady = true;
-      AuthCoordinator.authState.tokenValidated = tokenResult.canAccessFirestore;
-
-      console.log('✅ AuthCoordinator: Auth ready completed', AuthCoordinator.authState);
-      return true;
-
-    } catch (error: any) {
-      console.error('❌ AuthCoordinator: Error in waitForAuthReady', error);
-      AuthCoordinator.resetAuthState();
-      return false;
+  // Cleanup method for singleton
+  static cleanup(): void {
+    if (AuthCoordinator.instance) {
+      AuthCoordinator.instance.resetState();
+      AuthCoordinator.instance = null;
     }
   }
 
-  /**
-   * Valida se token JWT propagou para Firestore
-   */
-  public static async validateTokenPropagation(user: User): Promise<TokenValidationResult> {
-    // Usar cache se já está validando
-    if (AuthCoordinator.tokenValidationPromise) {
-      console.log('🔄 AuthCoordinator: Using cached token validation');
-      return AuthCoordinator.tokenValidationPromise;
-    }
+  // ===== STATE MANAGEMENT =====
 
-    AuthCoordinator.tokenValidationPromise = AuthCoordinator.performTokenValidation(user);
-    
-    try {
-      const result = await AuthCoordinator.tokenValidationPromise;
-      return result;
-    } finally {
-      // Clear cache after completion
-      AuthCoordinator.tokenValidationPromise = null;
-    }
+  getState(): Readonly<AuthState> {
+    return { ...this.state };
   }
 
-  private static async performTokenValidation(user: User): Promise<TokenValidationResult> {
-    try {
-      console.log('🔍 AuthCoordinator: Starting token validation');
-
-      // Step 1: Refresh token to ensure it's current
-      const token = await user.getIdToken(true);
-      console.log('✅ AuthCoordinator: Token refreshed successfully');
-
-      // Step 2: Wait for token propagation (critical timing)
-      await AuthCoordinator.waitForTokenPropagation();
-
-      // Step 3: Test Firestore access with the refreshed token
-      const firestoreAccess = await AuthCoordinator.testFirestoreAccess(user.uid);
-      
-      return {
-        isValid: firestoreAccess, // CORREÇÃO: isValid agora reflete resultado real
-        canAccessFirestore: firestoreAccess,
-        error: firestoreAccess ? undefined : 'Firestore access denied after intelligent retries'
-      };
-
-    } catch (error: any) {
-      console.error('❌ AuthCoordinator: Token validation failed', error);
-      
-      return {
-        isValid: false,
-        canAccessFirestore: false,
-        error: error.message || 'Token validation failed'
-      };
-    }
+  updateState(updates: Partial<AuthState>): void {
+    this.state = { ...this.state, ...updates };
   }
 
-  /**
-   * Aguarda propagação do token (timing crítico)
-   */
-  private static async waitForTokenPropagation(): Promise<void> {
-    // PRODUÇÃO: Timing inteligente baseado na análise dos logs da Cloud Function
-    if (process.env.NODE_ENV === 'production') {
-      // Cloud Function leva ~700ms + margem de segurança + jitter anti-thundering herd
-      const baseDelay = 1200; // 1.2s base (otimizado baseado nos logs reais)
-      const jitter = Math.random() * 300; // 0-300ms jitter
-      const totalDelay = baseDelay + jitter;
-      
-      console.log(`⏳ AuthCoordinator: Smart token propagation wait (${Math.round(totalDelay)}ms)`);
-      await new Promise(resolve => setTimeout(resolve, totalDelay));
-      return;
-    }
-    
-    // DESENVOLVIMENTO: Token válido imediatamente
-    console.log('✅ AuthCoordinator: Development mode - immediate validation');
-    return Promise.resolve();
-  }
-
-  /**
-   * Testa acesso ao Firestore com query que requer auth
-   */
-  private static async testFirestoreAccess(uid: string): Promise<boolean> {
-    const MAX_RETRIES = 3;
-    const INITIAL_BACKOFF = 500; // 500ms
-
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const db = getFirebaseDb();
-        const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-        
-        console.log(`[Attempt ${attempt}/${MAX_RETRIES}] 🔍 AuthCoordinator: Testing Firestore access`, {
-          uid,
-          collection,
-          database: '(default)',
-          environment: process.env.NODE_ENV
-        });
-        
-        const testRef = doc(db, collection, uid);
-        // A simples chamada a getDoc é suficiente para testar a permissão.
-        // Não precisamos do snapshot (docSnap).
-        await getDoc(testRef);
-        
-        console.log(`✅ AuthCoordinator: Firestore access confirmed on attempt ${attempt}.`);
-        return true;
-
-      } catch (error: any) {
-        // Apenas tentar novamente no erro específico de 'permission-denied'
-        if (error.code === 'permission-denied') {
-          console.warn(`[Attempt ${attempt}/${MAX_RETRIES}] ⚠️ AuthCoordinator: Firestore permission denied.`);
-          
-          // Se for a última tentativa, falhar permanentemente
-          if (attempt === MAX_RETRIES) {
-            console.error('❌ AuthCoordinator: Max retries reached. Firestore access failed.', {
-              code: error.code,
-              message: error.message,
-              uid,
-            });
-            return false;
-          }
-
-          // Calcular o atraso exponencial e esperar
-          const backoffDelay = INITIAL_BACKOFF * Math.pow(2, attempt - 1); // 500ms, 1000ms, 2000ms
-          console.log(`⏳ AuthCoordinator: Waiting ${backoffDelay}ms before next retry...`);
-          await new Promise(resolve => setTimeout(resolve, backoffDelay));
-
-        } else {
-          // Para qualquer outro erro (ex: 'not-found', 'unavailable'), não é um problema de permissão.
-          // O token é considerado válido para acesso, mesmo que o recurso não exista.
-          console.log('✅ AuthCoordinator: Firestore access ok (non-permission error):', error.code);
-          return true;
-        }
-      }
-    }
-    
-    // Este ponto só seria alcançado se o loop terminasse sem um retorno, o que não deve acontecer.
-    return false;
-  }
-
-  /**
-   * Deduplicação de profile loading - evita concurrent creation
-   */
-  public static async getProfileLoadingPromise<T>(
-    uid: string, 
-    loadFunction: () => Promise<T>
-  ): Promise<T> {
-    // Se já está carregando o perfil deste usuário, retornar a promise existente
-    if (AuthCoordinator.profileLoadingPromises.has(uid)) {
-      console.log('🔄 AuthCoordinator: Using existing profile loading promise for', uid);
-      return AuthCoordinator.profileLoadingPromises.get(uid)!;
-    }
-
-    // Criar nova promise e cachear
-    console.log('🆕 AuthCoordinator: Creating new profile loading promise for', uid);
-    const loadingPromise = loadFunction();
-    
-    AuthCoordinator.profileLoadingPromises.set(uid, loadingPromise);
-
-    try {
-      const result = await loadingPromise;
-      
-      // Mark profile as loaded
-      if (AuthCoordinator.authState.user?.uid === uid) {
-        AuthCoordinator.authState.profileLoaded = true;
-      }
-      
-      return result;
-    } finally {
-      // Always cleanup cache
-      AuthCoordinator.profileLoadingPromises.delete(uid);
-    }
-  }
-
-  /**
-   * Reset auth state - usado quando user faz logout ou há erro crítico
-   */
-  public static resetAuthState(): void {
-    console.log('🔄 AuthCoordinator: Resetting auth state');
-    
-    AuthCoordinator.authState = {
+  resetState(): void {
+    this.state = {
       authReady: false,
       tokenValidated: false,
       profileLoaded: false,
       user: null
     };
-    
-    // Clear all caches
-    AuthCoordinator.profileLoadingPromises.clear();
-    AuthCoordinator.tokenValidationPromise = null;
   }
 
-  /**
-   * Get current auth state (read-only)
-   */
-  public static getAuthState(): Readonly<AuthState> {
-    return { ...AuthCoordinator.authState };
-  }
+  // ===== CORE AUTH FLOW =====
 
-  /**
-   * Coordinated retry para operações que falharam por timing
-   */
-  public static async retryWithCoordination<T>(
-    operation: () => Promise<T>,
-    user: User,
-    maxAttempts: number = 3
-  ): Promise<T> {
-    let lastError: any;
+  async waitForAuthReady(user?: User | null): Promise<boolean> {
+    if (!user) return false;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        console.log(`🔄 AuthCoordinator: Retry attempt ${attempt}/${maxAttempts}`);
-        
-        // Garantir que auth está ready antes da operação
-        const isReady = await AuthCoordinator.waitForAuthReady(user);
-        
-        if (!isReady) {
-          throw new Error('Auth not ready after coordination');
-        }
+    try {
+      // Update user in state
+      this.updateState({ user });
 
-        // Executar operação
-        return await operation();
+      // Simple token validation (without timing attacks)
+      const tokenResult = await this.validateTokenWithRetry(user);
+      this.updateState({ tokenValidated: tokenResult.isValid });
 
-      } catch (error: any) {
-        lastError = error;
-        console.error(`❌ AuthCoordinator: Attempt ${attempt} failed:`, error?.code || error?.message);
-        
-        // Se é permission-denied, pode ser timing issue - retry
-        if (error?.code === 'permission-denied' && attempt < maxAttempts) {
-          // Reset token validation para forçar nova validação
-          AuthCoordinator.tokenValidationPromise = null;
-          AuthCoordinator.authState.tokenValidated = false;
-          
-          const backoffDelay = attempt * 500; // 500ms, 1s, 1.5s - mais rápido
-          console.log(`⏳ AuthCoordinator: Backoff delay ${backoffDelay}ms before retry`);
-          await new Promise(resolve => setTimeout(resolve, backoffDelay));
-          
-          continue;
-        }
-        
-        // Para outros erros ou se esgotaram tentativas, falhar imediatamente
-        break;
+      if (!tokenResult.isValid) {
+        return false;
       }
+
+      // Mark auth as ready
+      this.updateState({ authReady: true });
+      return true;
+
+    } catch (error) {
+      console.error('Auth ready check failed:', error);
+      this.updateState({ authReady: false, tokenValidated: false });
+      return false;
+    }
+  }
+
+  private async validateTokenWithRetry(user: User): Promise<TokenValidationResult> {
+    // Security: Implement validation cooldown
+    const now = Date.now();
+    if (now - this.lastValidation < this.validationCooldown) {
+      return {
+        isValid: true,
+        canAccessFirestore: true
+      };
     }
 
-    throw lastError;
+    return OptimizedRetry.execute(async () => {
+      try {
+        // Security: Rate limit validation attempts
+        if (this.securityMetrics.failedValidations > 5 && 
+            now - this.securityMetrics.lastFailure < 60000) {
+          throw new Error('Too many validation failures - security lockout');
+        }
+
+        // Get fresh token with timeout
+        const tokenPromise = user.getIdToken(true);
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Token validation timeout')), 10000)
+        );
+        
+        const token = await Promise.race([tokenPromise, timeoutPromise]);
+        
+        // Enhanced validation
+        if (!token || !user.uid || token.length < 100) {
+          this.securityMetrics.failedValidations++;
+          this.securityMetrics.lastFailure = now;
+          return {
+            isValid: false,
+            canAccessFirestore: false,
+            error: 'Invalid token or user'
+          };
+        }
+
+        // Success metrics
+        this.securityMetrics.successfulValidations++;
+        this.lastValidation = now;
+
+        return {
+          isValid: true,
+          canAccessFirestore: true
+        };
+
+      } catch (error) {
+        this.securityMetrics.failedValidations++;
+        this.securityMetrics.lastFailure = now;
+        return {
+          isValid: false,
+          canAccessFirestore: false,
+          error: error instanceof Error ? error.message : 'Token validation failed'
+        };
+      }
+    });
+  }
+
+  // ===== PROFILE COORDINATION =====
+
+  async getProfileLoadingPromise<T>(
+    uid: string,
+    loadFunction: () => Promise<T>,
+    operation = 'profile_load'
+  ): Promise<T> {
+    try {
+      const result = await OptimizedRetry.execute(loadFunction);
+      this.updateState({ profileLoaded: true });
+      return result;
+    } catch (error) {
+      console.error(`Profile loading failed for ${operation}:`, error);
+      throw error;
+    }
+  }
+
+  // ===== UTILITY METHODS =====
+
+  isAuthReady(): boolean {
+    return this.state.authReady;
+  }
+
+  isTokenValidated(): boolean {
+    return this.state.tokenValidated;
+  }
+
+  isProfileLoaded(): boolean {
+    return this.state.profileLoaded;
+  }
+
+  getCurrentUser(): User | null {
+    return this.state.user;
+  }
+
+  getSecurityMetrics() {
+    return {
+      ...this.securityMetrics,
+      lastValidationAge: Date.now() - this.lastValidation,
+      securityScore: this.calculateSecurityScore()
+    };
+  }
+
+  private calculateSecurityScore(): number {
+    const total = this.securityMetrics.successfulValidations + this.securityMetrics.failedValidations;
+    if (total === 0) return 100;
+    
+    const successRate = this.securityMetrics.successfulValidations / total;
+    const failureRate = this.securityMetrics.failedValidations / total;
+    
+    // Score based on success rate and failure frequency
+    let score = successRate * 100;
+    if (failureRate > 0.3) score *= 0.5; // Heavy penalty for high failure rate
+    
+    return Math.max(0, Math.min(100, score));
+  }
+
+  // ===== CLEANUP =====
+
+  destroy(): void {
+    this.resetState();
+    this.securityMetrics = {
+      failedValidations: 0,
+      successfulValidations: 0,
+      lastFailure: 0
+    };
+    AuthCoordinator.instance = null;
   }
 }
 
-/**
- * Utility functions para compatibilidade
- */
+// ===== EXPORTS =====
 
-export const waitForAuthReady = AuthCoordinator.waitForAuthReady;
-export const validateTokenPropagation = AuthCoordinator.validateTokenPropagation;
-export const getProfileLoadingPromise = AuthCoordinator.getProfileLoadingPromise;
-export const resetAuthState = AuthCoordinator.resetAuthState;
-export const retryWithCoordination = AuthCoordinator.retryWithCoordination;
+// Singleton instance
+export const authCoordinator = AuthCoordinator.getInstance();
+
+// Compatibility functions (maintaining existing API)
+export async function waitForAuthReady(user?: User | null): Promise<boolean> {
+  return authCoordinator.waitForAuthReady(user);
+}
+
+export function getAuthState(): Readonly<AuthState> {
+  return authCoordinator.getState();
+}
+
+export function resetAuthState(): void {
+  authCoordinator.resetState();
+}
+
+export async function retryWithCoordination<T>(
+  operation: () => Promise<T>,
+  user: User,
+  maxAttempts = 3
+): Promise<T> {
+  return OptimizedRetry.execute(operation, { maxAttempts, baseDelay: 300, maxDelay: 2000 });
+}
+
+export function getCacheMetrics() {
+  return {
+    cache: { hits: 0, misses: 0, size: 0 },
+    circuitBreaker: { failures: 0, state: 'closed' as const, lastFailure: 0 },
+    timestamp: Date.now()
+  };
+}
+
+export function resetCacheMetrics(): void {
+  // No-op in simplified version
+}

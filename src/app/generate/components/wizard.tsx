@@ -15,9 +15,6 @@ import { GenerationErrorBoundary } from '@/components/error-boundaries/generatio
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { copyToClipboard as copyTextToClipboard } from '@/lib/clipboard';
 
-// Flows importados mas não utilizados ainda - remover temporariamente
-// import { generateDocumentOutline, GenerateDocumentOutlineInput } from '@/ai/flows/generate-document-outline';
-// import { contextualDocumentGeneration, ContextualDocumentGenerationInput } from '@/ai/flows/contextual-document-generation';
 
 const getSteps = (mode: 'simple' | 'advanced') => {
   if (mode === 'simple') {

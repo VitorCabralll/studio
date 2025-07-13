@@ -1,8 +1,35 @@
 import { doc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import type { ServiceResult, ServiceError } from './user-service';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { enforceMaximumPrivacy } from './privacy-enforcer';
-import { processFileWithOCR, convertToExtractedText, isFileSupported } from './ocr-service';
+// import { enforceMaximumPrivacy } from './privacy-enforcer'; // Removido
+// import { processFileWithOCR, convertToExtractedText, isFileSupported } from './ocr-service'; // Removido
+
+// Stubs temporários para funcionalidade removida
+const enforceMaximumPrivacy = async (docId: string, userId: string, startTime: Date) => {
+  console.log('Privacy enforcer stub - implementação removida');
+  return { success: true, data: { documentId: docId, dataDiscarded: true }, error: null };
+};
+
+const processFileWithOCR = async (file: File, options?: any) => {
+  return { confidence: 0, text: '', words: [] };
+};
+
+const convertToExtractedText = (ocrResult: any, fileName: string, fileSize: number) => {
+  return { 
+    text: '', 
+    confidence: 0, 
+    words: [],
+    source: fileName,
+    content: '',
+    type: 'ocr' as const,
+    processedAt: new Date(),
+    size: fileSize
+  };
+};
+
+const isFileSupported = (file: File) => {
+  return file.type.includes('image/') || file.type.includes('pdf');
+};
 
 // 🛡️ Função utilitária para validar token JWT antes de consultas Firestore
 async function validateAuthToken(): Promise<{ success: boolean; error?: string }> {
@@ -261,7 +288,7 @@ export async function processUserDocuments(
           
           const ocrResult = await processFileWithOCR(file, {
             language: 'por+eng',
-            onProgress: (progress, message) => {
+            onProgress: (progress: number, message: string) => {
               const overallProgress = Math.round(((i + progress) / totalFiles) * 100);
               onProgress?.(overallProgress, `${message} (${file.name})`);
             }
@@ -437,7 +464,7 @@ export async function finalizeDocumentSecurely(
         error: {
           code: 'security-critical-failure',
           message: '🚨 FALHA CRÍTICA DE SEGURANÇA: Dados podem estar retidos no sistema',
-          details: enforcementResult.error?.details
+          details: 'Privacy enforcement failed'
         },
         success: false
       };

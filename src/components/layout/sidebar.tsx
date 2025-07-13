@@ -39,7 +39,7 @@ export function AppSidebar() {
           transition={{ duration: 0.2 }}
         >
           <Link href="/" className="group flex items-center gap-3">
-            <div className="shadow-apple-sm group-hover:shadow-apple-md flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 transition-all duration-300">
+            <div className="shadow-apple-sm group-hover:shadow-apple-md flex size-10 items-center justify-center rounded-2xl gradient-primary transition-all duration-300">
               <Scale className="size-5 text-white" />
             </div>
             <div className="flex flex-col">
@@ -101,7 +101,7 @@ export function AppSidebar() {
                       <CollapsibleTrigger className="group w-full">
                           <div className="hover:shadow-apple-sm flex items-center justify-between rounded-xl p-3 transition-all duration-300 hover:bg-muted/50 group-hover:scale-[1.02]">
                               <div className="flex items-center gap-3">
-                                  <div className="flex size-8 items-center justify-center rounded-lg border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+                                  <div className="flex size-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                                     <section.icon className="size-4 text-primary"/>
                                   </div>
                                   <span className="text-base font-semibold">{section.title}</span>

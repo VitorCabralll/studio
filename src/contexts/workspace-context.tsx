@@ -1,11 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { addNamespace } from '@/lib/staging-config';
+import { addNamespace } from '@/lib/app-config';
 import { useAuth } from '@/hooks/use-auth';
-import { AuthCoordinator } from '@/lib/auth-coordinator';
+import { useDebounce } from '@/hooks/use-debounce';
+import { waitForAuthReady } from '@/lib/auth-coordinator';
 import { authLogger } from '@/lib/auth-logger';
 
 // Função utilitária para validar auth usando AuthCoordinator
@@ -19,7 +20,7 @@ async function validateAuthWithCoordinator(): Promise<{ success: boolean; error?
     }
 
     // Usar AuthCoordinator para validação coordenada
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
+    const isAuthReady = await waitForAuthReady(currentUser);
     
     if (!isAuthReady) {
       authLogger.error('Workspace auth validation failed via AuthCoordinator', new Error('Auth not ready'), {
@@ -37,8 +38,9 @@ async function validateAuthWithCoordinator(): Promise<{ success: boolean; error?
     });
     
     return { success: true };
-  } catch (error: any) {
-    authLogger.error('Workspace auth validation error', error, {
+  } catch (error: unknown) {
+    const authError = error instanceof Error ? error : new Error(String(error));
+    authLogger.error('Workspace auth validation error', authError, {
       context: 'workspace-context',
       operation: 'auth_validation',
     });
@@ -81,10 +83,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  // Debounce user para evitar calls desnecessários durante auth flow
+  const debouncedUser = useDebounce(user, 300);
 
   // Carregar workspaces do usuário
-  const loadWorkspaces = async () => {
+  const loadWorkspaces = useCallback(async () => {
     if (!user) {
       setWorkspaces([]);
       setCurrentWorkspace(null);
@@ -153,7 +158,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, currentWorkspace]);
 
   // Criar novo workspace
   const createWorkspace = async (name: string, description?: string): Promise<string | null> => {
@@ -310,16 +315,182 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
   // Adicionar membro ao workspace
   const addMember = async (workspaceId: string, memberEmail: string): Promise<boolean> => {
-    // TODO: Implementar lógica para adicionar membro
-    console.log('addMember não implementado:', { workspaceId, memberEmail });
-    return false;
+    if (!user) {
+      setError('Usuário não autenticado');
+      return false;
+    }
+
+    try {
+      // Validar auth antes de adicionar membro
+      const authValidation = await validateAuthWithCoordinator();
+      if (!authValidation.success) {
+        throw new Error(authValidation.error || 'Falha na validação de autenticação');
+      }
+
+      const db = getFirebaseDb();
+      const workspacesCollection = addNamespace('workspaces');
+      const usersCollection = addNamespace('usuarios');
+      
+      // Verificar se o workspace existe e se o usuário atual é owner
+      const workspaceRef = doc(db, workspacesCollection, workspaceId);
+      const workspaceSnap = await getDoc(workspaceRef);
+      
+      if (!workspaceSnap.exists()) {
+        throw new Error('Workspace não encontrado');
+      }
+      
+      const workspaceData = workspaceSnap.data() as Workspace;
+      if (!workspaceData.owners.includes(user.uid)) {
+        throw new Error('Apenas owners podem adicionar membros');
+      }
+
+      // Buscar usuário pelo email
+      const usersQuery = query(
+        collection(db, usersCollection),
+        where('email', '==', memberEmail)
+      );
+      const usersSnapshot = await getDocs(usersQuery);
+      
+      if (usersSnapshot.empty) {
+        throw new Error('Usuário não encontrado com este email');
+      }
+      
+      const memberDoc = usersSnapshot.docs[0];
+      const memberId = memberDoc.id;
+      
+      // Verificar se o usuário já é membro
+      if (workspaceData.members.includes(memberId)) {
+        throw new Error('Usuário já é membro deste workspace');
+      }
+
+      // Adicionar membro ao workspace
+      const updatedMembers = [...workspaceData.members, memberId];
+      await updateDoc(workspaceRef, {
+        members: updatedMembers,
+        updated_at: new Date()
+      });
+
+      // Atualizar estado local
+      setWorkspaces(prev => 
+        prev.map(ws => 
+          ws.id === workspaceId 
+            ? { ...ws, members: updatedMembers, updated_at: new Date() }
+            : ws
+        )
+      );
+
+      // Atualizar workspace atual se for o mesmo
+      if (currentWorkspace?.id === workspaceId) {
+        setCurrentWorkspace(prev => 
+          prev ? { ...prev, members: updatedMembers, updated_at: new Date() } : null
+        );
+      }
+
+      authLogger.info('Member added to workspace successfully', {
+        context: 'workspace-context',
+        operation: 'addMember',
+        userInfo: { uid: user.uid }
+      });
+
+      return true;
+
+    } catch (err: any) {
+      console.error('Erro ao adicionar membro:', err);
+      setError(err.message || 'Erro ao adicionar membro ao workspace');
+      
+      authLogger.error('Failed to add member to workspace', err, {
+        context: 'workspace-context',
+        operation: 'addMember',
+        userInfo: { uid: user.uid }
+      });
+      
+      return false;
+    }
   };
 
   // Remover membro do workspace
   const removeMember = async (workspaceId: string, memberId: string): Promise<boolean> => {
-    // TODO: Implementar lógica para remover membro
-    console.log('removeMember não implementado:', { workspaceId, memberId });
-    return false;
+    if (!user) {
+      setError('Usuário não autenticado');
+      return false;
+    }
+
+    try {
+      // Validar auth antes de remover membro
+      const authValidation = await validateAuthWithCoordinator();
+      if (!authValidation.success) {
+        throw new Error(authValidation.error || 'Falha na validação de autenticação');
+      }
+
+      const db = getFirebaseDb();
+      const workspacesCollection = addNamespace('workspaces');
+      
+      // Verificar se o workspace existe e se o usuário atual é owner
+      const workspaceRef = doc(db, workspacesCollection, workspaceId);
+      const workspaceSnap = await getDoc(workspaceRef);
+      
+      if (!workspaceSnap.exists()) {
+        throw new Error('Workspace não encontrado');
+      }
+      
+      const workspaceData = workspaceSnap.data() as Workspace;
+      if (!workspaceData.owners.includes(user.uid)) {
+        throw new Error('Apenas owners podem remover membros');
+      }
+
+      // Verificar se o membro existe no workspace
+      if (!workspaceData.members.includes(memberId)) {
+        throw new Error('Usuário não é membro deste workspace');
+      }
+
+      // Não permitir remoção de owners (devem ser removidos separadamente)
+      if (workspaceData.owners.includes(memberId)) {
+        throw new Error('Não é possível remover um owner. Transfira a propriedade primeiro.');
+      }
+
+      // Remover membro do workspace
+      const updatedMembers = workspaceData.members.filter(id => id !== memberId);
+      await updateDoc(workspaceRef, {
+        members: updatedMembers,
+        updated_at: new Date()
+      });
+
+      // Atualizar estado local
+      setWorkspaces(prev => 
+        prev.map(ws => 
+          ws.id === workspaceId 
+            ? { ...ws, members: updatedMembers, updated_at: new Date() }
+            : ws
+        )
+      );
+
+      // Atualizar workspace atual se for o mesmo
+      if (currentWorkspace?.id === workspaceId) {
+        setCurrentWorkspace(prev => 
+          prev ? { ...prev, members: updatedMembers, updated_at: new Date() } : null
+        );
+      }
+
+      authLogger.info('Member removed from workspace successfully', {
+        context: 'workspace-context',
+        operation: 'removeMember',
+        userInfo: { uid: user.uid }
+      });
+
+      return true;
+
+    } catch (err: any) {
+      console.error('Erro ao remover membro:', err);
+      setError(err.message || 'Erro ao remover membro do workspace');
+      
+      authLogger.error('Failed to remove member from workspace', err, {
+        context: 'workspace-context',
+        operation: 'removeMember',
+        userInfo: { uid: user.uid }
+      });
+      
+      return false;
+    }
   };
 
   // Refresh workspaces
@@ -327,10 +498,24 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     await loadWorkspaces();
   };
 
-  // Carregar workspaces quando o usuário muda
+  // Carregar workspaces quando o usuário muda (com debounce)
   useEffect(() => {
-    loadWorkspaces();
-  }, [user]);
+    // Só carregar se user é válido e não está loading
+    if (debouncedUser?.uid && !authLoading) {
+      loadWorkspaces();
+    }
+  }, [debouncedUser?.uid, authLoading, loadWorkspaces]);
+
+  // Cleanup automático quando user muda
+  useEffect(() => {
+    return () => {
+      if (!user?.uid) {
+        setWorkspaces([]);
+        setCurrentWorkspace(null);
+        setError(null);
+      }
+    };
+  }, [user?.uid]);
 
   const contextValue: WorkspaceContextType = {
     workspaces,
