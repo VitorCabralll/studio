@@ -11,8 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/magic-ui";
 import { useAuth } from '@/hooks/use-auth';
-import { signupSchema, validateInput, getPasswordStrength, type SignupData } from '@/lib/validation/auth-schemas';
-import { useRateLimit } from '@/lib/security/rate-limiter';
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -29,27 +27,10 @@ export function SignupForm() {
     acceptNewsletter: false
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [passwordStrength, setPasswordStrength] = useState<{ score: number; feedback: string[] }>({ score: 0, feedback: [] });
   const { signup, loginWithGoogle, loading, error, clearError } = useAuth();
-  const rateLimit = useRateLimit('auth:signup');
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Atualizar força da senha em tempo real
-    if (field === 'password' && typeof value === 'string') {
-      const strength = getPasswordStrength(value);
-      setPasswordStrength(strength);
-    }
-    
-    // Limpar erro específico quando campo é alterado
-    if (formErrors[field]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,48 +40,36 @@ export function SignupForm() {
     setFormErrors({});
     clearError();
     
-    // Verificar rate limiting ANTES de qualquer processamento
-    const rateLimitCheck = rateLimit.isAllowed();
-    if (!rateLimitCheck.allowed) {
-      const blockTime = rateLimit.getBlockTimeRemaining();
-      const minutes = Math.ceil(blockTime / (1000 * 60));
-      
-      setFormErrors({ 
-        general: `Muitas tentativas de cadastro. Tente novamente em ${minutes} minuto(s).` 
-      });
+    // Validação de confirmação de senha
+    if (formData.password !== formData.confirmPassword) {
+      setFormErrors({ confirmPassword: "As senhas não coincidem" });
       return;
     }
     
-    // Validação robusta server-side usando schema
-    const validation = validateInput(signupSchema, formData);
-    
-    if (!validation.success) {
-      setFormErrors(validation.errors);
-      // Registrar tentativa inválida para rate limiting
-      rateLimit.recordAttempt(false);
+    // Validação de termos de uso
+    if (!formData.acceptTerms) {
+      setFormErrors({ acceptTerms: "Você deve aceitar os termos de uso" });
       return;
     }
-    
-    // Verificar força da senha (adicional)
-    if (passwordStrength.score < 3) {
-      setFormErrors({ 
-        password: "Senha muito fraca. " + passwordStrength.feedback.join(', ') 
-      });
-      rateLimit.recordAttempt(false);
+
+    // Validação de senha mínima
+    if (formData.password.length < 6) {
+      setFormErrors({ password: "A senha deve ter pelo menos 6 caracteres" });
       return;
     }
+
+    // Passar dados adicionais para o signup
+    const additionalData = {
+      name: formData.name,
+      phone: formData.phone,
+      company: formData.company,
+      oab: formData.oab,
+      acceptNewsletter: formData.acceptNewsletter
+    };
     
     try {
-      // Usar dados validados e sanitizados
-      const sanitizedData = validation.data;
-      await signup(sanitizedData.email, sanitizedData.password);
-      
-      // Registrar sucesso no rate limiting
-      rateLimit.recordAttempt(true);
-      
+      await signup(formData.email, formData.password, additionalData);
     } catch (error) {
-      // Registrar falha no rate limiting
-      rateLimit.recordAttempt(false);
       // Error is already handled by useAuth
     }
   };
@@ -174,16 +143,6 @@ export function SignupForm() {
                   </button>
                 </div>
               )}
-              
-              {/* Rate Limit Warning */}
-              {(() => {
-                const remaining = rateLimit.getRemainingAttempts();
-                return remaining <= 2 && remaining > 0 && (
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-900/50 dark:bg-yellow-900/20 dark:text-yellow-200">
-                    ⚠️ Restam apenas {remaining} tentativa(s) de cadastro antes do bloqueio temporário.
-                  </div>
-                );
-              })()}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}
                 <div className="space-y-2">
@@ -300,39 +259,6 @@ export function SignupForm() {
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
-                  
-                  {/* Indicador de força da senha */}
-                  {formData.password && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex space-x-1">
-                        {[1, 2, 3, 4].map(level => (
-                          <div
-                            key={level}
-                            className={`h-1 flex-1 rounded-full ${
-                              passwordStrength.score >= level
-                                ? level <= 2
-                                  ? 'bg-red-500'
-                                  : level === 3
-                                  ? 'bg-yellow-500'
-                                  : 'bg-green-500'
-                                : 'bg-gray-200 dark:bg-gray-700'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className={`text-xs ${
-                        passwordStrength.score <= 2
-                          ? 'text-red-600 dark:text-red-400'
-                          : passwordStrength.score === 3
-                          ? 'text-yellow-600 dark:text-yellow-400'
-                          : 'text-green-600 dark:text-green-400'
-                      }`}>
-                        {passwordStrength.score <= 2 && 'Senha fraca'}
-                        {passwordStrength.score === 3 && 'Senha boa'}
-                        {passwordStrength.score >= 4 && 'Senha forte'}
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Confirm Password */}

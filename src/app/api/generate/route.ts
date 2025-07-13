@@ -8,7 +8,7 @@ import { orchestrator } from '@/services/build-aware-orchestrator';
 import { getAdminAuth, isAdminConfigured } from '@/lib/firebase-admin';
 import { validateDocumentRequest, rateLimiter, createSafeLogData } from '@/lib/input-validation';
 import type { DocumentProcessingRequest } from '@/services/build-aware-orchestrator';
-import type { LegalArea } from '@/types/orchestrator';
+import type { LegalArea } from '@/ai/orchestrator/types';
 
 // Tipos para a API
 interface GenerateRequest {
@@ -54,17 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     try {
       const adminAuth = getAdminAuth();
       if (isAdminConfigured() && adminAuth) {
-        const tokenParts = authHeader.split('Bearer ');
-        if (tokenParts.length !== 2) {
-          return NextResponse.json({ 
-            success: false,
-            error: {
-              message: 'Invalid authorization header format',
-              code: 'INVALID_AUTH_HEADER'
-            }
-          }, { status: 401 });
-        }
-        const token = tokenParts[1];
+        const token = authHeader.split('Bearer ')[1];
         const decodedToken = await adminAuth.verifyIdToken(token);
         userId = decodedToken.uid;
       }

@@ -101,64 +101,6 @@
   }
 }
 
-/* Performance-Optimized Gradients */
-@layer utilities {
-  /* Desktop gradients */
-  .gradient-primary {
-    background: linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241));
-  }
-  
-  .gradient-secondary {
-    background: linear-gradient(135deg, rgb(16, 185, 129), rgb(34, 197, 94));
-  }
-  
-  .gradient-accent {
-    background: linear-gradient(135deg, rgb(245, 158, 11), rgb(251, 191, 36));
-  }
-  
-  .gradient-danger {
-    background: linear-gradient(135deg, rgb(239, 68, 68), rgb(248, 113, 113));
-  }
-  
-  /* Mobile optimization - simplified gradients */
-  @media (max-width: 768px) {
-    .gradient-primary {
-      background: linear-gradient(135deg, rgb(59, 130, 246), rgb(99, 102, 241));
-    }
-    
-    .gradient-secondary {
-      background: linear-gradient(135deg, rgb(16, 185, 129), rgb(34, 197, 94));
-    }
-    
-    .gradient-accent {
-      background: linear-gradient(135deg, rgb(245, 158, 11), rgb(251, 191, 36));
-    }
-    
-    .gradient-danger {
-      background: linear-gradient(135deg, rgb(239, 68, 68), rgb(248, 113, 113));
-    }
-  }
-  
-  /* Reduced motion / low-end devices - solid colors */
-  @media (prefers-reduced-motion: reduce) {
-    .gradient-primary {
-      background: rgb(99, 102, 241) !important;
-    }
-    
-    .gradient-secondary {
-      background: rgb(34, 197, 94) !important;
-    }
-    
-    .gradient-accent {
-      background: rgb(251, 191, 36) !important;
-    }
-    
-    .gradient-danger {
-      background: rgb(248, 113, 113) !important;
-    }
-  }
-}
-
 @layer base {
   * {
     @apply border-border;

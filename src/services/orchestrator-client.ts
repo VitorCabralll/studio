@@ -3,8 +3,7 @@
  * Interface única para comunicação com o orquestrador via Functions
  */
 
-import type { ProcessingInput, ProcessingOutput, RoutingDecision } from '@/types/orchestrator';
-import { AppConfig } from '@/lib/app-config';
+import type { ProcessingInput, ProcessingOutput, RoutingDecision } from '@/ai/orchestrator/types';
 
 interface OrchestratorClientConfig {
   functionUrl?: string;
@@ -19,7 +18,7 @@ export class OrchestratorClient {
   private config: Required<OrchestratorClientConfig>;
 
   constructor(config: OrchestratorClientConfig = {}) {
-    const projectId = AppConfig.firebase.projectId;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'lexai-ef0ab';
     const region = 'us-central1';
     
     this.config = {

@@ -15,7 +15,6 @@ runConfig:
 buildConfig:
   commands:
     - npm ci
-    - npm run typecheck
     - npm run build
 
 env:

@@ -6,13 +6,7 @@
 
 import { User } from 'firebase/auth';
 import { logger, type LogContext } from './logger';
-// import { type AuthError } from './auth-errors'; // Arquivo removido
-
-interface AuthError {
-  code?: string;
-  message: string;
-  originalError?: Error;
-}
+import { type AuthError } from './auth-errors';
 
 interface AuthLogContext extends LogContext {
   operation?: string;

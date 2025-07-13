@@ -1,19 +1,6 @@
 /**
- * Motion Components Library - LexAI Design System
- * 
- * Biblioteca unificada de componentes de animação usando Framer Motion.
- * Todos os componentes são otimizados para performance e incluem suporte a:
- * - Intersection Observer para animações on-scroll
- * - Prefers-reduced-motion para acessibilidade
- * - Configurações de delay e duration personalizáveis
- * - Variants padronizados do design system
- * 
- * @example
- * ```tsx
- * <FadeIn delay={0.2} duration={0.6}>
- *   <h1>Título animado</h1>
- * </FadeIn>
- * ```
+ * Componentes wrapper para animações Framer Motion padronizadas
+ * Substitui classes CSS customizadas por componentes reutilizáveis
  */
 
 "use client";
@@ -32,29 +19,17 @@ import {
   transitions 
 } from "@/lib/animations";
 
-/**
- * Props base para todos os componentes de animação
- */
+// Tipos base
 interface MotionComponentProps extends Omit<HTMLMotionProps<"div">, "variants" | "initial" | "animate" | "transition"> {
-  /** Atraso antes da animação começar (em segundos) */
   delay?: number;
-  /** Duração da animação (em segundos) */
   duration?: number;
-  /** Classes CSS adicionais */
   className?: string;
-  /** Conteúdo do componente */
   children: React.ReactNode;
-  /** Se a animação deve acontecer apenas uma vez */
   triggerOnce?: boolean;
-  /** Porcentagem do elemento visível para disparar animação (0.0 - 1.0) */
   threshold?: number;
 }
 
-/**
- * Componente base interno para animações com Intersection Observer
- * 
- * @internal - Não usar diretamente, usar os componentes específicos
- */
+// Componente base para animações com InView
 function AnimatedComponent({
   children,
   className,
@@ -99,26 +74,7 @@ function AnimatedComponent({
   );
 }
 
-/**
- * Componente de animação FadeIn
- * 
- * Anima a opacidade de 0 para 1 quando o elemento entra na viewport.
- * Otimizado para textos e elementos que devem aparecer suavemente.
- * 
- * @param children - Conteúdo a ser animado
- * @param className - Classes CSS adicionais
- * @param delay - Atraso em segundos (padrão: 0)
- * @param duration - Duração em segundos (padrão: do design system)
- * @param triggerOnce - Se anima apenas uma vez (padrão: true)
- * @param threshold - Threshold do Intersection Observer (padrão: 0.1)
- * 
- * @example
- * ```tsx
- * <FadeIn delay={0.3}>
- *   <p>Este texto aparece suavemente</p>
- * </FadeIn>
- * ```
- */
+// Componentes específicos
 export function FadeIn({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps) {
   return (
     <AnimatedComponent
@@ -138,26 +94,6 @@ export function FadeIn({ children, className, delay, duration, triggerOnce = tru
   );
 }
 
-/**
- * Componente de animação SlideUp
- * 
- * Anima o elemento deslizando de baixo para cima com fade-in.
- * Ideal para cards, seções e elementos que devem "emergir" da tela.
- * 
- * @param children - Conteúdo a ser animado
- * @param className - Classes CSS adicionais
- * @param delay - Atraso em segundos (padrão: 0)
- * @param duration - Duração em segundos (padrão: do design system)
- * @param triggerOnce - Se anima apenas uma vez (padrão: true)
- * @param threshold - Threshold do Intersection Observer (padrão: 0.1)
- * 
- * @example
- * ```tsx
- * <SlideUp delay={0.2}>
- *   <div className="card">Card animado</div>
- * </SlideUp>
- * ```
- */
 export function SlideUp({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps) {
   return (
     <AnimatedComponent
@@ -177,26 +113,6 @@ export function SlideUp({ children, className, delay, duration, triggerOnce = tr
   );
 }
 
-/**
- * Componente de animação ScaleIn
- * 
- * Anima o elemento com efeito de "zoom in" - escala de pequeno para tamanho normal.
- * Perfeito para ícones, botões e elementos que devem chamar atenção.
- * 
- * @param children - Conteúdo a ser animado
- * @param className - Classes CSS adicionais
- * @param delay - Atraso em segundos (padrão: 0)
- * @param duration - Duração em segundos (padrão: do design system)
- * @param triggerOnce - Se anima apenas uma vez (padrão: true)
- * @param threshold - Threshold do Intersection Observer (padrão: 0.1)
- * 
- * @example
- * ```tsx
- * <ScaleIn delay={0.1}>
- *   <Button>Botão que "aparece"</Button>
- * </ScaleIn>
- * ```
- */
 export function ScaleIn({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps) {
   return (
     <AnimatedComponent
@@ -216,28 +132,7 @@ export function ScaleIn({ children, className, delay, duration, triggerOnce = tr
   );
 }
 
-/**
- * Card animado com efeitos premium
- * 
- * Card com animações de entrada e hover interactions sofisticadas.
- * Inclui diferentes variantes: default, premium (glass morphism), elevated.
- * 
- * @param children - Conteúdo do card
- * @param className - Classes CSS adicionais
- * @param delay - Atraso em segundos (padrão: 0)
- * @param duration - Duração em segundos (padrão: do design system)
- * @param triggerOnce - Se anima apenas uma vez (padrão: true)
- * @param threshold - Threshold do Intersection Observer (padrão: 0.1)
- * @param variant - Estilo do card: "default" | "premium" | "elevated"
- * 
- * @example
- * ```tsx
- * <AnimatedCard variant="premium" delay={0.3}>
- *   <h3>Card Premium</h3>
- *   <p>Com efeito glass morphism</p>
- * </AnimatedCard>
- * ```
- */
+// Componente para cards com hover premium
 export function AnimatedCard({ children, className, delay, duration, triggerOnce = true, threshold = 0.1, ...props }: MotionComponentProps & { variant?: "default" | "premium" | "elevated" }) {
   const [ref, inView] = useInView({
     triggerOnce,

@@ -38,11 +38,15 @@
  * @since 2025-07-05
  */
 
-import { AppConfig, ExecutionContext } from '@/lib/app-config';
+import { 
+  getExecutionContext, 
+  ExecutionContext, 
+  envLog, 
+  skipInBuild,
+  getEnvConfig 
+} from '@/lib/environment';
 
-
-
-
+// Types
 export interface HealthCheckResult {
   status: 'ok' | 'error' | 'timeout' | 'build-time' | 'unavailable';
   context: ExecutionContext;
@@ -162,36 +166,6 @@ export class BuildAwareOrchestrator {
   private lastHealthCheck: HealthCheckResult | null = null;
   private healthCheckCache: Map<string, HealthCheckResult> = new Map();
 
-  /**
-   * Environment-aware logging
-   */
-  private static envLog(message: string, data?: unknown): void {
-    if (AppConfig.monitoring.enableVerboseLogging) {
-      console.log(`[${AppConfig.environment.context}] ${message}`, data || '');
-    }
-  }
-
-  /**
-   * Safe execution wrapper that respects environment context
-   */
-  private static executeInContext<T>(
-    contexts: ExecutionContext[],
-    fn: () => T,
-    fallback?: T
-  ): T | undefined {
-    if (contexts.includes(AppConfig.environment.context)) {
-      return fn();
-    }
-    return fallback;
-  }
-
-  private static skipInBuild = <T>(fn: () => T): T | undefined => 
-    BuildAwareOrchestrator.executeInContext([
-      ExecutionContext.CLIENT_RUNTIME, 
-      ExecutionContext.SERVER_RUNTIME, 
-      ExecutionContext.DEVELOPMENT
-    ], fn);
-
   constructor(config: Partial<OrchestratorConfig> = {}) {
     this.config = {
       healthCheckTimeout: 5000,
@@ -199,19 +173,19 @@ export class BuildAwareOrchestrator {
       retryDelay: 1000,
       enableHealthChecks: true,
       baseUrl: this.getBaseUrl(),
-      projectId: AppConfig.firebase.projectId,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'lexai-ef0ab',
       region: 'us-central1',
       ...config
     };
 
-    BuildAwareOrchestrator.envLog('BuildAwareOrchestrator initialized', { config: this.config });
+    envLog('BuildAwareOrchestrator initialized', { config: this.config });
   }
 
   /**
    * Get Firebase Functions base URL
    */
   private getBaseUrl(): string {
-    const projectId = AppConfig.firebase.projectId;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'lexai-ef0ab';
     const region = 'us-central1';
     return `https://${region}-${projectId}.cloudfunctions.net`;
   }
@@ -220,10 +194,10 @@ export class BuildAwareOrchestrator {
    * Perform health check with environment awareness
    */
   async healthCheck(force = false): Promise<HealthCheckResult> {
-    const context = AppConfig.environment.context;
+    const context = getExecutionContext();
     const timestamp = new Date().toISOString();
     
-    BuildAwareOrchestrator.envLog('Health check requested', { context, force });
+    envLog('Health check requested', { context, force });
 
     // Handle build-time context
     if (context === ExecutionContext.BUILD_TIME) {
@@ -232,7 +206,7 @@ export class BuildAwareOrchestrator {
 
     // Check cache for recent results (unless forced)
     if (!force && this.lastHealthCheck && this.isRecentHealthCheck()) {
-      BuildAwareOrchestrator.envLog('Returning cached health check result');
+      envLog('Returning cached health check result');
       return this.lastHealthCheck;
     }
 
@@ -251,7 +225,7 @@ export class BuildAwareOrchestrator {
       message: 'Health check skipped during build phase'
     };
 
-    BuildAwareOrchestrator.envLog('Build-time health check result created', result);
+    envLog('Build-time health check result created', result);
     return result;
   }
 
@@ -259,11 +233,11 @@ export class BuildAwareOrchestrator {
    * Perform actual health check with retries and timeout
    */
   private async performHealthCheck(timestamp: string): Promise<HealthCheckResult> {
-    const context = AppConfig.environment.context;
+    const context = getExecutionContext();
     const startTime = Date.now();
 
     try {
-      BuildAwareOrchestrator.envLog('Performing actual health check');
+      envLog('Performing actual health check');
 
       const result = await this.executeHealthCheckWithTimeout();
       const responseTime = Date.now() - startTime;
@@ -279,7 +253,7 @@ export class BuildAwareOrchestrator {
       this.lastHealthCheck = healthCheckResult;
       this.cacheHealthCheck(healthCheckResult);
       
-      BuildAwareOrchestrator.envLog('Health check completed successfully', { responseTime });
+      envLog('Health check completed successfully', { responseTime });
       return healthCheckResult;
 
     } catch (error) {
@@ -293,7 +267,7 @@ export class BuildAwareOrchestrator {
         message: this.formatErrorMessage(error)
       };
 
-      BuildAwareOrchestrator.envLog('Health check failed', { error: errorResult.message, responseTime });
+      envLog('Health check failed', { error: errorResult.message, responseTime });
       return errorResult;
     }
   }
@@ -302,7 +276,7 @@ export class BuildAwareOrchestrator {
    * Execute health check with timeout
    */
   private async executeHealthCheckWithTimeout(): Promise<Partial<HealthCheckResult>> {
-    return BuildAwareOrchestrator.skipInBuild(async () => {
+    return skipInBuild(async () => {
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Health check timeout')), this.config.healthCheckTimeout);
       });
@@ -336,7 +310,7 @@ export class BuildAwareOrchestrator {
         message: data.message || 'Firebase Functions operational'
       };
     } catch (error) {
-      BuildAwareOrchestrator.envLog('Health check API call failed', { error });
+      envLog('Health check API call failed', { error });
       throw error;
     }
   }
@@ -345,10 +319,10 @@ export class BuildAwareOrchestrator {
    * Get LLM providers status from Firebase Functions
    */
   async getLLMStatus(): Promise<LLMProviderStatus[]> {
-    const config = AppConfig;
+    const config = getEnvConfig();
     
-    if (AppConfig.environment.isBuild) {
-      BuildAwareOrchestrator.envLog('LLM status check skipped - services not initialized');
+    if (!config.initializeFirebaseServices) {
+      envLog('LLM status check skipped - services not initialized');
       return [];
     }
 
@@ -373,10 +347,6 @@ export class BuildAwareOrchestrator {
       const data = await response.json();
       const providers = data.availableProviders || [];
       
-      if (!Array.isArray(providers)) {
-        throw new Error('Invalid providers data format from API');
-      }
-      
       return providers.map((provider: any) => ({
         provider: provider.name,
         model: provider.model,
@@ -386,7 +356,7 @@ export class BuildAwareOrchestrator {
         error: provider.error
       }));
     } catch (error) {
-      BuildAwareOrchestrator.envLog('LLM status check failed', { error });
+      envLog('LLM status check failed', { error });
       // Fallback to basic status
       return [
         {
@@ -413,10 +383,10 @@ export class BuildAwareOrchestrator {
    * Get complete orchestrator status
    */
   async getStatus(force = false): Promise<OrchestratorStatus> {
-    const context = AppConfig.environment.context;
+    const context = getExecutionContext();
     const timestamp = new Date().toISOString();
 
-    BuildAwareOrchestrator.envLog('Getting orchestrator status', { context, force });
+    envLog('Getting orchestrator status', { context, force });
 
     const [functionsStatus, llmStatus] = await Promise.all([
       this.healthCheck(force),
@@ -435,7 +405,7 @@ export class BuildAwareOrchestrator {
       }
     };
 
-    BuildAwareOrchestrator.envLog('Orchestrator status compiled', { status: status.status });
+    envLog('Orchestrator status compiled', { status: status.status });
     return status;
   }
 
@@ -536,14 +506,14 @@ export class BuildAwareOrchestrator {
    * @returns Promise<DocumentProcessingResponse> - Resultado completo
    */
   async processDocument(request: DocumentProcessingRequest): Promise<DocumentProcessingResponse> {
-    const context = AppConfig.environment.context;
+    const context = getExecutionContext();
     
     if (context === ExecutionContext.BUILD_TIME) {
       throw new Error('Document processing not available during build time');
     }
 
     try {
-      BuildAwareOrchestrator.envLog('Processing document', { taskType: request.taskType, documentType: request.documentType });
+      envLog('Processing document', { taskType: request.taskType, documentType: request.documentType });
       
       const response = await fetch(`${this.config.baseUrl}/processDocument`, {
         method: 'POST',
@@ -562,14 +532,14 @@ export class BuildAwareOrchestrator {
 
       const data = await response.json();
       
-      BuildAwareOrchestrator.envLog('Document processing completed', { 
+      envLog('Document processing completed', { 
         success: data.success, 
         processingTime: data.metadata?.processingTime 
       });
       
       return data;
     } catch (error) {
-      BuildAwareOrchestrator.envLog('Document processing failed', { error });
+      envLog('Document processing failed', { error });
       throw error;
     }
   }
@@ -589,7 +559,7 @@ export class BuildAwareOrchestrator {
    * @returns Promise<any> - Decisão de roteamento
    */
   async testRouting(request: Partial<DocumentProcessingRequest>): Promise<any> {
-    const context = AppConfig.environment.context;
+    const context = getExecutionContext();
     
     if (context === ExecutionContext.BUILD_TIME) {
       return { status: 'build-time', message: 'Routing test not available during build' };
@@ -616,7 +586,7 @@ export class BuildAwareOrchestrator {
 
       return await response.json();
     } catch (error) {
-      BuildAwareOrchestrator.envLog('Routing test failed', { error });
+      envLog('Routing test failed', { error });
       throw error;
     }
   }
@@ -627,7 +597,7 @@ export class BuildAwareOrchestrator {
   clearCaches(): void {
     this.lastHealthCheck = null;
     this.healthCheckCache.clear();
-    BuildAwareOrchestrator.envLog('Orchestrator caches cleared');
+    envLog('Orchestrator caches cleared');
   }
 }
 

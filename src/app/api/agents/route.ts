@@ -34,15 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<AgentsResp
       }, { status: 401 });
     }
 
-    const tokenParts = authHeader.split('Bearer ');
-    if (tokenParts.length !== 2) {
-      return NextResponse.json({ 
-        agents: [],
-        default: 'geral',
-        error: 'Invalid authorization header format' 
-      }, { status: 401 });
-    }
-    const token = tokenParts[1];
+    const token = authHeader.split('Bearer ')[1];
     
     const adminAuth = getAdminAuth();
     if (!isAdminConfigured() || !adminAuth) {

@@ -13,7 +13,6 @@ interface LogContext {
   metadata?: Record<string, unknown>;
   timestamp?: string;
   environment?: string;
-  error?: Error;
 }
 
 interface LogEntry extends LogContext {
@@ -137,7 +136,6 @@ class StructuredLogger {
   }
 
   debug(message: string, context?: LogContext): void {
-    // Debug logs are disabled in production for performance
     if (this.isDevelopment) {
       const entry = this.createLogEntry('debug', message, context);
       this.outputLog(entry);
@@ -145,16 +143,8 @@ class StructuredLogger {
   }
 
   info(message: string, context?: LogContext): void {
-    // Info logs are minimal in production
-    if (this.isDevelopment || this.isImportantInfo(message)) {
-      const entry = this.createLogEntry('info', message, context);
-      this.outputLog(entry);
-    }
-  }
-
-  private isImportantInfo(message: string): boolean {
-    const important = ['auth', 'security', 'error', 'critical', 'startup', 'shutdown'];
-    return important.some(keyword => message.toLowerCase().includes(keyword));
+    const entry = this.createLogEntry('info', message, context);
+    this.outputLog(entry);
   }
 
   warn(message: string, context?: LogContext): void {
@@ -199,18 +189,15 @@ class StructuredLogger {
   }
 
   performance(message: string, duration: number, context?: LogContext): void {
-    // Performance logs only in development or for critical operations
-    if (this.isDevelopment || duration > 5000) { // Log only slow operations in production
-      this.info(`[PERFORMANCE] ${message}`, {
-        ...context,
-        component: 'performance',
-        metadata: {
-          ...context?.metadata,
-          duration,
-          timestamp: Date.now()
-        }
-      });
-    }
+    this.info(`[PERFORMANCE] ${message}`, {
+      ...context,
+      component: 'performance',
+      metadata: {
+        ...context?.metadata,
+        duration,
+        timestamp: Date.now()
+      }
+    });
   }
 
   audit(action: string, userId?: string, context?: LogContext): void {

@@ -174,7 +174,7 @@ class ApiSecurity {
     // CSP básico
     response.headers.set(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
     );
 
     // HSTS em produção
@@ -428,8 +428,7 @@ class ApiSecurity {
     const xClientIP = request.headers.get('x-client-ip');
 
     if (xForwardedFor) {
-      const ips = xForwardedFor.split(',');
-      return ips.length > 0 ? ips[0].trim() : xForwardedFor.trim();
+      return xForwardedFor.split(',')[0].trim();
     }
 
     if (xRealIP) {

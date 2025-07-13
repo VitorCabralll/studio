@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 // import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from './fonts';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -12,7 +13,13 @@ import { WorkspaceProvider } from '@/contexts/workspace-context';
 import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import './globals.css';
 
-// Debug components removidos
+// Lazy load do componente de debug apenas em desenvolvimento
+const AuthDebug = dynamic(
+  () => import('@/components/debug/auth-debug').then(mod => ({ default: mod.AuthDebug })),
+  {
+    loading: () => null, // Sem loading para debug
+  }
+);
 
 export const metadata: Metadata = {
   title: 'LexAI - IA Jurídica para Operadores do Direito',
@@ -69,7 +76,7 @@ export default function RootLayout({
                     {children}
                   </OnboardingGuard>
                   <Toaster />
-                  {/* Debug components removidos */}
+                  {process.env.NEXT_PUBLIC_FIREBASE_DEBUG === 'true' && <AuthDebug />}
                   <ResourcePreloader />
                   <WebVitals />
                 </WorkspaceProvider>

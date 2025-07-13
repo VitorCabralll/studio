@@ -14,15 +14,14 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuth } from '@/hooks/use-auth';
-import { UserProfile } from '@/lib/auth/types';
+import { useAuth, UserProfile } from '@/hooks/use-auth';
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { roles, legalAreas } from '@/lib/legal-constants';
 import { updateUserProfile } from '@/services/user-service';
 
 
 const profileSchema = z.object({
-  cargo: z.string({ message: 'Por favor, selecione um cargo.' }),
+  cargo: z.string({ required_error: 'Por favor, selecione um cargo.' }),
   areas_atuacao: z.array(z.string()).min(1, 'Selecione pelo menos uma área de atuação.'),
 });
 

@@ -17,7 +17,7 @@ export function AppHeader() {
   const { logout } = useAuth();
 
   return (
-    <header id="navigation" className="shadow-apple-sm sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-background/95 backdrop-blur-sm px-4 sm:px-6">
+    <header id="navigation" className="shadow-apple-sm sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-gradient-to-r from-background via-background to-primary/5 px-4 backdrop-blur-sm sm:px-6">
       <motion.div 
         className="md:hidden"
         whileHover={{ scale: 1.05 }}

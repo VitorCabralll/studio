@@ -183,7 +183,7 @@ export function validateDocumentRequest(request: unknown): {
     return {
       success: false,
       error: error instanceof z.ZodError 
-        ? error.issues.map((e: any) => e.message).join(', ')
+        ? error.errors.map(e => e.message).join(', ')
         : 'Erro de validação desconhecido'
     };
   }
@@ -256,7 +256,7 @@ export function createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
       return {
         success: false,
         error: error instanceof z.ZodError
-          ? error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
+          ? error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
           : 'Invalid request format'
       };
     }
