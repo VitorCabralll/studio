@@ -50,10 +50,19 @@ interface SimpleAuthState {
   isInitialized: boolean;
 }
 
+interface SignupData {
+  email: string;
+  password: string;
+  name?: string;
+  phone?: string;
+  company?: string;
+  oab?: string;
+}
+
 interface SimpleAuthContextType extends SimpleAuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (data: SignupData) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -113,10 +122,13 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Criar perfil padrão
-  const createDefaultProfile = (user: User): UserProfile => ({
-    name: user.displayName || '',
-    displayName: user.displayName || '',
+  const createDefaultProfile = (user: User, additionalData?: Partial<UserProfile>): UserProfile => ({
+    name: additionalData?.name || user.displayName || '',
+    displayName: additionalData?.name || user.displayName || '',
     email: user.email || '',
+    phone: additionalData?.phone || '',
+    company: additionalData?.company || '',
+    oab: additionalData?.oab || '',
     cargo: '',
     areas_atuacao: [],
     primeiro_acesso: true,
@@ -126,21 +138,23 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Buscar ou criar perfil
-  const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
+  const getOrCreateProfile = async (user: User, additionalData?: Partial<UserProfile>): Promise<UserProfile> => {
     try {
-      // AGUARDAR 2 segundos para token JWT ser propagado
-      console.log('🕒 Aguardando token JWT ser propagado...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const docRef = doc(db, 'usuarios', user.uid);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        // Perfil existe
-        return docSnap.data() as UserProfile;
+        // Perfil existe - merge com dados adicionais se fornecidos
+        const existingProfile = docSnap.data() as UserProfile;
+        if (additionalData) {
+          const updatedProfile = { ...existingProfile, ...additionalData };
+          await setDoc(docRef, updatedProfile, { merge: true });
+          return updatedProfile;
+        }
+        return existingProfile;
       } else {
-        // Criar perfil novo
-        const newProfile = createDefaultProfile(user);
+        // Criar perfil novo com dados adicionais
+        const newProfile = createDefaultProfile(user, additionalData);
         await setDoc(docRef, newProfile);
         return newProfile;
       }
@@ -182,14 +196,24 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Login
+  // Login com logging detalhado
   const login = async (email: string, password: string) => {
+    console.log('🔐 [AUTH] Iniciando login para:', email);
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log('🔐 [AUTH] Tentando signInWithEmailAndPassword...');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('✅ [AUTH] Login bem-sucedido:', userCredential.user.uid);
       // onAuthStateChanged irá lidar com o resto
     } catch (error: any) {
+      console.error('❌ [AUTH] Erro no login:', {
+        code: error.code,
+        message: error.message,
+        email: email,
+        timestamp: new Date().toISOString()
+      });
+      
       setState(prev => ({ 
         ...prev, 
         loading: false, 
@@ -199,14 +223,36 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Signup
-  const signup = async (email: string, password: string) => {
+  // Signup com dados extras e logging detalhado
+  const signup = async (data: SignupData) => {
+    console.log('📝 [AUTH] Iniciando cadastro para:', data.email);
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged irá lidar com o resto
+      console.log('📝 [AUTH] Criando usuário no Firebase Auth...');
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      console.log('✅ [AUTH] Usuário criado com sucesso:', userCredential.user.uid);
+      
+      // Criar perfil imediatamente com dados do formulário
+      const additionalData = {
+        name: data.name,
+        phone: data.phone,
+        company: data.company,
+        oab: data.oab
+      };
+      
+      console.log('📝 [AUTH] Criando perfil do usuário no Firestore...', additionalData);
+      await getOrCreateProfile(userCredential.user, additionalData);
+      console.log('✅ [AUTH] Perfil criado com sucesso');
+      
     } catch (error: any) {
+      console.error('❌ [AUTH] Erro no cadastro:', {
+        code: error.code,
+        message: error.message,
+        email: data.email,
+        timestamp: new Date().toISOString()
+      });
+      
       setState(prev => ({ 
         ...prev, 
         loading: false, 
@@ -287,16 +333,21 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  // Listener principal - SIMPLES e DIRETO
+  // Listener principal com logging detalhado
   useEffect(() => {
+    console.log('🎧 [AUTH] Configurando listener de estado de autenticação...');
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Usuário logado
+        console.log('👤 [AUTH] Usuário detectado:', user.uid, user.email);
         try {
           setState(prev => ({ ...prev, loading: true, error: null }));
           
           // Buscar/criar perfil
+          console.log('📊 [AUTH] Carregando perfil do usuário...');
           const profile = await getOrCreateProfile(user);
+          console.log('✅ [AUTH] Perfil carregado com sucesso:', profile.name || 'Sem nome');
           
           setState({
             user,
@@ -308,7 +359,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
           });
           
         } catch (error: any) {
-          console.error('Erro ao carregar perfil do usuário:', error);
+          console.error('❌ [AUTH] Erro ao carregar perfil do usuário:', error);
           setState({
             user,
             profile: null,
@@ -320,6 +371,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Usuário deslogado
+        console.log('🚪 [AUTH] Usuário deslogado ou não autenticado');
         setState({
           user: null,
           profile: null,
@@ -359,4 +411,4 @@ export const useAuth = useSimpleAuth;
 export const AuthProvider = SimpleAuthProvider;
 
 // Export types for convenience
-export type { AuthError };
+export type { AuthError, SignupData };

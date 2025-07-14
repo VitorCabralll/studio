@@ -62,11 +62,27 @@ export function getFirebaseConfig(): FirebaseConfig {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   };
 
-  // Validate required fields
+  // Validate required fields with detailed error messages
   const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
   const missing = required.filter(key => !config[key as keyof typeof config]);
   
   if (missing.length > 0) {
+    const errorMessage = `
+🚨 FIREBASE CONFIGURATION ERROR 🚨
+
+Missing required environment variables:
+${missing.map(key => `- NEXT_PUBLIC_FIREBASE_${key.toUpperCase().replace(/([A-Z])/g, '_$1')}`).join('\n')}
+
+To fix this:
+1. Copy .env.example to .env.local
+2. Get your Firebase config from: https://console.firebase.google.com/project/lexai-ef0ab/settings/general
+3. Fill in the missing values
+
+Current config status:
+${required.map(key => `- ${key}: ${config[key as keyof typeof config] ? '✅' : '❌'}`).join('\n')}
+    `;
+    
+    console.error(errorMessage);
     throw new Error(`Missing Firebase configuration: ${missing.join(', ')}`);
   }
 

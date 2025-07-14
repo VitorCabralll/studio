@@ -58,7 +58,14 @@ export function SignupForm() {
     }
 
     try {
-      await signup(formData.email, formData.password);
+      await signup({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        company: formData.company,
+        oab: formData.oab
+      });
     } catch (error) {
       // Error is already handled by useAuth
     }

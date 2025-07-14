@@ -32,6 +32,7 @@ function initializeFirebaseApp(): FirebaseApp {
 
   const config = getFirebaseConfig();
   firebaseApp = initializeApp(config);
+
   return firebaseApp;
 }
 
