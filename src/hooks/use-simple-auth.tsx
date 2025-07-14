@@ -128,6 +128,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   // Buscar ou criar perfil
   const getOrCreateProfile = async (user: User): Promise<UserProfile> => {
     try {
+      // AGUARDAR 2 segundos para token JWT ser propagado
+      console.log('🕒 Aguardando token JWT ser propagado...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const docRef = doc(db, 'usuarios', user.uid);
       const docSnap = await getDoc(docRef);
       
