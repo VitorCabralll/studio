@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FadeIn } from "@/components/magic-ui";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-simple-auth';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");

@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * Sistema de Autenticação Simples - Zero Bugs
- * Substitui o AuthCoordinator por algo direto e confiável
+ * Sistema de Autenticação Unificado - LexAI
+ * Sistema robusto e confiável para autenticação Firebase
  */
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
@@ -13,12 +13,14 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase';
 
-// Tipos simples
+// Tipos aprimorados
 export interface UserProfile {
   name?: string;
   displayName?: string;
@@ -34,11 +36,18 @@ export interface UserProfile {
   workspaces: any[];
 }
 
+interface AuthError {
+  code: string;
+  message: string;
+}
+
 interface SimpleAuthState {
   user: User | null;
   profile: UserProfile | null;
+  userProfile: UserProfile | null; // Alias for compatibility
   loading: boolean;
-  error: string | null;
+  error: AuthError | null;
+  isInitialized: boolean;
 }
 
 interface SimpleAuthContextType extends SimpleAuthState {
@@ -47,7 +56,10 @@ interface SimpleAuthContextType extends SimpleAuthState {
   signup: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  clearError: () => void;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateUserProfileState: (data: Partial<UserProfile>) => void;
   refetchProfile: () => Promise<void>;
 }
 
@@ -68,12 +80,37 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SimpleAuthState>({
     user: null,
     profile: null,
+    userProfile: null,
     loading: true,
-    error: null
+    error: null,
+    isInitialized: false
   });
+
+  const router = useRouter();
 
   const auth = getFirebaseAuth();
   const db = getFirebaseDb();
+
+  // Parse Firebase Auth errors into user-friendly messages
+  const parseAuthError = (error: any): AuthError => {
+    const errorMessages: Record<string, string> = {
+      'auth/user-not-found': 'Usuário não encontrado. Verifique o email.',
+      'auth/wrong-password': 'Senha incorreta. Tente novamente.',
+      'auth/invalid-email': 'Email inválido.',
+      'auth/email-already-in-use': 'Este email já está em uso.',
+      'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
+      'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
+      'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
+      'auth/popup-closed-by-user': 'Login cancelado.',
+      'auth/popup-blocked': 'Pop-up bloqueado. Permita pop-ups para este site.',
+      'auth/invalid-credential': 'Credenciais inválidas. Verifique email e senha.',
+    };
+
+    return {
+      code: error.code || 'unknown',
+      message: errorMessages[error.code] || 'Erro de autenticação. Tente novamente.'
+    };
+  };
 
   // Criar perfil padrão
   const createDefaultProfile = (user: User): UserProfile => ({
@@ -119,7 +156,8 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       
       setState(prev => ({
         ...prev,
-        profile: prev.profile ? { ...prev.profile, ...updates } : null
+        profile: prev.profile ? { ...prev.profile, ...updates } : null,
+        userProfile: prev.userProfile ? { ...prev.userProfile, ...updates } : null
       }));
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
@@ -133,10 +171,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     
     try {
       const profile = await getOrCreateProfile(state.user);
-      setState(prev => ({ ...prev, profile }));
+      setState(prev => ({ ...prev, profile, userProfile: profile }));
     } catch (error) {
       console.error('Erro ao recarregar perfil:', error);
-      setState(prev => ({ ...prev, error: 'Erro ao carregar perfil' }));
+      setState(prev => ({ ...prev, error: parseAuthError(error) }));
     }
   };
 
@@ -151,7 +189,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro no login' 
+        error: parseAuthError(error)
       }));
       throw error;
     }
@@ -168,7 +206,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro no cadastro' 
+        error: parseAuthError(error)
       }));
       throw error;
     }
@@ -190,7 +228,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro no login Google' 
+        error: parseAuthError(error)
       }));
       throw error;
     }
@@ -203,12 +241,46 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState({
         user: null,
         profile: null,
+        userProfile: null,
         loading: false,
-        error: null
+        error: null,
+        isInitialized: true
       });
+      router.push('/login');
     } catch (error: any) {
       console.error('Erro no logout:', error);
     }
+  };
+
+  // Reset password
+  const resetPassword = async (email: string): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setState(prev => ({ ...prev, loading: false }));
+    } catch (error: any) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false,
+        error: parseAuthError(error)
+      }));
+      throw error;
+    }
+  };
+
+  // Clear error
+  const clearError = (): void => {
+    setState(prev => ({ ...prev, error: null }));
+  };
+
+  // Update user profile state
+  const updateUserProfileState = (data: Partial<UserProfile>): void => {
+    setState(prev => ({
+      ...prev,
+      profile: prev.profile ? { ...prev.profile, ...data } : null,
+      userProfile: prev.userProfile ? { ...prev.userProfile, ...data } : null,
+    }));
   };
 
   // Listener principal - SIMPLES e DIRETO
@@ -225,8 +297,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
           setState({
             user,
             profile,
+            userProfile: profile,
             loading: false,
-            error: null
+            error: null,
+            isInitialized: true
           });
           
         } catch (error: any) {
@@ -234,8 +308,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
           setState({
             user,
             profile: null,
+            userProfile: null,
             loading: false,
-            error: 'Erro ao carregar perfil'
+            error: parseAuthError(error),
+            isInitialized: true
           });
         }
       } else {
@@ -243,8 +319,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         setState({
           user: null,
           profile: null,
+          userProfile: null,
           loading: false,
-          error: null
+          error: null,
+          isInitialized: true
         });
       }
     });
@@ -258,7 +336,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     signup,
     loginWithGoogle,
     logout,
+    resetPassword,
+    clearError,
     updateProfile,
+    updateUserProfileState,
     refetchProfile
   };
 
@@ -268,3 +349,10 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     </SimpleAuthContext.Provider>
   );
 }
+
+// Alias para compatibilidade com código existente
+export const useAuth = useSimpleAuth;
+export const AuthProvider = SimpleAuthProvider;
+
+// Export types for convenience
+export type { AuthError };

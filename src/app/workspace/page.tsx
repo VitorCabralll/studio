@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-simple-auth';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { updateUserProfile } from '@/services/user-service';
 

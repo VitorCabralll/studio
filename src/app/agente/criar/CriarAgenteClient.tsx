@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-simple-auth';
 import { useWorkspace } from '@/hooks/use-workspace';
 import { useToast } from "@/hooks/use-toast";
 import { legalAreas } from '@/lib/legal-constants';

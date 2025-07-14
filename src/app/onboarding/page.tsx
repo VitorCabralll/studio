@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuth, UserProfile } from '@/hooks/use-auth';
+import { useAuth, UserProfile } from '@/hooks/use-simple-auth';
 import { useFocusManagement } from '@/hooks/use-focus-management';
 import { roles, legalAreas } from '@/lib/legal-constants';
 import { updateUserProfile } from '@/services/user-service';

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 
-import { useAuth } from './use-auth';
+import { useAuth } from './use-simple-auth';
 import { 
   processUserDocuments,
   addUserInstruction,

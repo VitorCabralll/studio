@@ -82,7 +82,7 @@ export function LoginForm() {
             <CardContent className="space-y-4">
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                  {error}
+                  {typeof error === 'string' ? error : error.message}
                 </div>
               )}
               {Object.keys(formErrors).length > 0 && (

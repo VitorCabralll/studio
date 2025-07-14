@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-simple-auth';
 
 export default function OnboardingSuccessPage() {
   const { userProfile } = useAuth();
