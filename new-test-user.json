@@ -1,0 +1,1 @@
+{"users": [{"localId": "test-user-123", "email": "teste@lexai.dev", "emailVerified": true, "passwordHash": "cxBSP1DLjTBDk+nuwTPb+l4L4WwqbLp5RNdw0CkSiBy9joqNZ6cfE9dUkQFZeBLPXJlMljoHRUejQyKsX8bGBg==", "salt": "ci+278wcBSGtEA==", "createdAt": "1752281000000", "disabled": false}]}
