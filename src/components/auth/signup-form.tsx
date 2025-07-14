@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FadeIn } from "@/components/magic-ui";
-import { useAuth } from '@/hooks/use-auth';
+import { useSimpleAuth } from '@/hooks/use-simple-auth';
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +27,7 @@ export function SignupForm() {
     acceptNewsletter: false
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const { signup, loginWithGoogle, loading, error, clearError } = useAuth();
+  const { signup, loginWithGoogle, loading, error } = useSimpleAuth();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -38,7 +38,6 @@ export function SignupForm() {
     
     // Clear previous errors
     setFormErrors({});
-    clearError();
     
     // Validação de confirmação de senha
     if (formData.password !== formData.confirmPassword) {
@@ -58,17 +57,8 @@ export function SignupForm() {
       return;
     }
 
-    // Passar dados adicionais para o signup
-    const additionalData = {
-      name: formData.name,
-      phone: formData.phone,
-      company: formData.company,
-      oab: formData.oab,
-      acceptNewsletter: formData.acceptNewsletter
-    };
-    
     try {
-      await signup(formData.email, formData.password, additionalData);
+      await signup(formData.email, formData.password);
     } catch (error) {
       // Error is already handled by useAuth
     }
@@ -119,13 +109,7 @@ export function SignupForm() {
             <CardContent className="space-y-4">
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                  {error.message}
-                  <button 
-                    onClick={clearError}
-                    className="ml-2 text-red-800 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
-                  >
-                    ×
-                  </button>
+                  {error}
                 </div>
               )}
               {Object.keys(formErrors).length > 0 && (

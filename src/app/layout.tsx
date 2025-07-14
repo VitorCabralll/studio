@@ -8,7 +8,7 @@ import { ResourcePreloader } from '@/components/optimization/resource-preloader'
 import { WebVitals } from '@/components/optimization/web-vitals';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from '@/hooks/use-auth';
+import { SimpleAuthProvider } from '@/hooks/use-simple-auth';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
 import { OnboardingGuard } from '@/components/layout/onboarding-guard';
 import './globals.css';
@@ -70,7 +70,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-              <AuthProvider>
+              <SimpleAuthProvider>
                 <WorkspaceProvider>
                   <OnboardingGuard>
                     {children}
@@ -80,7 +80,7 @@ export default function RootLayout({
                   <ResourcePreloader />
                   <WebVitals />
                 </WorkspaceProvider>
-              </AuthProvider>
+              </SimpleAuthProvider>
           </ThemeProvider>
           {/* Speed Insights temporarily disabled
           <ErrorBoundary>

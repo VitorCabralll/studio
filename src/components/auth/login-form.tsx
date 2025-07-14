@@ -9,21 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeIn } from "@/components/magic-ui";
-import { useAuth } from '@/hooks/use-auth';
+import { useSimpleAuth } from '@/hooks/use-simple-auth';
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const { login, loginWithGoogle, loading, error, clearError } = useAuth();
+  const { login, loginWithGoogle, loading, error } = useSimpleAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Clear previous errors
     setFormErrors({});
-    clearError();
     
     // Basic validation
     if (!email || !password) {
@@ -83,13 +82,7 @@ export function LoginForm() {
             <CardContent className="space-y-4">
               {error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                  {error.message}
-                  <button 
-                    onClick={clearError}
-                    className="ml-2 text-red-800 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
-                  >
-                    ×
-                  </button>
+                  {error}
                 </div>
               )}
               {Object.keys(formErrors).length > 0 && (

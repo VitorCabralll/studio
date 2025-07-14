@@ -3,10 +3,10 @@
 import { Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useSimpleAuth } from '@/hooks/use-simple-auth';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading, userProfile, isInitialized } = useAuth();
+  const { user, loading, profile: userProfile } = useSimpleAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isVerified, setIsVerified] = useState(false);
@@ -26,7 +26,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     }
     
     // Aguardar inicialização completa para páginas protegidas
-    if (!isInitialized) {
+    if (loading) {
       return;
     }
 
@@ -83,7 +83,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     
     setIsVerified(true);
 
-  }, [user, userProfile, loading, pathname, router, isInitialized, isPublicPage, isAuthPage]);
+  }, [user, userProfile, loading, pathname, router, isPublicPage, isAuthPage]);
 
   if (!isVerified) {
     return (

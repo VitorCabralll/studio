@@ -1,0 +1,121 @@
+{"users": [
+{
+  "localId": "0Y8XKC4MFUZlO3NPcTVadpZW4XL2",
+  "email": "vitorcabral711@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "cxBSP1DLjTBDk+nuwTPb+l4L4WwqbLp5RNdw0CkSiBy9joqNZ6cfE9dUkQFZeBLPXJlMljoHRUejQyKsX8bGBg==",
+  "salt": "ci+278wcBSGtEA==",
+  "lastSignedInAt": "1752280988014",
+  "createdAt": "1752280988014",
+  "providerUserInfo": []
+},
+{
+  "localId": "333E7gIo72Uakh3GO72jb3veuSJ2",
+  "email": "vitorcabral3@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "A9+ZmA/aZmTcSnvkppe8b1WGwjYd3IJRnIL5DTDMudEyY8dNKFNRMxL7X/ONsHZEGaKUuBph44unfTH7j4nFSQ==",
+  "salt": "AXzxnKsMB1Lu5w==",
+  "lastSignedInAt": "1751990474772",
+  "createdAt": "1751990474772",
+  "providerUserInfo": []
+},
+{
+  "localId": "IsDdJYlJHOdDUkLuG17O2xZeuv13",
+  "email": "vitorhugo@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "XFH5JcapFxmM3q5p578vfn9CEPWvrjc8reR0rwQ/7i1Kdvql01tjqaLDPzn2oBIetAAC0RIBFLKMirHMlum2oQ==",
+  "salt": "Yb7bw14/VyUTqQ==",
+  "lastSignedInAt": "1752071645155",
+  "createdAt": "1752071645155",
+  "providerUserInfo": []
+},
+{
+  "localId": "MKUFJZ7ML7cnKGnvsmeWJ5PHBmx2",
+  "email": "vitorcabral703@gmail.com",
+  "emailVerified": true,
+  "passwordHash": "PWNbMGqbzmQnDhurEZffX8I+2KYRfPD1RTqaW5GarjZ0bL9hwOGIyq/irsOe85IPnyztYUW8HNA81ZzJ6n4oog==",
+  "salt": "vR1Cq8f92d8eAA==",
+  "displayName": "Vitor Hugo Cabral Araujo",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c",
+  "lastSignedInAt": "1752448312612",
+  "createdAt": "1751304158179",
+  "providerUserInfo": [
+    {
+      "providerId": "google.com",
+      "rawId": "107577672097350071580",
+      "email": "vitorcabral703@gmail.com",
+      "displayName": "Vitor Hugo Cabral Araujo",
+      "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocJRZhWAnujydYd55ej9vm0zukAJdlqbJTSF90hiMUzxTKz8wtUZ=s96-c"
+    }
+  ]
+},
+{
+  "localId": "QuRmTfjlJWNFppq5YrZx3Ij1igi2",
+  "email": "vitorcabra@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "p47DrWiwKPFkw7FwDLuRo7CWWP2gtp0kSsA3MuhDSLJPoQbXLUKmtd6NYbT5JAycGhfThk22ahvXcqB/aNuVYA==",
+  "salt": "+JBwDM8tVbMYNQ==",
+  "lastSignedInAt": "1752065736464",
+  "createdAt": "1752065736464",
+  "providerUserInfo": []
+},
+{
+  "localId": "RaswaNRxHaSmsVGBGHp3BVpVflY2",
+  "email": "vitorcabral7503@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "iKecIyy+7SKydpcU35fSWT0UCepJdgu9L50Qy6tONlq5ni248GlAAEE8LDGl2DxtxCC4GS/DpBBH1hn0En5Krw==",
+  "salt": "x45O5m14KVjz/Q==",
+  "lastSignedInAt": "1752332645679",
+  "createdAt": "1752332645679",
+  "providerUserInfo": []
+},
+{
+  "localId": "VyzRLM3B3uf3WabFrXoyO5THDx23",
+  "email": "vitocabral703@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "2t2uZEhXOuNkSUTd8M6ca6ciUxPQf2fzmJyhaMR2vo6ctdWCFDV3Y/Fva5/H8FsQod3NR54WKgykdcJIk4m3Lg==",
+  "salt": "CExZk8tDfh5XvQ==",
+  "lastSignedInAt": "1752105603727",
+  "createdAt": "1752105603727",
+  "providerUserInfo": []
+},
+{
+  "localId": "jP1UsiGxChbGTob9nthZJu6ZTPA2",
+  "email": "vitorcabral7@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "SAMKIl+6+mqqm3Y0EXftPIGo6COOozSk7WqYuDLSXrAuazUr/Ia13YeeN/FWYrNFo/aY5/gsHEI1ItCICKEryA==",
+  "salt": "nEICW15hTKQ7uw==",
+  "lastSignedInAt": "1751982598550",
+  "createdAt": "1751982598550",
+  "providerUserInfo": []
+},
+{
+  "localId": "n0dWpQU30TYipLV5dmuTt8Zf3Wm2",
+  "email": "toniazzoana15@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "xGutvGeLH37ciPFjuJeOaJ7ipBh7gmHU6WZCnc1ugAk/nMDKR1XVDINH82RZ79niYC40ZyD332rHIxsMO890KA==",
+  "salt": "AO9634oV5743HA==",
+  "lastSignedInAt": "1751509453910",
+  "createdAt": "1751509453910",
+  "providerUserInfo": []
+},
+{
+  "localId": "q9SyYIZ0l0gy8tS4egxZrScdCxB3",
+  "email": "jao703@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "NMZhRM5pHoNIRRl5z3Gnb7MtAocNQkEjkDsPHPK/uPtU0BxRriftj46kaUjHxN4j1kFQiB52XIvml0gcPHLbmw==",
+  "salt": "SElQfXl7DGFZ9g==",
+  "lastSignedInAt": "1752070504453",
+  "createdAt": "1752070504453",
+  "providerUserInfo": []
+},
+{
+  "localId": "yKxlQnBqlggBfcoJYOMZTbdiADU2",
+  "email": "vitrcabral@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "Xj7NldPL5DcFh+eluLM6VzyGaOBbiRVDHA0VNfkTI5U3RTiEPuaIzegGjYmIdPBUs4J0WIwi7pQPSj5SrgXkKA==",
+  "salt": "yQ9QSJSeNUq5LA==",
+  "lastSignedInAt": "1752448372217",
+  "createdAt": "1752448372217",
+  "providerUserInfo": []
+}]}

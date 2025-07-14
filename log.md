@@ -1,0 +1,101 @@
+Web Vitals: Object
+layout-a436ca20b798b21d.js:1 Web Vitals: Object
+layout-a436ca20b798b21d.js:1 Web Vitals: Object
+vendors-107fd2b434763a7c.js:1 Failed to load profile: ProfileLoadError: Acesso negado. Verifique suas permissões e tente novamente.
+at n (30-ae9cf709d772bc9f.js:1:3470)
+at async Object.next (30-ae9cf709d772bc9f.js:1:5799)
+window.console.error @ vendors-107fd2b434763a7c.js:1
+(anonymous) @ 30-ae9cf709d772bc9f.js:1
+await in (anonymous)
+(anonymous) @ firebase-54fed3407b7a1f64.js:15
+(anonymous) @ firebase-54fed3407b7a1f64.js:15
+Promise.then
+sendOne @ firebase-54fed3407b7a1f64.js:15
+forEachObserver @ firebase-54fed3407b7a1f64.js:15
+next @ firebase-54fed3407b7a1f64.js:15
+notifyAuthListeners @ 7c86ec74-b75876c516107972.js:1
+(anonymous) @ 7c86ec74-b75876c516107972.js:1
+Promise.then
+queue @ 7c86ec74-b75876c516107972.js:1
+\_updateCurrentUser @ 7c86ec74-b75876c516107972.js:1
+await in \_updateCurrentUser
+ta @ 7c86ec74-b75876c516107972.js:1
+await in ta
+to @ 7c86ec74-b75876c516107972.js:1
+tf @ 7c86ec74-b75876c516107972.js:1
+p @ 30-ae9cf709d772bc9f.js:1
+A @ page-c639640ab81ec191.js:1
+iX @ 4bd1b696-56bbbd3bdbd27daa.js:1
+(anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
+nS @ 4bd1b696-56bbbd3bdbd27daa.js:1
+i2 @ 4bd1b696-56bbbd3bdbd27daa.js:1
+s7 @ 4bd1b696-56bbbd3bdbd27daa.js:1
+s5 @ 4bd1b696-56bbbd3bdbd27daa.js:1Understand this error
+vendors-107fd2b434763a7c.js:1 Erro ao carregar workspaces: FirebaseError: Missing or insufficient permissions.
+window.console.error @ vendors-107fd2b434763a7c.js:1
+x @ layout-a436ca20b798b21d.js:1
+await in x
+(anonymous) @ layout-a436ca20b798b21d.js:1
+oq @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+um @ 4bd1b696-56bbbd3bdbd27daa.js:1
+uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
+iS @ 4bd1b696-56bbbd3bdbd27daa.js:1
+(anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
+j @ vendors-107fd2b434763a7c.js:1Understand this error

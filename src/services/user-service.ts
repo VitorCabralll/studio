@@ -1,9 +1,6 @@
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, FieldValue, updateDoc } from 'firebase/firestore';
 import { logger } from '@/lib/production-logger';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { addNamespace } from '@/lib/staging-config';
-import { AuthCoordinator } from '@/lib/auth-coordinator';
-import { authLogger } from '@/lib/auth-logger';
 
 // Service result types
 export interface ServiceResult<T> {
@@ -54,7 +51,7 @@ function createDefaultProfile(): UserProfile {
 }
 
 /**
- * Get user profile with automatic creation for new users
+ * Get user profile - VERSÃO SIMPLES SEM BUGS
  */
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   if (!uid?.trim()) {
@@ -72,27 +69,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
 
   try {
-    // Step 1: Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
-    if (!isAuthReady) {
-      throw new Error('Auth coordination failed');
-    }
-
-    // Step 2: Get fresh token
-    const token = await currentUser.getIdToken(true);
-    logger.log('getUserProfile: Fresh JWT token obtained');
-
-    // Step 3: Try to get existing profile
     const db = getFirebaseDb();
-    // CORREÇÃO: usar 'usuarios' diretamente em produção
-    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-    const docRef = doc(db, collection, uid);
+    const docRef = doc(db, 'usuarios', uid); // SEMPRE 'usuarios' - sem complicações
     
     logger.log('getUserProfile: Querying Firestore', {
       database: db.app.options.projectId,
-      collection: collection,
-      uid,
-      hasToken: !!token
+      collection: 'usuarios',
+      uid
     });
 
     const docSnap = await getDoc(docRef);
@@ -101,40 +84,32 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       const data = docSnap.data() as UserProfile;
       logger.log('getUserProfile: Profile found and loaded');
       
-      authLogger.info('Profile loaded successfully', {
-        context: 'user-service',
-        operation: 'getUserProfile',
-        userId: uid
-      });
-      
       return {
         ...data,
         workspaces: data.workspaces || []
       };
     } else {
-      // Profile doesn't exist - this should NOT happen since Cloud Function creates it
-      logger.error('getUserProfile: Profile not found - Cloud Function may have failed');
+      // Perfil não existe - criar na hora (SIMPLES)
+      logger.log('getUserProfile: Profile not found, creating new profile');
       
-      authLogger.error('Profile not found - possible Cloud Function failure', new Error('Profile not found'), {
-        context: 'user-service',
-        operation: 'getUserProfile',
-        userId: uid
-      });
+      const newProfile = createDefaultProfile();
+      // Adicionar campos opcionais se disponíveis
+      if (currentUser.email) {
+        (newProfile as any).email = currentUser.email;
+      }
+      if (currentUser.displayName) {
+        newProfile.name = currentUser.displayName;
+        newProfile.displayName = currentUser.displayName;
+      }
       
-      // Don't create profile here - let the Cloud Function handle it
-      // Return null to indicate profile doesn't exist yet
-      return null;
+      await setDoc(docRef, newProfile);
+      logger.log('getUserProfile: New profile created successfully');
+      
+      return newProfile;
     }
 
   } catch (error: any) {
     logger.error('getUserProfile: Failed to load/create profile:', error);
-    
-    authLogger.error('getUserProfile failed', error, {
-      context: 'user-service',
-      operation: 'getUserProfile',
-      userId: uid,
-      errorCode: error?.code
-    });
 
     // Re-throw with user-friendly message
     const friendlyError = new Error(getFirestoreErrorMessage(error));
@@ -161,19 +136,8 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
   }
 
   try {
-    // Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
-    if (!isAuthReady) {
-      throw new Error('Auth coordination failed');
-    }
-
-    // Get fresh token
-    await currentUser.getIdToken(true);
-
     const db = getFirebaseDb();
-    // CORREÇÃO: usar 'usuarios' diretamente em produção
-    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-    const docRef = doc(db, collection, uid);
+    const docRef = doc(db, 'usuarios', uid); // SEMPRE 'usuarios' - simples
 
     const completeProfile: UserProfile = {
       ...createDefaultProfile(),
@@ -184,24 +148,13 @@ export async function createUserProfile(uid: string, profile: Partial<UserProfil
     await setDoc(docRef, completeProfile);
 
     logger.log('createUserProfile: Profile created successfully');
-    
-    authLogger.info('User profile created', {
-      context: 'user-service',
-      operation: 'createUserProfile',
-      userId: uid
-    });
 
     return completeProfile;
 
   } catch (error: any) {
     logger.error('createUserProfile: Failed to create profile:', error);
     
-    authLogger.error('createUserProfile failed', error, {
-      context: 'user-service',
-      operation: 'createUserProfile',
-      userId: uid,
-      errorCode: error?.code
-    });
+    // Erro removido - sistema simples
 
     throw error;
   }
@@ -223,19 +176,10 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
   }
 
   try {
-    // Ensure auth is ready
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
-    if (!isAuthReady) {
-      throw new Error('Auth coordination failed');
-    }
-
-    // Get fresh token
-    await currentUser.getIdToken(true);
+    // Sistema simples - sem complicações
 
     const db = getFirebaseDb();
-    // CORREÇÃO: usar 'usuarios' diretamente em produção
-    const collection = process.env.NODE_ENV === 'production' ? 'usuarios' : addNamespace('usuarios');
-    const docRef = doc(db, collection, uid);
+    const docRef = doc(db, 'usuarios', uid); // SEMPRE 'usuarios' - simples
 
     // Get current profile first
     const docSnap = await getDoc(docRef);
@@ -253,23 +197,14 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
 
     await setDoc(docRef, updatedProfile);
 
-    authLogger.info('User profile updated', {
-      context: 'user-service',
-      operation: 'updateUserProfile',
-      userId: uid
-    });
+    // Log removido - sistema simples
 
     return updatedProfile;
 
   } catch (error: any) {
     logger.error('Error updating user profile:', error);
     
-    authLogger.error('updateUserProfile failed', error, {
-      context: 'user-service',
-      operation: 'updateUserProfile',
-      userId: uid,
-      errorCode: error?.code
-    });
+    // Erro removido - sistema simples
 
     throw error;
   }

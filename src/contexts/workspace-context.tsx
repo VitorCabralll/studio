@@ -3,13 +3,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getFirebaseDb, getFirebaseAuth } from '@/lib/firebase';
-import { addNamespace } from '@/lib/staging-config';
-import { useAuth } from '@/hooks/use-auth';
-import { AuthCoordinator } from '@/lib/auth-coordinator';
-import { authLogger } from '@/lib/auth-logger';
+import { useSimpleAuth } from '@/hooks/use-simple-auth';
 
-// Função utilitária para validar auth usando AuthCoordinator
-async function validateAuthWithCoordinator(): Promise<{ success: boolean; error?: string }> {
+// Função utilitária SIMPLES para validar auth
+async function validateAuth(): Promise<{ success: boolean; error?: string }> {
   try {
     const auth = getFirebaseAuth();
     const currentUser = auth.currentUser;
@@ -18,30 +15,10 @@ async function validateAuthWithCoordinator(): Promise<{ success: boolean; error?
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    // Usar AuthCoordinator para validação coordenada
-    const isAuthReady = await AuthCoordinator.waitForAuthReady(currentUser);
-    
-    if (!isAuthReady) {
-      authLogger.error('Workspace auth validation failed via AuthCoordinator', new Error('Auth not ready'), {
-        context: 'workspace-context',
-        operation: 'auth_validation',
-        userId: currentUser.uid,
-      });
-      return { success: false, error: 'Falha na validação coordenada de autenticação' };
-    }
-
-    authLogger.info('Workspace auth validation successful via AuthCoordinator', {
-      context: 'workspace-context',
-      operation: 'auth_validation',
-      userId: currentUser.uid,
-    });
-    
+    // Sistema simples - se há usuário autenticado, está pronto
     return { success: true };
   } catch (error: any) {
-    authLogger.error('Workspace auth validation error', error, {
-      context: 'workspace-context',
-      operation: 'auth_validation',
-    });
+    console.error('Workspace auth validation error:', error);
     return { success: false, error: 'Erro na validação de autenticação' };
   }
 }
@@ -81,7 +58,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
 
   // Carregar workspaces do usuário
   const loadWorkspaces = async () => {
@@ -97,13 +74,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     try {
       // Validar auth antes de fazer queries
-      const authValidation = await validateAuthWithCoordinator();
+      const authValidation = await validateAuth();
       if (!authValidation.success) {
         throw new Error(authValidation.error || 'Falha na validação de autenticação');
       }
 
       const db = getFirebaseDb();
-      const workspacesCollection = addNamespace('workspaces');
+      const workspacesCollection = 'workspaces';
       
       // Query para workspaces onde o usuário é membro
       const q = query(
@@ -141,7 +118,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
       if (process.env.NODE_ENV === 'development' && err instanceof Error && 'code' in err && err.code === 'permission-denied') {
         console.error('Workspace Permission Debug:', {
           operation: 'loadWorkspaces',
-          collection: addNamespace('workspaces'),
+          collection: 'workspaces',
           userId: user?.uid,
           error_code: err.code,
           error_message: err.message,
@@ -164,13 +141,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     try {
       // Validar auth antes de criar
-      const authValidation = await validateAuthWithCoordinator();
+      const authValidation = await validateAuth();
       if (!authValidation.success) {
         throw new Error(authValidation.error || 'Falha na validação de autenticação');
       }
 
       const db = getFirebaseDb();
-      const workspacesCollection = addNamespace('workspaces');
+      const workspacesCollection = 'workspaces';
       
       const newWorkspace = {
         name,
@@ -192,23 +169,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
       setWorkspaces(prev => [...prev, workspace]);
       setCurrentWorkspace(workspace);
       
-      authLogger.info('Workspace created successfully', {
-        context: 'workspace-context',
-        operation: 'createWorkspace',
-        userId: user.uid,
-      });
+      console.log('Workspace created successfully');
 
       return docRef.id;
 
     } catch (err: any) {
       console.error('Erro ao criar workspace:', err);
       setError('Erro ao criar workspace');
-      
-      authLogger.error('Failed to create workspace', err, {
-        context: 'workspace-context',
-        operation: 'createWorkspace',
-        userId: user.uid,
-      });
       
       return null;
     }
@@ -231,13 +198,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     try {
       // Validar auth antes de atualizar
-      const authValidation = await validateAuthWithCoordinator();
+      const authValidation = await validateAuth();
       if (!authValidation.success) {
         throw new Error(authValidation.error || 'Falha na validação de autenticação');
       }
 
       const db = getFirebaseDb();
-      const workspacesCollection = addNamespace('workspaces');
+      const workspacesCollection = 'workspaces';
       const workspaceRef = doc(db, workspacesCollection, workspaceId);
 
       const updateData = {
@@ -279,13 +246,13 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
 
     try {
       // Validar auth antes de deletar
-      const authValidation = await validateAuthWithCoordinator();
+      const authValidation = await validateAuth();
       if (!authValidation.success) {
         throw new Error(authValidation.error || 'Falha na validação de autenticação');
       }
 
       const db = getFirebaseDb();
-      const workspacesCollection = addNamespace('workspaces');
+      const workspacesCollection = 'workspaces';
       const workspaceRef = doc(db, workspacesCollection, workspaceId);
 
       await deleteDoc(workspaceRef);

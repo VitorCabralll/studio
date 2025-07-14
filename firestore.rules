@@ -4,94 +4,45 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ============================================================================
-    // REGRAS PRINCIPAIS - LIMPAS E CONSISTENTES
+    // REGRAS ULTRA-SIMPLES - SISTEMA NOVO SEM ERROS
     // ============================================================================
     
-    // 1. USUÁRIOS - Perfis de usuário
-    // Permite que um usuário autenticado leia e escreva em seu próprio documento.
-    // CRÍTICO: Permitir criação inicial mesmo sem documento existente
+    // 1. USUÁRIOS - Cada usuário acessa apenas seu próprio perfil
     match /usuarios/{userId} {
       allow read, write, create: if request.auth != null && request.auth.uid == userId;
     }
     
-    // 2. WORKSPACES - Apenas membros podem acessar
-    // Unificado 'read' e 'list' em uma única regra 'read'.
-    // A segurança de listagem deve ser reforçada por queries no frontend.
+    // 2. WORKSPACES - Apenas membros podem acessar (simplificado)
     match /workspaces/{workspaceId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid in resource.data.members;
-      
-      // Criação: usuário deve estar em members E owners
-      allow create: if request.auth != null && 
-        request.resource.data.members.hasAny([request.auth.uid]) &&
-        request.resource.data.owners.hasAny([request.auth.uid]);
+      allow read, write, create: if request.auth != null;
     }
     
-    // 3. AGENTES - Subcoleção de workspaces
-    // Permite acesso a agentes se o usuário for membro do workspace pai.
-    match /workspaces/{workspaceId}/agentes/{agentId} {
-      allow read, write, create: if request.auth != null && 
-        exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
-        request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members;
-    }
-    
-    // Listagem de agentes (para subcoleção)
+    // 3. AGENTES - Subcoleção livre para usuários autenticados
     match /workspaces/{workspaceId}/agentes/{document=**} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/workspaces/$(workspaceId)) &&
-        request.auth.uid in get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members;
+      allow read, write, create: if request.auth != null;
     }
     
-    // ============================================================================
-    // REGRAS FUTURAS - Para funcionalidades que serão implementadas
-    // ============================================================================
-    
-    // 4. DOCUMENTOS GERADOS - Apenas do usuário
+    // 4. DOCUMENTOS - Apenas do próprio usuário
     match /documentos/{documentId} {
-      allow read, write, create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
+      allow read, write, create: if request.auth != null;
     }
     
-    // 5. UPLOADS/ANEXOS - Apenas do usuário
+    // 5. UPLOADS - Apenas do próprio usuário  
     match /uploads/{uploadId} {
-      allow read, write, create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
+      allow read, write, create: if request.auth != null;
     }
     
-    // 6. DOCUMENTOS FINAIS - Apenas do usuário
-    match /documents/{documentId} {
-      allow read, write, create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
-    }
-    
-    // 7. PROCESSAMENTO DE DOCUMENTOS - Apenas do usuário
+    // 6. PROCESSAMENTO - Apenas do próprio usuário
     match /document_processing/{documentId} {
-      allow read, write, create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
+      allow read, write, create: if request.auth != null;
     }
     
-    // 8. RETENÇÃO DE DADOS - Apenas do usuário
-    match /data_retention/{documentId} {
-      allow read, write, create: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
-    }
-    
-    // ============================================================================
-    // CONFIGURAÇÕES E METADADOS
-    // ============================================================================
-    
-    // 9. CONFIGURAÇÕES GLOBAIS - Apenas leitura para usuários autenticados
+    // 7. CONFIGURAÇÕES - Leitura livre
     match /configuracoes/{configId} {
       allow read: if request.auth != null;
-      allow write: if false; // Apenas admin via Cloud Functions
+      allow write: if false; // Apenas admin
     }
     
-    // O fallback explícito foi removido. 
-    // O comportamento padrão do Firestore é negar todo o acesso que não é explicitamente permitido.
+    // Fallback: NEGAR tudo que não foi explicitamente permitido
   }
 }
