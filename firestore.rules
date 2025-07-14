@@ -70,26 +70,42 @@ service cloud.firestore {
     // 4. DOCUMENTOS - Apenas do próprio usuário
     // ============================================================================
     match /documents/{documentId} {
-      allow read, write, create: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
-      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+      allow read, write, create, delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        isOwner(documentId)
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.userId) || 
+        isOwner(documentId)
+      );
     }
     
     // ============================================================================
     // 5. PROCESSAMENTO DE DOCUMENTOS - Apenas do próprio usuário
     // ============================================================================
     match /document_processing/{documentId} {
-      allow read, write, create: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
-      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+      allow read, write, create, delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        isOwner(documentId)
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.userId) || 
+        isOwner(documentId)
+      );
     }
     
     // ============================================================================
     // 6. RETENÇÃO DE DADOS - Apenas do próprio usuário
     // ============================================================================
     match /data_retention/{documentId} {
-      allow read, write, create, delete: if isAuthenticated() && isOwner(resource.data.documentId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.documentId);
+      allow read, write, create, delete: if isAuthenticated() && (
+        isOwner(resource.data.documentId) || 
+        isOwner(documentId)
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.documentId) || 
+        isOwner(documentId)
+      );
     }
     
     // ============================================================================
@@ -104,8 +120,14 @@ service cloud.firestore {
     // 8. UPLOADS - Apenas do próprio usuário
     // ============================================================================
     match /uploads/{uploadId} {
-      allow read, write, create, delete: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow read, write, create, delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        isOwner(uploadId)
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.userId) || 
+        isOwner(uploadId)
+      );
     }
     
     // ============================================================================
