@@ -21,7 +21,7 @@ import { updateUserProfile } from '@/services/user-service';
 
 
 const profileSchema = z.object({
-  cargo: z.string({ required_error: 'Por favor, selecione um cargo.' }),
+  cargo: z.string({ error: 'Por favor, selecione um cargo.' }),
   areas_atuacao: z.array(z.string()).min(1, 'Selecione pelo menos uma área de atuação.'),
 });
 
