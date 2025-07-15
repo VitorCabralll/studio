@@ -1,5 +1,5 @@
-Web Vitals: Object
-layout-f057596902b800c1.js:1 Web Vitals: Object
+Web Vitals: {name: 'FCP', value: 1096, rating: 'good', delta: 1096, entries: Array(1), …}
+layout-f057596902b800c1.js:1 Web Vitals: {name: 'TTFB', value: 716.0999999999985, rating: 'good', delta: 716.0999999999985, entries: Array(1), …}
 7c86ec74-b75876c516107972.js:1 POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBlznzwe_cuk3X2QCXHYpqCx6UGh1HOxSI 400 (Bad Request)
 (anonymous) @ 7c86ec74-b75876c516107972.js:1
 await in (anonymous)
@@ -13,132 +13,29 @@ tn @ 7c86ec74-b75876c516107972.js:1
 ta @ 7c86ec74-b75876c516107972.js:1
 to @ 7c86ec74-b75876c516107972.js:1
 tf @ 7c86ec74-b75876c516107972.js:1
-b @ 499-617c795c9a2ee041.js:1
-P @ page-f6e37854c287dbcf.js:1
+b @ 499-119f261723befb0f.js:1
+P @ page-75dfed12be95ed39.js:1
 iX @ 4bd1b696-56bbbd3bdbd27daa.js:1
 (anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
 nS @ 4bd1b696-56bbbd3bdbd27daa.js:1
 i2 @ 4bd1b696-56bbbd3bdbd27daa.js:1
 s7 @ 4bd1b696-56bbbd3bdbd27daa.js:1
 s5 @ 4bd1b696-56bbbd3bdbd27daa.js:1Understand this error
-vendors-107fd2b434763a7c.js:1 Erro ao buscar/criar perfil: FirebaseError: Missing or insufficient permissions.
-window.console.error @ vendors-107fd2b434763a7c.js:1
-g @ 499-617c795c9a2ee041.js:1
-await in g
-(anonymous) @ 499-617c795c9a2ee041.js:1
-(anonymous) @ firebase-54fed3407b7a1f64.js:15
-(anonymous) @ firebase-54fed3407b7a1f64.js:15
-Promise.then
-sendOne @ firebase-54fed3407b7a1f64.js:15
-forEachObserver @ firebase-54fed3407b7a1f64.js:15
-next @ firebase-54fed3407b7a1f64.js:15
-notifyAuthListeners @ 7c86ec74-b75876c516107972.js:1
+499-119f261723befb0f.js:1 🕒 Aguardando token JWT ser propagado...
+7c86ec74-b75876c516107972.js:1 POST https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBlznzwe_cuk3X2QCXHYpqCx6UGh1HOxSI 400 (Bad Request)
 (anonymous) @ 7c86ec74-b75876c516107972.js:1
-Promise.then
-queue @ 7c86ec74-b75876c516107972.js:1
-\_updateCurrentUser @ 7c86ec74-b75876c516107972.js:1
-await in \_updateCurrentUser
-tp @ 7c86ec74-b75876c516107972.js:1
-await in tp
-y @ 499-617c795c9a2ee041.js:1
-z @ page-276a08cbc04d120d.js:1
-iX @ 4bd1b696-56bbbd3bdbd27daa.js:1
-(anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
-nS @ 4bd1b696-56bbbd3bdbd27daa.js:1
-i2 @ 4bd1b696-56bbbd3bdbd27daa.js:1
-s7 @ 4bd1b696-56bbbd3bdbd27daa.js:1
-s5 @ 4bd1b696-56bbbd3bdbd27daa.js:1Understand this error
-vendors-107fd2b434763a7c.js:1 Erro ao carregar perfil do usuário: FirebaseError: Missing or insufficient permissions.
-window.console.error @ vendors-107fd2b434763a7c.js:1
-(anonymous) @ 499-617c795c9a2ee041.js:1
 await in (anonymous)
-(anonymous) @ firebase-54fed3407b7a1f64.js:15
-(anonymous) @ firebase-54fed3407b7a1f64.js:15
-Promise.then
-sendOne @ firebase-54fed3407b7a1f64.js:15
-forEachObserver @ firebase-54fed3407b7a1f64.js:15
-next @ firebase-54fed3407b7a1f64.js:15
-notifyAuthListeners @ 7c86ec74-b75876c516107972.js:1
-(anonymous) @ 7c86ec74-b75876c516107972.js:1
-Promise.then
-queue @ 7c86ec74-b75876c516107972.js:1
-\_updateCurrentUser @ 7c86ec74-b75876c516107972.js:1
-await in \_updateCurrentUser
+A @ 7c86ec74-b75876c516107972.js:1
+b @ 7c86ec74-b75876c516107972.js:1
+N @ 7c86ec74-b75876c516107972.js:1
+e8 @ 7c86ec74-b75876c516107972.js:1
+eN @ 7c86ec74-b75876c516107972.js:1
 tp @ 7c86ec74-b75876c516107972.js:1
-await in tp
-y @ 499-617c795c9a2ee041.js:1
-z @ page-276a08cbc04d120d.js:1
+y @ 499-119f261723befb0f.js:1
+z @ page-4ba5a791a97a9ff7.js:1
 iX @ 4bd1b696-56bbbd3bdbd27daa.js:1
 (anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
 nS @ 4bd1b696-56bbbd3bdbd27daa.js:1
 i2 @ 4bd1b696-56bbbd3bdbd27daa.js:1
 s7 @ 4bd1b696-56bbbd3bdbd27daa.js:1
 s5 @ 4bd1b696-56bbbd3bdbd27daa.js:1Understand this error
-vendors-107fd2b434763a7c.js:1 Erro ao carregar workspaces: FirebaseError: Missing or insufficient permissions.
-window.console.error @ vendors-107fd2b434763a7c.js:1
-w @ 499-617c795c9a2ee041.js:1
-await in w
-(anonymous) @ 499-617c795c9a2ee041.js:1
-oq @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-um @ 4bd1b696-56bbbd3bdbd27daa.js:1
-uh @ 4bd1b696-56bbbd3bdbd27daa.js:1
-iS @ 4bd1b696-56bbbd3bdbd27daa.js:1
-(anonymous) @ 4bd1b696-56bbbd3bdbd27daa.js:1
-j @ vendors-107fd2b434763a7c.js:1Understand this error

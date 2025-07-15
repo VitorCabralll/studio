@@ -1,260 +1,411 @@
 /**
- * Authentication Error Handling
- * Centralized error parsing and user-friendly messages
+ * Authentication Error Handling System
+ * Comprehensive error management for Firebase Auth and App Check
  */
 
+import { logger } from './production-logger';
+
+// Error categories
+export enum AuthErrorType {
+  AUTHENTICATION = 'authentication',
+  APP_CHECK = 'app_check',
+  NETWORK = 'network',
+  FIRESTORE = 'firestore',
+  VALIDATION = 'validation',
+  RATE_LIMIT = 'rate_limit',
+  CONFIGURATION = 'configuration',
+  UNKNOWN = 'unknown'
+}
+
+// Error severity levels
+export enum ErrorSeverity {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical'
+}
+
+// Enhanced error interface
 export interface AuthError {
   code: string;
+  type: AuthErrorType;
+  severity: ErrorSeverity;
   message: string;
-  originalError?: Error;
-}
-
-/**
- * Enhanced Auth Flow Error with categorization
- */
-export interface AuthFlowError extends AuthError {
-  category: 'auth' | 'profile' | 'permission' | 'network' | 'timing' | 'coordination';
+  userMessage: string;
+  metadata?: Record<string, any>;
+  timestamp: number;
   retryable: boolean;
-  retryStrategy?: 'immediate' | 'delayed' | 'exponential' | 'coordinated';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  retryAfter?: number; // seconds
+  supportActions?: string[];
 }
 
-/**
- * Parse Firebase Auth errors into user-friendly messages
- */
-export function parseAuthError(error: unknown): AuthError {
-  const errorObj = error as { code?: string; message?: string };
-  const code = errorObj?.code || 'unknown';
-  const originalMessage = errorObj?.message || 'Unknown error';
-  
-  const errorMessages: Record<string, string> = {
-    // Authentication errors
-    'auth/user-not-found': 'Usuário não encontrado. Verifique o email digitado.',
-    'auth/wrong-password': 'Senha incorreta. Tente novamente.',
-    'auth/invalid-email': 'Email inválido. Verifique o formato do email.',
-    'auth/user-disabled': 'Esta conta foi desabilitada. Entre em contato com o suporte.',
-    'auth/too-many-requests': 'Muitas tentativas de login. Tente novamente em alguns minutos.',
-    'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
-    
-    // Registration errors
-    'auth/email-already-in-use': 'Este email já está em uso. Tente fazer login.',
-    'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
-    'auth/invalid-password': 'Senha inválida. Use pelo menos 6 caracteres.',
-    
-    // Google Auth errors
-    'auth/popup-closed-by-user': 'Login cancelado pelo usuário.',
-    'auth/popup-blocked': 'Pop-up bloqueado. Permita pop-ups para este site.',
-    'auth/unauthorized-domain': 'Domínio não autorizado. Entre em contato com o suporte.',
-    'auth/operation-not-allowed': 'Método de login não permitido.',
-    'auth/cancelled-popup-request': 'Solicitação de pop-up cancelada.',
-    
-    // Network and timeout errors
-    'auth/timeout': 'Operação expirou. Tente novamente.',
-    
-    // Generic errors
-    'auth/internal-error': 'Erro interno. Tente novamente.',
-    'auth/invalid-credential': 'Credenciais inválidas. Verifique seus dados.',
-    'auth/credential-already-in-use': 'Credencial já está em uso.',
-    'auth/invalid-verification-code': 'Código de verificação inválido.',
-    'auth/invalid-verification-id': 'ID de verificação inválido.',
-    'auth/code-expired': 'Código de verificação expirado.',
-    
-    // LexAI specific errors
-    'auth-not-ready': 'Sistema de autenticação não está pronto. Aguarde um momento.',
-    'profile-loading-failed': 'Falha ao carregar perfil do usuário.',
-    'permission-denied': 'Acesso negado. Verifique suas permissões.',
-    'coordination-failed': 'Erro de coordenação na autenticação. Tente novamente.'
-  };
+// Firebase Auth error mappings
+const FIREBASE_AUTH_ERRORS: Record<string, Partial<AuthError>> = {
+  // Authentication errors
+  'auth/user-not-found': {
+    type: AuthErrorType.AUTHENTICATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Email não encontrado. Verifique o endereço ou cadastre-se.',
+    retryable: false,
+    supportActions: ['check_email', 'try_signup']
+  },
+  'auth/wrong-password': {
+    type: AuthErrorType.AUTHENTICATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Senha incorreta. Tente novamente ou use "Esqueci minha senha".',
+    retryable: true,
+    supportActions: ['retry_password', 'reset_password']
+  },
+  'auth/invalid-email': {
+    type: AuthErrorType.VALIDATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Email inválido. Verifique o formato do endereço.',
+    retryable: true,
+    supportActions: ['fix_email_format']
+  },
+  'auth/email-already-in-use': {
+    type: AuthErrorType.AUTHENTICATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Este email já está cadastrado. Tente fazer login ou use "Esqueci minha senha".',
+    retryable: false,
+    supportActions: ['try_login', 'reset_password']
+  },
+  'auth/weak-password': {
+    type: AuthErrorType.VALIDATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Senha muito fraca. Use pelo menos 6 caracteres com letras e números.',
+    retryable: true,
+    supportActions: ['strengthen_password']
+  },
+  'auth/too-many-requests': {
+    type: AuthErrorType.RATE_LIMIT,
+    severity: ErrorSeverity.MEDIUM,
+    userMessage: 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.',
+    retryable: true,
+    retryAfter: 300, // 5 minutes
+    supportActions: ['wait_and_retry', 'contact_support']
+  },
+  'auth/network-request-failed': {
+    type: AuthErrorType.NETWORK,
+    severity: ErrorSeverity.MEDIUM,
+    userMessage: 'Erro de conexão. Verifique sua internet e tente novamente.',
+    retryable: true,
+    retryAfter: 5,
+    supportActions: ['check_connection', 'retry']
+  },
+  'auth/invalid-credential': {
+    type: AuthErrorType.AUTHENTICATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Credenciais inválidas. Verifique email e senha.',
+    retryable: true,
+    supportActions: ['check_credentials', 'reset_password']
+  },
+  'auth/popup-closed-by-user': {
+    type: AuthErrorType.AUTHENTICATION,
+    severity: ErrorSeverity.LOW,
+    userMessage: 'Login cancelado. Tente novamente quando estiver pronto.',
+    retryable: true,
+    supportActions: ['retry_oauth']
+  },
+  'auth/popup-blocked': {
+    type: AuthErrorType.CONFIGURATION,
+    severity: ErrorSeverity.MEDIUM,
+    userMessage: 'Pop-up bloqueado pelo navegador. Permita pop-ups para este site.',
+    retryable: true,
+    supportActions: ['enable_popups', 'retry_oauth']
+  }
+};
 
-  const message = errorMessages[code] || `Erro de autenticação: ${originalMessage}`;
-  
-  return {
-    code,
-    message,
-    originalError: error instanceof Error ? error : undefined
-  };
-}
+// App Check error mappings
+const APP_CHECK_ERRORS: Record<string, Partial<AuthError>> = {
+  'appCheck/token-error': {
+    type: AuthErrorType.APP_CHECK,
+    severity: ErrorSeverity.HIGH,
+    userMessage: 'Erro de verificação de segurança. Tente recarregar a página.',
+    retryable: true,
+    retryAfter: 10,
+    supportActions: ['reload_page', 'clear_cache']
+  },
+  'appCheck/fetch-status-error': {
+    type: AuthErrorType.APP_CHECK,
+    severity: ErrorSeverity.HIGH,
+    userMessage: 'Falha na verificação de segurança. Verifique sua conexão.',
+    retryable: true,
+    retryAfter: 5,
+    supportActions: ['check_connection', 'retry']
+  },
+  'appCheck/fetch-network-error': {
+    type: AuthErrorType.NETWORK,
+    severity: ErrorSeverity.MEDIUM,
+    userMessage: 'Erro de rede na verificação de segurança. Tente novamente.',
+    retryable: true,
+    retryAfter: 5,
+    supportActions: ['check_connection', 'retry']
+  },
+  'appCheck/recaptcha-error': {
+    type: AuthErrorType.APP_CHECK,
+    severity: ErrorSeverity.HIGH,
+    userMessage: 'Erro no reCAPTCHA. Recarregue a página e tente novamente.',
+    retryable: true,
+    retryAfter: 10,
+    supportActions: ['reload_page', 'disable_adblocker']
+  }
+};
 
-/**
- * Check if error is a network-related error
- */
-export function isNetworkError(error: AuthError): boolean {
-  const networkCodes = [
-    'auth/network-request-failed',
-    'auth/timeout',
-    'auth/internal-error'
-  ];
-  return networkCodes.includes(error.code);
-}
+// Network error patterns
+const NETWORK_ERROR_PATTERNS = [
+  /fetch/i,
+  /network/i,
+  /timeout/i,
+  /connection/i,
+  /cors/i
+];
 
-/**
- * Check if error is recoverable (user can retry)
- */
-export function isRecoverableError(error: AuthError): boolean {
-  const recoverableCodes = [
-    'auth/network-request-failed',
-    'auth/timeout',
-    'auth/too-many-requests',
-    'auth/popup-closed-by-user',
-    'auth/popup-blocked',
-    'auth/cancelled-popup-request'
-  ];
-  return recoverableCodes.includes(error.code);
-}
-
-/**
- * Enhanced error categorization for auth flow issues
- */
-export function categorizeAuthError(error: unknown): AuthFlowError {
-  const baseError = parseAuthError(error);
-  const errorObj = error as { code?: string; message?: string };
-  const code = errorObj?.code || 'unknown';
-  const originalMessage = errorObj?.message || 'Unknown error';
-  
-  // Categorize by error type
-  let category: AuthFlowError['category'] = 'auth';
-  let retryable = false;
-  let retryStrategy: AuthFlowError['retryStrategy'] = 'immediate';
-  let severity: AuthFlowError['severity'] = 'medium';
-  
-  // Permission and timing related errors
-  if (code.includes('permission-denied') || originalMessage.includes('permission')) {
-    category = 'permission';
-    retryable = true;
-    retryStrategy = 'coordinated';
-    severity = 'high';
+// Firestore error mappings
+const FIRESTORE_ERRORS: Record<string, Partial<AuthError>> = {
+  'permission-denied': {
+    type: AuthErrorType.FIRESTORE,
+    severity: ErrorSeverity.HIGH,
+    userMessage: 'Erro de permissão. Faça login novamente.',
+    retryable: false,
+    supportActions: ['relogin', 'contact_support']
+  },
+  'unavailable': {
+    type: AuthErrorType.NETWORK,
+    severity: ErrorSeverity.MEDIUM,
+    userMessage: 'Serviço temporariamente indisponível. Tente em alguns instantes.',
+    retryable: true,
+    retryAfter: 30,
+    supportActions: ['wait_and_retry']
   }
-  // Profile loading errors
-  else if (code.includes('not-found') || originalMessage.includes('profile') || originalMessage.includes('document')) {
-    category = 'profile';
-    retryable = true;
-    retryStrategy = 'delayed';
-    severity = 'medium';
-  }
-  // Network related errors
-  else if (isNetworkError(baseError) || code.includes('unavailable') || code.includes('deadline-exceeded')) {
-    category = 'network';
-    retryable = true;
-    retryStrategy = 'exponential';
-    severity = 'medium';
-  }
-  // Auth coordinator specific errors
-  else if (code.includes('auth-not-ready') || originalMessage.includes('coordinator') || originalMessage.includes('timing')) {
-    category = 'coordination';
-    retryable = true;
-    retryStrategy = 'coordinated';
-    severity = 'high';
-  }
-  // Token and timing issues
-  else if (code.includes('unauthenticated') || code.includes('token') || originalMessage.includes('timing')) {
-    category = 'timing';
-    retryable = true;
-    retryStrategy = 'coordinated';
-    severity = 'high';
-  }
-  // Standard auth errors
-  else if (code.startsWith('auth/')) {
-    category = 'auth';
-    retryable = isRecoverableError(baseError);
-    retryStrategy = 'immediate';
-    severity = code.includes('user-not-found') || code.includes('wrong-password') ? 'low' : 'medium';
-  }
-  
-  return {
-    ...baseError,
-    category,
-    retryable,
-    retryStrategy,
-    severity
-  };
-}
+};
 
 /**
- * Get suggested action for an error
+ * Parse and enhance any authentication-related error
  */
-export function getErrorAction(error: AuthError): string {
-  const actions: Record<string, string> = {
-    'auth/user-not-found': 'Verifique o email ou crie uma nova conta.',
-    'auth/wrong-password': 'Tente novamente ou redefina sua senha.',
-    'auth/email-already-in-use': 'Faça login com este email.',
-    'auth/popup-blocked': 'Permita pop-ups nas configurações do navegador.',
-    'auth/network-request-failed': 'Verifique sua conexão com a internet.',
-    'auth/too-many-requests': 'Aguarde alguns minutos antes de tentar novamente.',
-    'auth/unauthorized-domain': 'Contate o suporte técnico.',
-    
-    // LexAI specific actions
-    'auth-not-ready': 'Aguarde alguns segundos e tente novamente.',
-    'profile-loading-failed': 'Recarregue a página ou tente fazer login novamente.',
-    'permission-denied': 'Aguarde um momento e tente novamente.',
-    'coordination-failed': 'Recarregue a página e faça login novamente.',
+export function parseAuthError(error: any): AuthError {
+  const timestamp = Date.now();
+  
+  // Basic error structure
+  let authError: AuthError = {
+    code: error.code || 'unknown',
+    type: AuthErrorType.UNKNOWN,
+    severity: ErrorSeverity.MEDIUM,
+    message: error.message || 'Unknown error occurred',
+    userMessage: 'Ocorreu um erro inesperado. Tente novamente.',
+    timestamp,
+    retryable: false,
+    supportActions: ['retry', 'contact_support']
   };
   
-  return actions[error.code] || 'Tente novamente ou contate o suporte.';
-}
-
-/**
- * Get retry strategy for categorized errors
- */
-export function getRetryStrategy(error: AuthFlowError): {
-  shouldRetry: boolean;
-  strategy: string;
-  maxAttempts: number;
-  baseDelay: number;
-} {
-  if (!error.retryable) {
-    return {
-      shouldRetry: false,
-      strategy: 'none',
-      maxAttempts: 0,
-      baseDelay: 0
+  // Try to match Firebase Auth errors
+  if (error.code && FIREBASE_AUTH_ERRORS[error.code]) {
+    authError = { ...authError, ...FIREBASE_AUTH_ERRORS[error.code] };
+  }
+  
+  // Try to match App Check errors
+  else if (error.code && APP_CHECK_ERRORS[error.code]) {
+    authError = { ...authError, ...APP_CHECK_ERRORS[error.code] };
+  }
+  
+  // Try to match Firestore errors
+  else if (error.code && FIRESTORE_ERRORS[error.code]) {
+    authError = { ...authError, ...FIRESTORE_ERRORS[error.code] };
+  }
+  
+  // Check for network errors by message pattern
+  else if (NETWORK_ERROR_PATTERNS.some(pattern => pattern.test(error.message))) {
+    authError = {
+      ...authError,
+      type: AuthErrorType.NETWORK,
+      severity: ErrorSeverity.MEDIUM,
+      userMessage: 'Erro de conexão. Verifique sua internet.',
+      retryable: true,
+      retryAfter: 5,
+      supportActions: ['check_connection', 'retry']
     };
   }
   
-  const strategies = {
-    immediate: { maxAttempts: 2, baseDelay: 0 },
-    delayed: { maxAttempts: 3, baseDelay: 1000 },
-    exponential: { maxAttempts: 3, baseDelay: 1000 },
-    coordinated: { maxAttempts: 3, baseDelay: 1500 }
+  // Special handling for specific HTTP status codes
+  if (error.status === 400) {
+    authError = {
+      ...authError,
+      type: AuthErrorType.APP_CHECK,
+      severity: ErrorSeverity.HIGH,
+      userMessage: 'Erro de verificação (400). Recarregue a página.',
+      retryable: true,
+      retryAfter: 10,
+      supportActions: ['reload_page', 'clear_cache', 'disable_app_check']
+    };
+  }
+  
+  // Add metadata
+  authError.metadata = {
+    originalError: {
+      code: error.code,
+      message: error.message,
+      status: error.status
+    },
+    userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server',
+    url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+    timestamp: new Date().toISOString()
   };
   
-  const config = strategies[error.retryStrategy || 'immediate'];
+  // Log error for monitoring
+  logger.error('Authentication Error', {
+    code: authError.code,
+    type: authError.type,
+    severity: authError.severity,
+    retryable: authError.retryable,
+    metadata: authError.metadata
+  });
   
-  return {
-    shouldRetry: true,
-    strategy: error.retryStrategy || 'immediate',
-    maxAttempts: config.maxAttempts,
-    baseDelay: config.baseDelay
-  };
+  return authError;
 }
 
 /**
- * Check if error indicates timing/coordination issues
+ * Get user-friendly error message
  */
-export function isTimingError(error: AuthError | AuthFlowError): boolean {
-  const timingCodes = [
-    'permission-denied',
-    'auth-not-ready',
-    'coordination-failed',
-    'unauthenticated'
-  ];
-  
-  return timingCodes.includes(error.code) || 
-         error.message.includes('timing') ||
-         error.message.includes('propagation') ||
-         ('category' in error && error.category === 'timing');
+export function getUserMessage(error: any): string {
+  const authError = parseAuthError(error);
+  return authError.userMessage;
 }
 
 /**
- * Check if error indicates profile-related issues
+ * Check if error is retryable
  */
-export function isProfileError(error: AuthError | AuthFlowError): boolean {
-  const profileCodes = [
-    'profile-loading-failed',
-    'not-found',
-    'invalid-argument'
-  ];
+export function isRetryableError(error: any): boolean {
+  const authError = parseAuthError(error);
+  return authError.retryable;
+}
+
+/**
+ * Get retry delay in seconds
+ */
+export function getRetryDelay(error: any): number {
+  const authError = parseAuthError(error);
+  return authError.retryAfter || 5;
+}
+
+/**
+ * Get support actions for error
+ */
+export function getSupportActions(error: any): string[] {
+  const authError = parseAuthError(error);
+  return authError.supportActions || ['contact_support'];
+}
+
+/**
+ * Create retry strategy for authentication operations
+ */
+export class AuthRetryStrategy {
+  private maxRetries: number;
+  private baseDelay: number;
+  private maxDelay: number;
   
-  return profileCodes.includes(error.code) || 
-         error.message.includes('profile') ||
-         ('category' in error && error.category === 'profile');
+  constructor(maxRetries = 3, baseDelay = 1000, maxDelay = 30000) {
+    this.maxRetries = maxRetries;
+    this.baseDelay = baseDelay;
+    this.maxDelay = maxDelay;
+  }
+  
+  async execute<T>(
+    operation: () => Promise<T>,
+    operationName: string = 'auth_operation'
+  ): Promise<T> {
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= this.maxRetries + 1; attempt++) {
+      try {
+        const result = await operation();
+        
+        // Log success if we had previous failures
+        if (attempt > 1) {
+          logger.log(`${operationName} succeeded on attempt ${attempt}`, {
+            totalAttempts: attempt,
+            operation: operationName
+          });
+        }
+        
+        return result;
+      } catch (error) {
+        lastError = error;
+        const authError = parseAuthError(error);
+        
+        // Don't retry if error is not retryable
+        if (!authError.retryable) {
+          logger.warn(`${operationName} failed with non-retryable error`, {
+            code: authError.code,
+            type: authError.type,
+            attempt
+          });
+          throw error;
+        }
+        
+        // Don't retry if we've exhausted attempts
+        if (attempt > this.maxRetries) {
+          logger.error(`${operationName} failed after ${this.maxRetries} retries`, {
+            code: authError.code,
+            type: authError.type,
+            totalAttempts: attempt - 1
+          });
+          throw error;
+        }
+        
+        // Calculate delay with exponential backoff
+        const delay = Math.min(
+          this.baseDelay * Math.pow(2, attempt - 1),
+          authError.retryAfter ? authError.retryAfter * 1000 : this.maxDelay
+        );
+        
+        logger.warn(`${operationName} failed, retrying in ${delay}ms`, {
+          code: authError.code,
+          type: authError.type,
+          attempt,
+          nextAttempt: attempt + 1,
+          delay
+        });
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError;
+  }
+}
+
+/**
+ * Default retry strategy instance
+ */
+export const defaultRetryStrategy = new AuthRetryStrategy();
+
+/**
+ * Error reporting for monitoring systems
+ */
+export function reportAuthError(error: AuthError, context?: Record<string, any>): void {
+  // In production, this would integrate with error tracking services
+  // like Sentry, LogRocket, etc.
+  
+  const errorReport = {
+    ...error,
+    context,
+    environment: process.env.NODE_ENV,
+    userId: context?.userId || 'anonymous',
+    sessionId: context?.sessionId || 'unknown'
+  };
+  
+  // Log locally for now
+  logger.error('Auth Error Report', errorReport);
+  
+  // TODO: Send to external monitoring service
+  // if (process.env.NODE_ENV === 'production') {
+  //   Sentry.captureException(new Error(error.message), {
+  //     tags: {
+  //       type: error.type,
+  //       severity: error.severity
+  //     },
+  //     extra: errorReport
+  //   });
+  // }
 }

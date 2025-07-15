@@ -142,7 +142,7 @@ class AuthLogger {
   }
 
   loginFailure(error: AuthError, method: 'email' | 'google' | 'anonymous', email?: string): void {
-    this.error('Login failed', error.originalError || new Error(error.message), {
+    this.error('Login failed', error.metadata?.originalError || new Error(error.message), {
       operation: 'login_failure',
       metadata: {
         method,
@@ -171,7 +171,7 @@ class AuthLogger {
   }
 
   signupFailure(error: AuthError, email: string): void {
-    this.error('Signup failed', error.originalError || new Error(error.message), {
+    this.error('Signup failed', error.metadata?.originalError || new Error(error.message), {
       operation: 'signup_failure',
       metadata: {
         email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
@@ -281,7 +281,7 @@ class AuthLogger {
   }
 
   passwordResetFailure(error: AuthError, email: string): void {
-    this.error('Password reset failed', error.originalError || new Error(error.message), {
+    this.error('Password reset failed', error.metadata?.originalError || new Error(error.message), {
       operation: 'password_reset_failure',
       metadata: {
         email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
@@ -332,7 +332,14 @@ class AuthLogger {
     const authError: AuthError = {
       code: error.code || 'unknown',
       message: error.message || 'Unknown error',
-      originalError: error instanceof Error ? error : undefined,
+      type: 'unknown' as any,
+      severity: 'medium' as any,
+      userMessage: error.message || 'Unknown error',
+      timestamp: Date.now(),
+      retryable: false,
+      metadata: {
+        originalError: error instanceof Error ? error : undefined,
+      },
     };
 
     this.error(`${operation} failed`, authError, {

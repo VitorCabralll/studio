@@ -19,6 +19,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase';
+import { parseAuthError, defaultRetryStrategy, AuthError as EnhancedAuthError } from '@/lib/auth-errors';
 
 // Tipos aprimorados
 export interface UserProfile {
@@ -36,17 +37,12 @@ export interface UserProfile {
   workspaces: any[];
 }
 
-interface AuthError {
-  code: string;
-  message: string;
-}
-
 interface SimpleAuthState {
   user: User | null;
   profile: UserProfile | null;
   userProfile: UserProfile | null; // Alias for compatibility
   loading: boolean;
-  error: AuthError | null;
+  error: EnhancedAuthError | null;
   isInitialized: boolean;
 }
 
@@ -100,25 +96,20 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   const auth = getFirebaseAuth();
   const db = getFirebaseDb();
 
-  // Parse Firebase Auth errors into user-friendly messages
-  const parseAuthError = (error: any): AuthError => {
-    const errorMessages: Record<string, string> = {
-      'auth/user-not-found': 'Usuário não encontrado. Verifique o email.',
-      'auth/wrong-password': 'Senha incorreta. Tente novamente.',
-      'auth/invalid-email': 'Email inválido.',
-      'auth/email-already-in-use': 'Este email já está em uso.',
-      'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
-      'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
-      'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
-      'auth/popup-closed-by-user': 'Login cancelado.',
-      'auth/popup-blocked': 'Pop-up bloqueado. Permita pop-ups para este site.',
-      'auth/invalid-credential': 'Credenciais inválidas. Verifique email e senha.',
-    };
-
-    return {
-      code: error.code || 'unknown',
-      message: errorMessages[error.code] || 'Erro de autenticação. Tente novamente.'
-    };
+  // Enhanced error parsing with retry logic
+  const handleAuthError = (error: any, context?: string): EnhancedAuthError => {
+    const enhancedError = parseAuthError(error);
+    
+    // Add context information
+    if (context) {
+      enhancedError.metadata = {
+        ...enhancedError.metadata,
+        context,
+        operation: context
+      };
+    }
+    
+    return enhancedError;
   };
 
   // Criar perfil padrão
@@ -196,20 +187,28 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Login com logging detalhado
+  // Login with retry strategy and enhanced error handling
   const login = async (email: string, password: string) => {
     console.log('🔐 [AUTH] Iniciando login para:', email);
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      console.log('🔐 [AUTH] Tentando signInWithEmailAndPassword...');
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('✅ [AUTH] Login bem-sucedido:', userCredential.user.uid);
+      await defaultRetryStrategy.execute(async () => {
+        console.log('🔐 [AUTH] Tentando signInWithEmailAndPassword...');
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('✅ [AUTH] Login bem-sucedido:', userCredential.user.uid);
+        return userCredential;
+      }, 'email_password_login');
+      
       // onAuthStateChanged irá lidar com o resto
     } catch (error: any) {
+      const enhancedError = handleAuthError(error, 'login');
+      
       console.error('❌ [AUTH] Erro no login:', {
-        code: error.code,
-        message: error.message,
+        code: enhancedError.code,
+        type: enhancedError.type,
+        severity: enhancedError.severity,
+        userMessage: enhancedError.userMessage,
         email: email,
         timestamp: new Date().toISOString()
       });
@@ -217,21 +216,24 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: parseAuthError(error)
+        error: enhancedError
       }));
       throw error;
     }
   };
 
-  // Signup com dados extras e logging detalhado
+  // Signup with retry strategy and enhanced error handling
   const signup = async (data: SignupData) => {
     console.log('📝 [AUTH] Iniciando cadastro para:', data.email);
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      console.log('📝 [AUTH] Criando usuário no Firebase Auth...');
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      console.log('✅ [AUTH] Usuário criado com sucesso:', userCredential.user.uid);
+      const userCredential = await defaultRetryStrategy.execute(async () => {
+        console.log('📝 [AUTH] Criando usuário no Firebase Auth...');
+        const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        console.log('✅ [AUTH] Usuário criado com sucesso:', credential.user.uid);
+        return credential;
+      }, 'email_password_signup');
       
       // Criar perfil imediatamente com dados do formulário
       const additionalData = {
@@ -246,9 +248,13 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       console.log('✅ [AUTH] Perfil criado com sucesso');
       
     } catch (error: any) {
+      const enhancedError = handleAuthError(error, 'signup');
+      
       console.error('❌ [AUTH] Erro no cadastro:', {
-        code: error.code,
-        message: error.message,
+        code: enhancedError.code,
+        type: enhancedError.type,
+        severity: enhancedError.severity,
+        userMessage: enhancedError.userMessage,
         email: data.email,
         timestamp: new Date().toISOString()
       });
@@ -256,7 +262,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: parseAuthError(error)
+        error: enhancedError
       }));
       throw error;
     }
@@ -411,4 +417,4 @@ export const useAuth = useSimpleAuth;
 export const AuthProvider = SimpleAuthProvider;
 
 // Export types for convenience
-export type { AuthError, SignupData };
+export type { EnhancedAuthError as AuthError, SignupData };

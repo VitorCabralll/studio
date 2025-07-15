@@ -10,6 +10,7 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getFirebaseConfig } from './firebase-config';
 import { logger } from './production-logger';
+import { initializeFirebaseAppCheck } from './app-check';
 
 // Lazy-initialized services
 let firebaseApp: FirebaseApp | null = null;
@@ -32,6 +33,15 @@ function initializeFirebaseApp(): FirebaseApp {
 
   const config = getFirebaseConfig();
   firebaseApp = initializeApp(config);
+
+  // Initialize App Check after Firebase app creation
+  try {
+    initializeFirebaseAppCheck(firebaseApp);
+    logger.log('Firebase App Check initialized successfully');
+  } catch (error) {
+    logger.warn('Firebase App Check initialization failed:', { error });
+    // Continue without App Check - graceful degradation
+  }
 
   return firebaseApp;
 }
