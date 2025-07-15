@@ -17,7 +17,13 @@ if (admin.apps.length === 0) {
 import { getOrchestrator } from './orchestrator';
 import { ProcessingInput } from './orchestrator/types';
 
-// Import reCAPTCHA validation functions
+// Import reCAPTCHA Enterprise validation functions
+export {
+  validateRecaptchaEnterprise,
+  verifyAppCheckTokenEnterprise
+} from './recaptcha-enterprise-validator';
+
+// Legacy reCAPTCHA v3 functions (deprecated)
 export {
   validateRecaptcha,
   verifyAppCheckToken

@@ -5,7 +5,8 @@
 
 import { 
   initializeAppCheck, 
-  ReCaptchaV3Provider, 
+  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider, 
   CustomProvider,
   AppCheck,
   getToken
@@ -16,7 +17,7 @@ import { logger } from './production-logger';
 
 // Types
 interface AppCheckConfig {
-  provider: ReCaptchaV3Provider | CustomProvider;
+  provider: ReCaptchaV3Provider | ReCaptchaEnterpriseProvider | CustomProvider;
   isTokenAutoRefreshEnabled: boolean;
 }
 
@@ -75,13 +76,13 @@ function createAppCheckConfig(): AppCheckConfig | null {
     return null;
   }
   
-  logger.log('App Check: Initializing with reCAPTCHA v3 for production', {
+  logger.log('App Check: Initializing with reCAPTCHA Enterprise for production', {
     environment: 'production',
     siteKeyPrefix: siteKey.substring(0, 10) + '...'
   });
   
   return {
-    provider: new ReCaptchaV3Provider(siteKey),
+    provider: new ReCaptchaEnterpriseProvider(siteKey),
     isTokenAutoRefreshEnabled: true
   };
 }

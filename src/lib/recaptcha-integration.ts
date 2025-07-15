@@ -27,7 +27,7 @@ interface RecaptchaValidationRequest {
 }
 
 /**
- * Validates reCAPTCHA token using Firebase Functions
+ * Validates reCAPTCHA Enterprise token using Firebase Functions
  */
 export async function validateRecaptchaToken(
   token: string,
@@ -40,7 +40,7 @@ export async function validateRecaptchaToken(
     
     const validateRecaptcha = httpsCallable<RecaptchaValidationRequest, RecaptchaValidationResult>(
       functions,
-      'validateRecaptcha'
+      'validateRecaptchaEnterprise'
     );
 
     const result = await validateRecaptcha({
@@ -73,7 +73,7 @@ export async function validateRecaptchaToken(
 }
 
 /**
- * Simplified validation for App Check integration
+ * Simplified Enterprise validation for App Check integration
  */
 export async function verifyAppCheckRecaptcha(token: string): Promise<{ valid: boolean; score: number }> {
   try {
@@ -82,7 +82,7 @@ export async function verifyAppCheckRecaptcha(token: string): Promise<{ valid: b
     
     const verifyAppCheckToken = httpsCallable<{ token: string }, { valid: boolean; score: number }>(
       functions,
-      'verifyAppCheckToken'
+      'verifyAppCheckTokenEnterprise'
     );
 
     const result = await verifyAppCheckToken({ token });
