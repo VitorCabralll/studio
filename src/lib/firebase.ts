@@ -36,8 +36,12 @@ function initializeFirebaseApp(): FirebaseApp {
 
   // Initialize App Check after Firebase app creation
   try {
-    initializeFirebaseAppCheck(firebaseApp);
-    logger.log('Firebase App Check initialized successfully');
+    const appCheck = initializeFirebaseAppCheck(firebaseApp);
+    if (appCheck) {
+      logger.log('Firebase App Check initialized successfully');
+    } else {
+      logger.log('Firebase App Check skipped (development or missing config)');
+    }
   } catch (error) {
     logger.warn('Firebase App Check initialization failed:', { error });
     // Continue without App Check - graceful degradation

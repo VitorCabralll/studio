@@ -29,44 +29,23 @@ interface AppCheckDebugConfig {
 let appCheckInstance: AppCheck | null = null;
 
 /**
- * Get reCAPTCHA site key based on environment
+ * Get reCAPTCHA site key for production
  */
 function getRecaptchaSiteKey(): string {
-  const env = getEnvironmentInfo();
-  
-  if (env.isProduction) {
-    const key = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-    if (!key) {
-      throw new Error(
-        '🔴 RECAPTCHA_SITE_KEY is required for production environment.\n' +
-        'Get your key from: https://www.google.com/recaptcha/admin'
-      );
-    }
-    return key;
-  }
-  
-  // Development/staging key (if available)
-  return process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY_DEV || 
-         process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || 
-         '';
-}
-
-/**
- * Get debug token for development
- */
-function getDebugToken(): string {
-  const token = process.env.NEXT_PUBLIC_APP_CHECK_DEBUG_TOKEN;
-  if (!token) {
-    console.warn(
-      '⚠️ APP_CHECK_DEBUG_TOKEN not set for development.\n' +
-      'Generate one at: https://console.firebase.google.com/project/lexai-ef0ab/appcheck'
+  const key = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  if (!key) {
+    logger.error(
+      'App Check: RECAPTCHA_SITE_KEY is required for production.\n' +
+      'Get your key from: https://www.google.com/recaptcha/admin'
     );
+    return '';
   }
-  return token || 'debug-token-not-configured';
+  return key;
 }
 
+
 /**
- * Create App Check configuration based on environment
+ * Create App Check configuration for production
  */
 function createAppCheckConfig(): AppCheckConfig | null {
   const env = getEnvironmentInfo();
@@ -82,43 +61,27 @@ function createAppCheckConfig(): AppCheckConfig | null {
     logger.log('App Check: Skipping initialization on server side');
     return null;
   }
-  
-  // Production: Use reCAPTCHA v3
-  if (env.isProduction) {
-    const siteKey = getRecaptchaSiteKey();
-    if (!siteKey) {
-      logger.error('App Check: Missing reCAPTCHA site key for production');
-      return null;
-    }
-    
-    logger.log('App Check: Initializing with reCAPTCHA v3 for production', {
-      environment: 'production',
-      siteKeyPrefix: siteKey.substring(0, 10) + '...'
-    });
-    
-    return {
-      provider: new ReCaptchaV3Provider(siteKey),
-      isTokenAutoRefreshEnabled: true
-    };
+
+  // Emergency disable for debugging
+  if (process.env.EMERGENCY_DISABLE_APP_CHECK === 'true') {
+    logger.warn('App Check: EMERGENCY DISABLED via environment variable');
+    return null;
   }
   
-  // Development/Staging: Use debug token
-  const debugToken = getDebugToken();
+  // Production configuration with reCAPTCHA v3
+  const siteKey = getRecaptchaSiteKey();
+  if (!siteKey) {
+    logger.warn('App Check: Missing reCAPTCHA site key - disabling App Check');
+    return null;
+  }
   
-  logger.log('App Check: Initializing with debug token for development', {
-    environment: env.nodeEnv,
-    hasDebugToken: !!debugToken
+  logger.log('App Check: Initializing with reCAPTCHA v3 for production', {
+    environment: 'production',
+    siteKeyPrefix: siteKey.substring(0, 10) + '...'
   });
   
   return {
-    provider: new CustomProvider({
-      getToken: (): Promise<AppCheckDebugConfig> => {
-        return Promise.resolve({
-          token: debugToken,
-          expireTimeMillis: Date.now() + (60 * 60 * 1000) // 1 hour
-        });
-      }
-    }),
+    provider: new ReCaptchaV3Provider(siteKey),
     isTokenAutoRefreshEnabled: true
   };
 }
@@ -151,10 +114,8 @@ export function initializeFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
           autoRefresh: config.isTokenAutoRefreshEnabled
         });
         
-        // Test token generation in development
-        if (!getEnvironmentInfo().isProduction) {
-          testAppCheckToken();
-        }
+        // Test token generation
+        testAppCheckToken();
         
         return appCheckInstance;
         
@@ -201,24 +162,20 @@ export async function getAppCheckToken(): Promise<string | null> {
 }
 
 /**
- * Test App Check token generation (development only)
+ * Test App Check token generation
  */
 async function testAppCheckToken(): Promise<void> {
-  if (getEnvironmentInfo().isProduction) {
-    return;
-  }
-  
   try {
     const token = await getAppCheckToken();
     if (token) {
-      logger.log('App Check: Test token generation successful', {
+      logger.log('App Check: Token generation successful', {
         tokenPreview: token.substring(0, 20) + '...'
       });
     } else {
-      logger.warn('App Check: Test token generation failed');
+      logger.warn('App Check: Token generation failed');
     }
   } catch (error: any) {
-    logger.warn('App Check: Test token generation error', {
+    logger.warn('App Check: Token generation error', {
       error: error.message
     });
   }
@@ -239,11 +196,9 @@ export function getAppCheckStatus() {
   
   return {
     initialized: !!appCheckInstance,
-    environment: env.nodeEnv,
-    isProduction: env.isProduction,
+    environment: 'production',
     isClient: env.isClient,
-    hasRecaptchaKey: !!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-    hasDebugToken: !!process.env.NEXT_PUBLIC_APP_CHECK_DEBUG_TOKEN
+    hasRecaptchaKey: !!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
   };
 }
 

@@ -119,3 +119,6 @@ package-lock.json.bak
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 next-env.d.ts
+
+# Debug files
+debug-*.js

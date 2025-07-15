@@ -62,6 +62,10 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_DEBUG
     value: "false"
     
+  # App Check and reCAPTCHA Configuration
+  - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    value: 6Ld79nMrAAAAAE-oWEVVeBbthv-I49JaHxbRR-_N
+    
   # Production Limits
   - variable: NEXT_PUBLIC_MAX_FILE_SIZE
     value: "10485760"
