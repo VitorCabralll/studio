@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { logger } from '@/lib/production-logger';
 import { 
   User,
   onAuthStateChanged,
@@ -150,7 +151,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         return newProfile;
       }
     } catch (error) {
-      console.error('Erro ao buscar/criar perfil:', error);
+      logger.error('Erro ao buscar/criar perfil:', error);
       throw error;
     }
   };
@@ -169,7 +170,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         userProfile: prev.userProfile ? { ...prev.userProfile, ...updates } : null
       }));
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      logger.error('Erro ao atualizar perfil:', error);
       throw error;
     }
   };
@@ -182,21 +183,21 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       const profile = await getOrCreateProfile(state.user);
       setState(prev => ({ ...prev, profile, userProfile: profile }));
     } catch (error) {
-      console.error('Erro ao recarregar perfil:', error);
+      logger.error('Erro ao recarregar perfil:', error);
       setState(prev => ({ ...prev, error: parseAuthError(error) }));
     }
   };
 
   // Login with retry strategy and enhanced error handling
   const login = async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Iniciando login para:', email);
+    logger.log('Iniciando login para:', { email });
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       await defaultRetryStrategy.execute(async () => {
-        console.log('🔐 [AUTH] Tentando signInWithEmailAndPassword...');
+        logger.log('Tentando signInWithEmailAndPassword...');
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('✅ [AUTH] Login bem-sucedido:', userCredential.user.uid);
+        logger.log('Login bem-sucedido:', { uid: userCredential.user.uid });
         return userCredential;
       }, 'email_password_login');
       
@@ -204,7 +205,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       const enhancedError = handleAuthError(error, 'login');
       
-      console.error('❌ [AUTH] Erro no login:', {
+      logger.error('Erro no login:', {
         code: enhancedError.code,
         type: enhancedError.type,
         severity: enhancedError.severity,
@@ -224,14 +225,14 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
 
   // Signup with retry strategy and enhanced error handling
   const signup = async (data: SignupData) => {
-    console.log('📝 [AUTH] Iniciando cadastro para:', data.email);
+    logger.log('Iniciando cadastro para:', { email: data.email });
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
       const userCredential = await defaultRetryStrategy.execute(async () => {
-        console.log('📝 [AUTH] Criando usuário no Firebase Auth...');
+        logger.log('Criando usuário no Firebase Auth...');
         const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        console.log('✅ [AUTH] Usuário criado com sucesso:', credential.user.uid);
+        logger.log('Usuário criado com sucesso:', { uid: credential.user.uid });
         return credential;
       }, 'email_password_signup');
       
@@ -243,14 +244,14 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         oab: data.oab
       };
       
-      console.log('📝 [AUTH] Criando perfil do usuário no Firestore...', additionalData);
+      logger.log('Criando perfil do usuário no Firestore...', { additionalData });
       await getOrCreateProfile(userCredential.user, additionalData);
-      console.log('✅ [AUTH] Perfil criado com sucesso');
+      logger.log('Perfil criado com sucesso');
       
     } catch (error: any) {
       const enhancedError = handleAuthError(error, 'signup');
       
-      console.error('❌ [AUTH] Erro no cadastro:', {
+      logger.error('Erro no cadastro:', {
         code: enhancedError.code,
         type: enhancedError.type,
         severity: enhancedError.severity,
@@ -304,7 +305,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       });
       router.push('/login');
     } catch (error: any) {
-      console.error('Erro no logout:', error);
+      logger.error('Erro no logout:', error);
     }
   };
 
@@ -341,19 +342,19 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
 
   // Listener principal com logging detalhado
   useEffect(() => {
-    console.log('🎧 [AUTH] Configurando listener de estado de autenticação...');
+    logger.log('Configurando listener de estado de autenticação...');
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Usuário logado
-        console.log('👤 [AUTH] Usuário detectado:', user.uid, user.email);
+        logger.log('Usuário detectado:', { uid: user.uid, email: user.email });
         try {
           setState(prev => ({ ...prev, loading: true, error: null }));
           
           // Buscar/criar perfil
-          console.log('📊 [AUTH] Carregando perfil do usuário...');
+          logger.log('Carregando perfil do usuário...');
           const profile = await getOrCreateProfile(user);
-          console.log('✅ [AUTH] Perfil carregado com sucesso:', profile.name || 'Sem nome');
+          logger.log('Perfil carregado com sucesso:', { name: profile.name || 'Sem nome' });
           
           setState({
             user,
@@ -365,7 +366,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
           });
           
         } catch (error: any) {
-          console.error('❌ [AUTH] Erro ao carregar perfil do usuário:', error);
+          logger.error('Erro ao carregar perfil do usuário:', error);
           setState({
             user,
             profile: null,
@@ -377,7 +378,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Usuário deslogado
-        console.log('🚪 [AUTH] Usuário deslogado ou não autenticado');
+        logger.log('Usuário deslogado ou não autenticado');
         setState({
           user: null,
           profile: null,
