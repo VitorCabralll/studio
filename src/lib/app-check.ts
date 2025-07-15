@@ -114,8 +114,15 @@ export function initializeFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
           autoRefresh: config.isTokenAutoRefreshEnabled
         });
         
-        // Test token generation
+        // Test token generation and backend validation
         testAppCheckToken();
+        
+        // Setup periodic validation to ensure backend is working
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            testBackendValidation();
+          }, 5000); // Test after 5 seconds
+        }
         
         return appCheckInstance;
         
@@ -176,6 +183,39 @@ async function testAppCheckToken(): Promise<void> {
     }
   } catch (error: any) {
     logger.warn('App Check: Token generation error', {
+      error: error.message
+    });
+  }
+}
+
+/**
+ * Test backend validation integration
+ */
+async function testBackendValidation(): Promise<void> {
+  try {
+    // Import the validation function dynamically to avoid circular deps
+    const { executeRecaptchaWithValidation } = await import('./recaptcha-integration');
+    
+    logger.log('App Check: Testing backend validation integration');
+    
+    const result = await executeRecaptchaWithValidation('app_check_test', window.location.hostname);
+    
+    logger.log('App Check: Backend validation test completed', {
+      success: result.success,
+      score: result.score,
+      riskLevel: result.risk_level,
+      recommendedAction: result.recommended_action
+    });
+    
+    if (!result.success || result.score < 0.3) {
+      logger.warn('App Check: Backend validation indicates potential issues', {
+        score: result.score,
+        riskLevel: result.risk_level
+      });
+    }
+    
+  } catch (error: any) {
+    logger.warn('App Check: Backend validation test failed', {
       error: error.message
     });
   }

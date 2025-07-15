@@ -17,6 +17,12 @@ if (admin.apps.length === 0) {
 import { getOrchestrator } from './orchestrator';
 import { ProcessingInput } from './orchestrator/types';
 
+// Import reCAPTCHA validation functions
+export {
+  validateRecaptcha,
+  verifyAppCheckToken
+} from './recaptcha-validator';
+
 // Configuração global
 setGlobalOptions({
   maxInstances: 10,
